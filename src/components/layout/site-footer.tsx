@@ -7,11 +7,11 @@ export async function SiteFooter() {
   const t = await getTranslations();
   const col = (title: string, links: { href: string; label: string }[]) => (
     <div>
-      <h2 className="type-eyebrow mb-3 text-white/70">{title}</h2>
-      <ul className="space-y-1">
+      <h2 className="type-eyebrow mb-2 text-white/70 md:mb-3">{title}</h2>
+      <ul className="space-y-0.5 md:space-y-1">
         {links.map((l) => (
           <li key={l.href}>
-            <Link href={l.href} className="inline-flex min-h-9 items-center text-sm text-white/90 hover:text-white hover:underline">
+            <Link href={l.href} className="inline-flex min-h-9 items-center text-[0.8125rem] leading-tight text-white/90 hover:text-white hover:underline md:text-sm">
               {l.label}
             </Link>
           </li>
@@ -22,8 +22,8 @@ export async function SiteFooter() {
 
   return (
     <footer className="bg-surface-navy text-white">
-      <div className="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div className="space-y-3">
+      <div className="container-page grid grid-cols-3 gap-x-3 gap-y-6 py-8 md:grid-cols-[1.4fr_repeat(3,1fr)] md:gap-10 md:py-12">
+        <div className="col-span-3 space-y-2 md:col-span-1 md:space-y-3">
           <Logo tone="inverse" />
           <p className="type-small max-w-xs text-white/80">{t("footer.tagline")}</p>
         </div>
