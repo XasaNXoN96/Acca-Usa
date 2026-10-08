@@ -30,7 +30,7 @@ export async function RankingPreview({ entries }: { entries: RankingEntry[] }) {
             </li>
           ))}
         </ol>
-        <Link href={routes.ranking} className="type-small mt-3 inline-block font-semibold text-primary hover:underline">
+        <Link href={routes.ranking} className="type-small mt-3 inline-flex min-h-8 items-center font-semibold text-primary hover:underline">
           {c("viewAll")} →
         </Link>
       </CardContent>

@@ -73,7 +73,7 @@ export function LoginForm({ next, demoAccounts }: { next?: string; demoAccounts?
         <PasswordField id="login-password" label={t("fields.password")} autoComplete="current-password" required
           registration={form.register("password")} error={err(errors.password?.message)} />
         <div className="text-right">
-          <Link href={routes.forgotPassword} className="type-small font-semibold text-primary hover:underline">{t("login.forgot")}</Link>
+          <Link href={routes.forgotPassword} className="type-small inline-flex min-h-8 items-center font-semibold text-primary hover:underline">{t("login.forgot")}</Link>
         </div>
         <Button type="submit" size="lg" className="w-full" loading={pending}>{t("login.submit")}</Button>
       </form>

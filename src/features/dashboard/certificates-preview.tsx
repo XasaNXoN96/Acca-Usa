@@ -35,7 +35,7 @@ export async function CertificatesPreview({ items }: { items: Certificate[] }) {
             </li>
           ))}
         </ul>
-        <Link href={routes.certificates} className="type-small inline-block font-semibold text-primary hover:underline">
+        <Link href={routes.certificates} className="type-small inline-flex min-h-8 items-center font-semibold text-primary hover:underline">
           {c("viewAll")} →
         </Link>
       </CardContent>

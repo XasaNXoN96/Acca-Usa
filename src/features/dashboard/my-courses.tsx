@@ -19,7 +19,7 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
     <section aria-labelledby="my-courses-title" className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 id="my-courses-title" className="type-h3">{t("myCourses")}</h2>
-        <Button asChild variant="link" size="sm"><Link href={routes.courses}>{c("viewAll")} →</Link></Button>
+        <Button asChild variant="link" size="sm" className="min-h-8 pointer-coarse:min-h-10"><Link href={routes.courses}>{c("viewAll")} →</Link></Button>
       </div>
 
       {/* Mobile: compact tappable rows */}
