@@ -10,7 +10,7 @@ export const badgeVariants = cva(
         neutral: "border-border bg-muted text-foreground",
         navy: "border-transparent bg-navy text-navy-foreground",
         acca: "border-transparent bg-acca-soft text-acca",
-        cima: "border-transparent bg-cima-soft text-cima",
+        azure: "border-transparent bg-azure-soft text-azure",
         fia: "border-transparent bg-fia-soft text-fia",
         success: "border-transparent bg-success-soft text-success",
         warning: "border-transparent bg-warning-soft text-warning",

@@ -30,7 +30,7 @@ export async function TestIntro({ test }: { test: TestSummary }) {
       <main id="main" tabIndex={-1} className="container-page max-w-2xl py-8 outline-none sm:py-14">
         <Card className="space-y-6 p-6 sm:p-8">
           <div className="flex items-start gap-4">
-            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-cima-soft text-cima"><ClipboardList className="size-6" aria-hidden /></span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-azure-soft text-azure"><ClipboardList className="size-6" aria-hidden /></span>
             <div className="min-w-0 space-y-1">
               <h1 className="type-h1 text-balance">{test.title}</h1>
               <p className="text-muted-foreground">{t("startText", { minutes: test.durationMinutes })}</p>

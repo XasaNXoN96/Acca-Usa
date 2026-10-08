@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "ACCA USA — ACCA, CIMA va FIA o‘quv platformasi",
-    "description": "ACCA, CIMA va FIA talabalari uchun video darslar, amaliy savollar va sinov imtihonlari — barchasi bir joyda.",
+    "title": "ACCA USA — ACCA va FIA o‘quv platformasi",
+    "description": "ACCA va FIA talabalari uchun video darslar, amaliy savollar va sinov imtihonlari — barchasi bir joyda.",
     "titleTemplate": "%s | ACCA USA"
   },
   "common": {
@@ -63,7 +63,6 @@
   },
   "nav": {
     "acca": "ACCA",
-    "cima": "CIMA",
     "fia": "FIA",
     "books": "Kitoblar",
     "forums": "Forumlar",
@@ -100,11 +99,11 @@
     "promoText": "O‘quv dasturi tuzilmasi va demo darslar bilan tanishish uchun bepul hisob yarating."
   },
   "footer": {
-    "tagline": "ACCA, CIMA va FIA talabalari uchun premium moliyaviy ta’lim.",
+    "tagline": "ACCA va FIA talabalari uchun premium moliyaviy ta’lim.",
     "qualifications": "Malakalar",
     "learn": "O‘qish",
     "account": "Hisob",
-    "disclaimer": "ACCA USA — mustaqil o‘quv platformasi. ACCA, CIMA va FIA o‘z egalarining tovar belgilari bo‘lib, faqat identifikatsiya uchun ishlatiladi.",
+    "disclaimer": "ACCA USA — mustaqil o‘quv platformasi. ACCA va FIA o‘z egalarining tovar belgilari bo‘lib, faqat identifikatsiya uchun ishlatiladi.",
     "copyright": "© {year} ACCA USA. Barcha huquqlar himoyalangan.",
     "demoBuild": "Demo versiya — kontent va raqamlar vaqtinchalik."
   },
@@ -113,7 +112,7 @@
       "titleLine1": "Global karyeraga",
       "titleLine2": "yo‘lingiz —",
       "titleAccent": "ACCA",
-      "subtitle": "Sifatli ACCA, CIMA va FIA kurslari, video darslar, amaliy savollar va sinov imtihonlari — barchasi bir joyda.",
+      "subtitle": "Sifatli ACCA va FIA kurslari, video darslar, amaliy savollar va sinov imtihonlari — barchasi bir joyda.",
       "primary": "O‘qishni boshlash",
       "secondary": "Kurslarni ko‘rish",
       "cardTitle": "O‘z sur’atingizda o‘qing",
@@ -139,18 +138,12 @@
     },
     "platforms": {
       "title": "Malakangizni tanlang",
-      "subtitle": "Uch malaka — yagona qulay o‘quv tajribasi.",
+      "subtitle": "Ikki malaka — yagona qulay o‘quv tajribasi.",
       "acca": {
         "name": "ACCA",
         "full": "Association of Chartered Certified Accountants",
         "text": "Moliya, buxgalteriya va biznesda muvaffaqiyatli karyera uchun butun dunyoda tan olingan malaka.",
         "cta": "ACCA haqida"
-      },
-      "cima": {
-        "name": "CIMA",
-        "full": "Chartered Institute of Management Accountants",
-        "text": "O‘zgarayotgan dunyoda boshqarish va yetakchilik ko‘nikmalarini rivojlantiring.",
-        "cta": "CIMA haqida"
       },
       "fia": {
         "name": "FIA",
@@ -192,7 +185,7 @@
       "subtitle": "Imtihonga ishonch hosil qiluvchi oddiy sikl.",
       "step1": {
         "title": "Malakani tanlang",
-        "text": "ACCA, CIMA yoki FIA va fanni tanlang."
+        "text": "ACCA yoki FIA va fanni tanlang."
       },
       "step2": {
         "title": "Mavzu ketidan mavzu o‘rganing",
@@ -246,7 +239,7 @@
       "t2": {
         "quote": "Har bir testdan keyingi javob izohlari xatolarimni tez tuzatishga yordam berdi.",
         "name": "B talaba (namuna)",
-        "role": "CIMA talabasi"
+        "role": "ACCA talabasi"
       },
       "t3": {
         "quote": "Yo‘lda telefonimdan davom ettira olaman — hammasi muammosiz ishlaydi.",
@@ -382,7 +375,7 @@
     "notifications": "{count, plural, =0 {Yangi bildirishnoma yo‘q} other {# ta yangi bildirishnoma}}",
     "enroll": "Yozilish",
     "noEnrollmentsTitle": "Birinchi platformani tanlang",
-    "noEnrollmentsText": "Fanlar, mavzular va testlarni ochish uchun ACCA, CIMA yoki FIA ga yoziling. Har bir platformaning o‘z progressi bor.",
+    "noEnrollmentsText": "Fanlar, mavzular va testlarni ochish uchun ACCA yoki FIA ga yoziling. Har bir platformaning o‘z progressi bor.",
     "continueEmpty": "Hozircha hech narsa boshlanmagan. Boshlash uchun mavzuni oching.",
     "recentResults": "So‘nggi test natijalari",
     "noResults": "Test natijalari hali yo‘q.",
@@ -710,10 +703,6 @@
     "acca": {
       "title": "ACCA",
       "text": "ACCA fanlari va imtihonlari bo‘yicha savollar."
-    },
-    "cima": {
-      "title": "CIMA",
-      "text": "CIMA fanlari va imtihonlari bo‘yicha savollar."
     },
     "fia": {
       "title": "FIA",
@@ -1093,8 +1082,16 @@
     "noTopics": "Mavzular tez orada qo‘shiladi.",
     "notice": "Faqat mavzular ro‘yxati ommaga ochiq. Darslar, materiallar va testlar kirish va platformaga yozilgandan keyin ochiladi.",
     "topicsBadge": "{count} ta mavzu",
-    "dialogTitle": "Mavzu yopiq",
-    "dialogLogin": "Materiallarni o‘rganish uchun hisobingizga kiring.",
-    "dialogEnroll": "Materiallarni o‘rganish uchun {platform} ga yoziling."
+    "dialogTitle": "Materialga kirish yopiq",
+    "dialogLogin": "Bu materialni o‘rganish uchun hisobingizga kiring.",
+    "dialogEnroll": "Bu materialni o‘rganish uchun {platform} ga yoziling.",
+    "materials": "Materiallar",
+    "noMaterials": "Materiallar tez orada qo‘shiladi."
+  },
+  "allCourses": {
+    "title": "Barcha kurslar",
+    "description": "Malaka va fanni tanlang. Materiallar kirgandan keyin ochiladi.",
+    "empty": "Kurslar tez orada qo‘shiladi.",
+    "open": "{subject} ni ochish"
   }
 }

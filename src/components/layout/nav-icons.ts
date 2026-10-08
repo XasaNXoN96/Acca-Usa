@@ -1,7 +1,7 @@
 import {
   Award, BarChart3, Bell, BookOpen, ClipboardCheck, ClipboardList, CreditCard, FileText, GraduationCap,
   Landmark, Layers, LayoutDashboard, Library, ListChecks, Medal, Settings, Target, TrendingUp, User, Users,
-  Video, CircleHelp, Building2,
+  Video, CircleHelp,
   type LucideIcon,
 } from "lucide-react";
 import type { NavIconName } from "@/lib/navigation";
@@ -10,7 +10,6 @@ export const navIcons: Record<NavIconName, LucideIcon> = {
   dashboard: LayoutDashboard,
   courses: BookOpen,
   acca: Landmark,
-  cima: Building2,
   fia: GraduationCap,
   exams: ClipboardCheck,
   progress: TrendingUp,

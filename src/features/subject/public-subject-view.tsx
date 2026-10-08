@@ -24,15 +24,9 @@ export async function PublicSubjectView({ subject, access }: { subject: Subject;
   const level = platform?.levels.find((l) => l.id === subject.levelId);
   const platformName = platform?.name ?? subject.platform.toUpperCase();
   const theme = platformTheme[subject.platform];
-  const rows = topics.map((x) => {
-    const target = routes.subjectTopic(subject.slug, x.id);
-    return {
-      id: x.id,
-      order: x.order,
-      title: x.title,
-      href: access === "login_required" ? `${routes.login}?next=${encodeURIComponent(target)}` : routes.coursePlatform(subject.platform),
-    };
-  });
+  const rows = topics.map((x) => ({ id: x.id, order: x.order, title: x.title, materials: x.materials.map((m) => ({ id: m.id, title: m.title })) }));
+  // Sign in returns to THIS page; a signed-in user without access is sent to the platform enrolment page.
+  const actionHref = access === "login_required" ? `${routes.login}?next=${encodeURIComponent(routes.subject(subject.slug))}` : routes.coursePlatform(subject.platform);
 
   return (
     <div className="container-page max-w-4xl space-y-8 py-8 sm:py-12">
@@ -61,7 +55,7 @@ export async function PublicSubjectView({ subject, access }: { subject: Subject;
         {topics.length === 0 ? (
           <EmptyState title={t("noTopics")} />
         ) : (
-          <PublicTopicAccordion topics={rows} access={access} platformName={platformName} />
+          <PublicTopicAccordion topics={rows} access={access} platformName={platformName} actionHref={actionHref} />
         )}
         <Alert variant="info">{t("notice")}</Alert>
       </section>

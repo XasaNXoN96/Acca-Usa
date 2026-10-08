@@ -2,7 +2,7 @@ import { routes } from "./routes";
 import type { Permission } from "./permissions";
 
 export type NavIconName =
-  | "dashboard" | "courses" | "acca" | "cima" | "fia" | "exams" | "progress" | "ranking"
+  | "dashboard" | "courses" | "acca" | "fia" | "exams" | "progress" | "ranking"
   | "certificates" | "payments" | "notifications" | "profile" | "platforms" | "subjects"
   | "topics" | "materials" | "questions" | "tests" | "students" | "statistics" | "settings" | "overview";
 
@@ -22,7 +22,6 @@ export const studentNav: NavItem[] = [
   { labelKey: "dashboard", href: routes.dashboard, icon: "dashboard", exact: true },
   { labelKey: "courses", href: routes.courses, icon: "courses", match: ["/courses", "/subject", "/topic"] },
   { labelKey: "acca", href: routes.coursePlatform("acca"), icon: "acca" },
-  { labelKey: "cima", href: routes.coursePlatform("cima"), icon: "cima" },
   { labelKey: "fia", href: routes.coursePlatform("fia"), icon: "fia" },
   { labelKey: "exams", href: routes.exams, icon: "exams" },
   { labelKey: "progress", href: routes.progress, icon: "progress" },

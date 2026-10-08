@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         ghost: "text-foreground hover:bg-muted",
         destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
         link: "h-auto rounded-sm p-0 text-primary underline-offset-4 hover:underline",
-        cima: "bg-cima text-cima-foreground shadow-xs hover:bg-cima/90",
+        azure: "bg-azure text-azure-foreground shadow-xs hover:bg-azure/90",
         fia: "bg-fia text-fia-foreground shadow-xs hover:bg-fia/90",
       },
       size: {

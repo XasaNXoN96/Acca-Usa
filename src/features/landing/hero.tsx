@@ -25,7 +25,7 @@ export async function Hero() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href={routes.courses}>{t("secondary")}</Link>
+              <Link href={routes.allCourses}>{t("secondary")}</Link>
             </Button>
           </div>
         </div>
@@ -65,7 +65,7 @@ async function HeroVisual() {
           </div>
           <div className="rounded-2xl bg-background p-4 shadow-md">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-              <BookOpenCheck className="size-4 text-cima" /> Test
+              <BookOpenCheck className="size-4 text-azure" /> Test
             </div>
             <div className="flex items-center gap-2 text-2xl font-bold">
               8 / 10 <CheckCircle2 className="size-5 text-success" />

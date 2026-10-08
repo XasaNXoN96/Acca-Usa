@@ -44,8 +44,8 @@
   /* Platforms */
   --acca: #c8102e;
   --acca-soft: #fdeef1;
-  --cima: #1e4fc2;
-  --cima-soft: #eaf0fd;
+  --azure: #1e4fc2;
+  --azure-soft: #eaf0fd;
   --fia: #0f7b5a;
   --fia-soft: #e6f5ef;
 
@@ -64,7 +64,7 @@
 
   /* Text colour to put ON each solid brand/status colour */
   --acca-foreground: #ffffff;
-  --cima-foreground: #ffffff;
+  --azure-foreground: #ffffff;
   --fia-foreground: #ffffff;
   --success-foreground: #ffffff;
   --destructive-foreground: #ffffff;
@@ -115,9 +115,9 @@
   --acca: #ff6b81;
   --acca-soft: #3a1621;
   --acca-foreground: #2b0610;
-  --cima: #6b9bff;
-  --cima-soft: #172a52;
-  --cima-foreground: #07142e;
+  --azure: #6b9bff;
+  --azure-soft: #172a52;
+  --azure-foreground: #07142e;
   --fia: #38c79b;
   --fia-soft: #0f3328;
   --fia-foreground: #04201a;
@@ -157,7 +157,7 @@
   --color-ring: var(--ring);
   --color-surface-navy: var(--surface-navy);
   --color-acca-foreground: var(--acca-foreground);
-  --color-cima-foreground: var(--cima-foreground);
+  --color-azure-foreground: var(--azure-foreground);
   --color-fia-foreground: var(--fia-foreground);
   --color-success-foreground: var(--success-foreground);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -177,8 +177,8 @@
 
   --color-acca: var(--acca);
   --color-acca-soft: var(--acca-soft);
-  --color-cima: var(--cima);
-  --color-cima-soft: var(--cima-soft);
+  --color-azure: var(--azure);
+  --color-azure-soft: var(--azure-soft);
   --color-fia: var(--fia);
   --color-fia-soft: var(--fia-soft);
 

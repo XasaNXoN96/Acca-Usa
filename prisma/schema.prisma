@@ -124,7 +124,7 @@ model VerificationToken {
 
 model Platform {
   id        String    @id @default(cuid())
-  slug      String    @unique // acca | cima | fia
+  slug      String    @unique // acca | fia
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "ACCA USA — ACCA, CIMA and FIA learning platform",
-    "description": "Video lessons, practice questions and mock exams for ACCA, CIMA and FIA students — all in one place.",
+    "title": "ACCA USA — ACCA and FIA learning platform",
+    "description": "Video lessons, practice questions and mock exams for ACCA and FIA students — all in one place.",
     "titleTemplate": "%s | ACCA USA"
   },
   "common": {
@@ -63,7 +63,6 @@
   },
   "nav": {
     "acca": "ACCA",
-    "cima": "CIMA",
     "fia": "FIA",
     "books": "Books",
     "forums": "Forums",
@@ -100,11 +99,11 @@
     "promoText": "Create a free account to explore the syllabus structure and demo lessons."
   },
   "footer": {
-    "tagline": "Premium finance education for ACCA, CIMA and FIA students.",
+    "tagline": "Premium finance education for ACCA and FIA students.",
     "qualifications": "Qualifications",
     "learn": "Learn",
     "account": "Account",
-    "disclaimer": "ACCA USA is an independent learning platform. ACCA, CIMA and FIA are trademarks of their respective owners and are used for identification only.",
+    "disclaimer": "ACCA USA is an independent learning platform. ACCA and FIA are trademarks of their respective owners and are used for identification only.",
     "copyright": "© {year} ACCA USA. All rights reserved.",
     "demoBuild": "Demo build — content and figures are placeholders."
   },
@@ -113,7 +112,7 @@
       "titleLine1": "Your Path to a",
       "titleLine2": "Global Career with",
       "titleAccent": "ACCA",
-      "subtitle": "High-quality ACCA, CIMA and FIA courses, video lessons, practice questions and mock exams — all in one place.",
+      "subtitle": "High-quality ACCA and FIA courses, video lessons, practice questions and mock exams — all in one place.",
       "primary": "Start learning",
       "secondary": "View courses",
       "cardTitle": "Learn at your own pace",
@@ -139,18 +138,12 @@
     },
     "platforms": {
       "title": "Choose your qualification",
-      "subtitle": "Three qualifications, one consistent learning experience.",
+      "subtitle": "Two qualifications, one consistent learning experience.",
       "acca": {
         "name": "ACCA",
         "full": "Association of Chartered Certified Accountants",
         "text": "A globally recognised qualification for a successful career in finance, accounting and business.",
         "cta": "Explore ACCA"
-      },
-      "cima": {
-        "name": "CIMA",
-        "full": "Chartered Institute of Management Accountants",
-        "text": "Develop the skills to manage and lead in a changing world.",
-        "cta": "Explore CIMA"
       },
       "fia": {
         "name": "FIA",
@@ -192,7 +185,7 @@
       "subtitle": "A simple loop that builds exam confidence.",
       "step1": {
         "title": "Choose a qualification",
-        "text": "Pick ACCA, CIMA or FIA and your subject."
+        "text": "Pick ACCA or FIA and your subject."
       },
       "step2": {
         "title": "Learn topic by topic",
@@ -246,7 +239,7 @@
       "t2": {
         "quote": "Explained answers after each test helped me fix my mistakes quickly.",
         "name": "Sample Student B",
-        "role": "CIMA student"
+        "role": "ACCA student"
       },
       "t3": {
         "quote": "I can continue on my phone during the commute — it just works.",
@@ -382,7 +375,7 @@
     "notifications": "{count, plural, =0 {No new notifications} one {# new notification} other {# new notifications}}",
     "enroll": "Enroll",
     "noEnrollmentsTitle": "Choose your first platform",
-    "noEnrollmentsText": "Enroll in ACCA, CIMA or FIA to unlock subjects, topics and tests. Each platform has its own progress.",
+    "noEnrollmentsText": "Enroll in ACCA or FIA to unlock subjects, topics and tests. Each platform has its own progress.",
     "continueEmpty": "Nothing in progress yet. Open a topic to start.",
     "recentResults": "Recent test results",
     "noResults": "No test results yet.",
@@ -710,10 +703,6 @@
     "acca": {
       "title": "ACCA",
       "text": "Questions about ACCA subjects and exams."
-    },
-    "cima": {
-      "title": "CIMA",
-      "text": "Questions about CIMA subjects and exams."
     },
     "fia": {
       "title": "FIA",
@@ -1093,8 +1082,16 @@
     "noTopics": "Topics will be added soon.",
     "notice": "Only the topic list is public. Lessons, materials and tests are available after you sign in and enroll.",
     "topicsBadge": "{count, plural, one {# Topic} other {# Topics}}",
-    "dialogTitle": "This topic is locked",
-    "dialogLogin": "To study the materials, sign in to your account.",
-    "dialogEnroll": "To study the materials, enroll in {platform}."
+    "dialogTitle": "Access to this material is locked",
+    "dialogLogin": "To study this material, sign in to your account.",
+    "dialogEnroll": "To study this material, enroll in {platform}.",
+    "materials": "Materials",
+    "noMaterials": "Materials will be added soon."
+  },
+  "allCourses": {
+    "title": "All courses",
+    "description": "Choose your qualification and subject. Materials open after you sign in.",
+    "empty": "Courses will be added soon.",
+    "open": "Open {subject}"
   }
 }

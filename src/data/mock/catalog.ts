@@ -24,12 +24,6 @@ export const platforms: Platform[] = [
     ],
   },
   {
-    slug: "cima",
-    name: "CIMA",
-    fullName: "Chartered Institute of Management Accountants",
-    levels: [lvl("cima", 1, "Operational"), lvl("cima", 2, "Management"), lvl("cima", 3, "Strategic")],
-  },
-  {
     slug: "fia",
     name: "FIA",
     fullName: "Foundations in Accountancy",
@@ -55,15 +49,6 @@ const seeds: SubjectSeed[] = [
   ["apm", "APM", "Advanced Performance Management", "acca", 3, 4, 0],
   ["atx", "ATX", "Advanced Taxation", "acca", 3, 4, 0],
   ["aaa", "AAA", "Advanced Audit and Assurance", "acca", 3, 4, 0],
-  ["cima-e1", "E1", "Managing Finance in a Digital World", "cima", 1, 4, 0],
-  ["cima-p1", "P1", "Management Accounting", "cima", 1, 4, 0],
-  ["cima-f1", "F1", "Financial Reporting", "cima", 1, 4, 0],
-  ["cima-e2", "E2", "Managing Performance", "cima", 2, 4, 0],
-  ["cima-p2", "P2", "Advanced Management Accounting", "cima", 2, 4, 0],
-  ["cima-f2", "F2", "Advanced Financial Reporting", "cima", 2, 4, 0],
-  ["cima-e3", "E3", "Strategic Management", "cima", 3, 4, 0],
-  ["cima-p3", "P3", "Risk Management", "cima", 3, 4, 0],
-  ["cima-f3", "F3", "Financial Strategy", "cima", 3, 4, 0],
   ["fab", "FAB", "Accountant in Business", "fia", 1, 4, 0],
   ["fma", "FMA", "Management Accounting", "fia", 1, 4, 0],
   ["ffa", "FFA", "Financial Accounting", "fia", 1, 4, 0],
@@ -146,7 +131,27 @@ export const topicsBySubject: Record<string, Topic[]> = Object.fromEntries(
 export const allTopics: Topic[] = Object.values(topicsBySubject).flat();
 
 /** Seed notes only — real files are uploaded through the demo storage provider. */
+const seedNotes = (t: Topic, suffix: string, title: string, body: string): Material => ({
+  id: `${t.id}-${suffix}`,
+  subjectSlug: t.subjectSlug,
+  topicId: t.id,
+  kind: "notes",
+  title,
+  meta: "Notes",
+  body,
+  createdAt: "2026-01-10T10:00:00.000Z",
+});
+
+/** Every topic outside MA gets two short seed notes so the public outline shows materials everywhere. */
+const otherSubjectMaterials: Material[] = allTopics
+  .filter((t) => t.subjectSlug !== "ma")
+  .flatMap((t) => [
+    seedNotes(t, "notes", `${t.title} — study notes`, `${t.description}\n\n${t.keyPoints.map((k) => `• ${k}`).join("\n")}`),
+    seedNotes(t, "summary", `${t.title} — key points summary`, t.keyPoints.map((k) => `• ${k}`).join("\n")),
+  ]);
+
 export const materials: Material[] = [
+  ...otherSubjectMaterials,
   ...maTopics.map<Material>((t) => ({
     id: `${t.id}-notes`,
     subjectSlug: "ma",

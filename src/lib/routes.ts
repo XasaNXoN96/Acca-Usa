@@ -17,6 +17,8 @@ export const routes = {
 
   dashboard: "/dashboard",
   courses: "/courses",
+  /** Public catalogue of every subject (no materials, no login). */
+  allCourses: "/all-courses",
   coursePlatform: (slug: PlatformSlug) => `/platform/${slug}`,
   subject: (slug: string) => `/subject/${encodeURIComponent(slug)}`,
   subjectTab: (slug: string, tab: "overview" | "topics" | "tests" | "materials" | "progress") =>

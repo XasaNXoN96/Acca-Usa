@@ -190,7 +190,7 @@ function MegaPanel({ platform }: { platform: MegaPlatform }) {
         <section aria-label={t("mega.resources")} className="hidden xl:block">
           <h3 className="type-eyebrow mb-3 text-muted-foreground">{t("mega.resources")}</h3>
           <ul className="space-y-0.5 text-sm">
-            <ResourceLink href={routes.coursePlatform(platform.slug)} icon={<BookOpen aria-hidden />}>
+            <ResourceLink href={routes.allCourses} icon={<BookOpen aria-hidden />}>
               {t("mega.allCourses", { platform: platform.name })}
             </ResourceLink>
             <ResourceLink href={routes.exams} icon={<ClipboardList aria-hidden />}>

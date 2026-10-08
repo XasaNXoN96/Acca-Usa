@@ -18,7 +18,6 @@ const signups = [18, 26, 31, 29, 44, 52];
 const months = [0, 1, 2, 3, 4, 5].map((m) => new Date(Date.UTC(2026, 4 + m, 1)));
 const completion = [
   { slug: "acca", value: 62 },
-  { slug: "cima", value: 41 },
   { slug: "fia", value: 18 },
 ] as const;
 

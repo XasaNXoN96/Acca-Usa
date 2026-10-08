@@ -118,11 +118,13 @@ export interface PublicTopic {
   /** 1-based position among the subject's visible topics (recomputed on every read) */
   order: number;
   title: string;
+  /** Titles only (id, title, kind) — never file ids, bodies, URLs or sizes. */
+  materials: { id: string; title: string; kind: MaterialKind }[];
 }
 
 export interface TopicService {
   /**
-   * Public course outline: titles and positions ONLY — no descriptions, materials, tests or answers.
+   * Public course outline: topic titles, positions and material TITLES only — no descriptions, files, bodies, tests or answers.
    * Safe to render for anonymous visitors. Reflects admin create / edit / archive immediately.
    */
   listPublic(subjectSlug: string): Promise<PublicTopic[]>;

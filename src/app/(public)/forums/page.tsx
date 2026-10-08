@@ -13,7 +13,6 @@ export async function generateMetadata(): Promise<Metadata> {
 const categories = [
   { key: "general", badge: "navy" },
   { key: "acca", badge: "acca" },
-  { key: "cima", badge: "cima" },
   { key: "fia", badge: "fia" },
   { key: "tips", badge: "warning" },
 ] as const;

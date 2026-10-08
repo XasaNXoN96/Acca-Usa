@@ -6,10 +6,10 @@ export async function FeaturesSection() {
   const t = await getTranslations("landing.features");
   const items = [
     { key: "video", icon: Video, tone: "bg-primary-soft text-primary" },
-    { key: "notes", icon: FileText, tone: "bg-cima-soft text-cima" },
+    { key: "notes", icon: FileText, tone: "bg-azure-soft text-azure" },
     { key: "tests", icon: ListChecks, tone: "bg-fia-soft text-fia" },
     { key: "mocks", icon: ClipboardCheck, tone: "bg-primary-soft text-primary" },
-    { key: "progress", icon: BarChart3, tone: "bg-cima-soft text-cima" },
+    { key: "progress", icon: BarChart3, tone: "bg-azure-soft text-azure" },
     { key: "certificates", icon: Award, tone: "bg-fia-soft text-fia" },
   ] as const;
   return (

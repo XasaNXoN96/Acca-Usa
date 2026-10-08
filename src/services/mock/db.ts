@@ -132,7 +132,6 @@ function seed(): Db {
     tests: testRecords.map((t) => ({ ...t, published: true, createdAt: created })),
     enrollments: [
       { userId: DEMO_STUDENT_ID, platform: "acca", createdAt: hoursAgo(900) },
-      { userId: DEMO_STUDENT_ID, platform: "cima", createdAt: hoursAgo(700) },
     ],
     progress: new Map(),
     attempts: [],

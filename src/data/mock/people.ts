@@ -50,9 +50,9 @@ export const seedUsers: SeedUser[] = [
 
 /** Fictional enrolment/progress for the non-login demo students (admin lists only). */
 export const seedStudentSummary: Record<string, { platforms: PlatformSlug[]; progress: number }> = {
-  [DEMO_STUDENT_ID]: { platforms: ["acca", "cima"], progress: 54 },
+  [DEMO_STUDENT_ID]: { platforms: ["acca"], progress: 54 },
   "u-s2": { platforms: ["acca"], progress: 71 },
-  "u-s3": { platforms: ["cima"], progress: 33 },
+  "u-s3": { platforms: ["fia"], progress: 33 },
   "u-s4": { platforms: ["fia", "acca"], progress: 48 },
   "u-s5": { platforms: ["acca"], progress: 12 },
 };
@@ -71,7 +71,6 @@ export const ranking: Omit<RankingEntry, "isCurrentUser">[] = [
 export const certificates: Certificate[] = [
   { id: "c1", title: "ACCA Business and Technology (BT) — course completion", platform: "acca", status: "earned", issuedAt: "2026-06-12T00:00:00.000Z", progress: 100 },
   { id: "c2", title: "ACCA Management Accounting (MA) — course completion", platform: "acca", status: "in_progress", progress: 42 },
-  { id: "c3", title: "CIMA Operational Level — course completion", platform: "cima", status: "in_progress", progress: 18 },
 ];
 
 export const notifications: AppNotification[] = [
@@ -85,7 +84,6 @@ export const notifications: AppNotification[] = [
 
 export const payments: Payment[] = [
   { id: "p1", description: "ACCA — full access (demo)", amountCents: 14900, currency: "USD", status: "paid", createdAt: "2026-03-01T10:00:00.000Z", studentName: "Demo Student" },
-  { id: "p2", description: "CIMA — full access (demo)", amountCents: 16900, currency: "USD", status: "paid", createdAt: "2026-04-11T10:00:00.000Z", studentName: "Demo Student" },
   { id: "p3", description: "FIA — full access (demo)", amountCents: 2900, currency: "USD", status: "pending", createdAt: "2026-09-30T10:00:00.000Z", studentName: "Maria Lopez" },
   { id: "p4", description: "ACCA — full access (demo)", amountCents: 14900, currency: "USD", status: "refunded", createdAt: "2026-05-19T10:00:00.000Z", studentName: "Jasur Rahimov" },
   { id: "p5", description: "ACCA — full access (demo)", amountCents: 14900, currency: "USD", status: "failed", createdAt: "2026-08-02T10:00:00.000Z", studentName: "Daniil Sokolov" },
@@ -95,7 +93,6 @@ export const exams: Exam[] = [
   { id: "ex-ma-1", title: "ACCA MA — Mock Exam 1", platform: "acca", subjectSlug: "ma", startsAt: daysFromNow(3, 10), durationMinutes: 120, status: "scheduled" },
   { id: "ex-bt-1", title: "ACCA BT — Mock Exam 1", platform: "acca", subjectSlug: "bt", startsAt: daysFromNow(-20, 10), durationMinutes: 120, status: "completed", score: 76 },
   { id: "ex-fa-1", title: "ACCA FA — Mock Exam 1", platform: "acca", subjectSlug: "fa", startsAt: daysFromNow(10, 10), durationMinutes: 120, status: "scheduled" },
-  { id: "ex-cima-e1", title: "CIMA E1 — Mock Exam 1", platform: "cima", subjectSlug: "cima-e1", startsAt: daysFromNow(14, 12), durationMinutes: 90, status: "scheduled" },
 ];
 
 export const activitySeeds = [

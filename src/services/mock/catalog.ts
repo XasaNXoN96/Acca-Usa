@@ -207,7 +207,15 @@ export const materialService: MaterialService = {
 
 export const topicService: TopicService = {
   async listPublic(subjectSlug) {
-    return visibleTopicsOf(getDb(), subjectSlug).map((t, i) => ({ id: t.id, order: i + 1, title: t.title }));
+    const db = getDb();
+    return visibleTopicsOf(db, subjectSlug).map((t, i) => ({
+      id: t.id,
+      order: i + 1,
+      title: t.title,
+      materials: db.materials
+        .filter((m) => m.topicId === t.id && materialVisible(db, m))
+        .map((m) => ({ id: m.id, title: m.title, kind: m.kind })),
+    }));
   },
   async listForSubject(subjectSlug, userId) {
     return topicsWithStatus(getDb(), userId, subjectSlug);

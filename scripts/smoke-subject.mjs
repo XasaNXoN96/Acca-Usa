@@ -31,33 +31,43 @@ await step("NO materials, tests, answers or file URLs in the public HTML (BT and
   for (const slug of ["bt", "ma"]) {
     const html = await (await anon.request.get(`/subject/${slug}`)).text();
     // (UI strings such as "Take the topic test" legitimately ship in the message dictionary — only DATA is checked)
-    for (const leak of ["/api/files", "seed-ma-workbook", "— study notes", "sample workbook", "Cost classification — topic test", "Introduction to management accounting — quiz", "q-fixed-cost", "Factory rent stays the same", "correctOptionId", "<video", "<audio", "<iframe"]) assert(!html.includes(leak), `/subject/${slug} leaks "${leak}"`);
+    for (const leak of ["/api/files", "seed-ma-workbook", "Cost classification — topic test", "Introduction to management accounting — quiz", "q-fixed-cost", "Factory rent stays the same", "correctOptionId", "<video", "<audio", "<iframe"]) assert(!html.includes(leak), `/subject/${slug} leaks "${leak}"`);
   }
   assert((await page.locator("video,audio,iframe,img[src*='/api/files']").count()) === 0, "media element on public page");
   for (const w of ["Materials", "Tests"]) assert((await page.getByRole("link", { name: w, exact: true }).count()) === 0, `"${w}" tab visible to the public`);
 });
-await step("locked topic click opens dialog (Sign in / Cancel); Cancel closes it", async () => {
-  const t = rows(page).first().locator("button").first(); await t.click();
-  const d = page.getByRole("dialog"); await d.getByText("To study the materials, sign in to your account.").waitFor();
-  assert((await d.getByRole("link", { name: "Sign in" }).count()) === 1, "no Sign in link");
+await step("topic accordion expands/collapses and lists locked materials (titles only)", async () => {
+  const t = rows(page).first().locator("button").first();
+  assert((await t.getAttribute("aria-expanded")) === "false", "should start collapsed");
+  await t.click(); await page.waitForTimeout(350); assert((await t.getAttribute("aria-expanded")) === "true", "did not expand");
+  const panel = page.locator("[role=region][data-state=open]").first();
+  const mats = panel.locator("[data-material-row]"); assert((await mats.count()) >= 2, "expected >= 2 materials under the topic");
+  assert((await panel.getByRole("link").count()) === 0, "panel must not contain direct links");
+  await t.click(); await page.waitForTimeout(350); assert((await t.getAttribute("aria-expanded")) === "false", "did not collapse");
+  await t.focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(300); assert((await t.getAttribute("aria-expanded")) === "true", "Enter did not expand");
+});
+await step("locked material click → modal (Sign in / Cancel); Cancel closes it", async () => {
+  const m = page.locator("[role=region][data-state=open] [data-material-row] button").first(); await m.click();
+  const d = page.getByRole("dialog"); await d.getByText("Access to this material is locked").waitFor();
+  await d.getByText("To study this material, sign in to your account.").waitFor();
   firstTopicHref = await d.getByRole("link", { name: "Sign in" }).getAttribute("href");
   await d.getByRole("button", { name: "Cancel" }).click(); await d.waitFor({ state: "detached" });
-  assert(page.url().includes("/subject/bt"), "Cancel navigated away");
+  assert(new URL(page.url()).pathname === "/subject/bt", "Cancel navigated away");
 });
-await step("Sign in in the dialog → /login?next=<topic url>", async () => {
-  assert(/^\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/.test(firstTopicHref), `href ${firstTopicHref}`);
-  await rows(page).first().locator("button").first().click();
+await step("Sign in in the modal → /login?next=<current page>", async () => {
+  assert(firstTopicHref === "/login?next=%2Fsubject%2Fbt", `href ${firstTopicHref}`);
+  await page.locator("[role=region][data-state=open] [data-material-row] button").first().click();
   await page.getByRole("dialog").getByRole("link", { name: "Sign in" }).click();
-  await page.waitForURL(/\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/);
+  await page.waitForURL(/\/login\?next=%2Fsubject%2Fbt$/);
 });
 await step("anonymous direct topic URL and legacy /topic/<id> also go to login with next", async () => {
-  const topicPath = decodeURIComponent(new URL(page.url()).searchParams.get("next"));
+  const topicPath = "/subject/bt/topic/bt-business-environment";
   const c = await ctx(); const p = await c.newPage();
   await p.goto(topicPath); await p.waitForURL(/\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/);
   await p.goto("/topic/bt-business-environment"); await p.waitForURL(/\/login\?next=%2Ftopic%2F/); await c.close();
 });
 let target = "";
-await step("Demo Student login returns to the chosen topic (not the dashboard)", async () => {
+await step("Demo Student login returns to the page the user came from (not the dashboard)", async () => {
   target = decodeURIComponent(new URL(page.url()).searchParams.get("next"));
   await page.getByRole("button", { name: "Student", exact: true }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -94,8 +104,8 @@ await step("admin archives it → back to N and numbering is contiguous", async 
   const nums = await rows(page).locator("button span[aria-hidden]").evaluateAll((els) => els.map((e) => e.textContent).filter((x) => /^\d\d$/.test(x ?? "")));
   assert(nums.every((x, i) => Number(x) === i + 1), `numbering not contiguous: ${nums}`);
 });
-await step("same behaviour for other subjects/platforms (MA, CIMA E1, FIA FAB)", async () => {
-  for (const slug of ["ma", "fa", "lw", "cima-e1", "cima-f3", "fab", "ffa"]) {
+await step("same behaviour for other subjects/platforms (MA, FA, LW, FIA FAB)", async () => {
+  for (const slug of ["ma", "fa", "lw", "sbl", "fab", "ffa"]) {
     await page.goto(`/subject/${slug}`); await page.getByRole("heading", { name: "Course Topics" }).waitFor();
     const n = await rows(page).count(); assert(n >= 1 && (await countBadge(page)) === n, `${slug}: count mismatch`);
     assert((await page.getByText("Locked", { exact: true }).count()) >= n, `${slug}: not locked`);
@@ -108,8 +118,9 @@ await step("signed-in user WITHOUT access sees locked outline with an Enroll CTA
   await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard/);
   await p.goto("/subject/bt"); await p.getByRole("heading", { name: "Course Topics" }).waitFor();
   await rows(p).first().locator("button").first().click();
-  await p.getByRole("dialog").getByText("To study the materials, enroll in ACCA.").waitFor();
-  await p.getByRole("dialog").getByRole("link").first().click(); await p.waitForURL(/\/platform\/acca/);
+  await p.locator("[data-material-row] button").first().click();
+  await p.getByRole("dialog").getByText("To study this material, enroll in ACCA.").waitFor();
+  await p.getByRole("dialog").getByRole("link", { name: "Enroll in ACCA" }).click(); await p.waitForURL(/\/platform\/acca/);
   await p.goto("/subject/bt/topic/bt-business-environment"); await p.waitForURL(/\/platform\/acca/); await c.close();
 });
 await step("register keeps ?next (new account returns to the chosen topic route)", async () => {
@@ -130,7 +141,8 @@ await step("responsive: public subject page + open accordion at 360/390/768/1024
     const t = rows(p).nth(1).locator("button").first();
     const box = await t.boundingBox(); assert(box.height >= 44, `${w}: row too small (${box.height})`);
     await t.click(); await p.waitForTimeout(350);
-    assert((await over()) <= 0, `${w}: overflow with dialog open`);
+    assert((await over()) <= 0, `${w}: overflow with item open`);
+    await p.locator("[data-material-row] button").first().click();
     const vis = await p.getByRole("dialog").getByRole("link").first().boundingBox(); assert(vis && vis.x >= 0 && vis.x + vis.width <= w, `${w}: CTA outside viewport`);
     await c.close();
   }

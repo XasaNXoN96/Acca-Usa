@@ -1,6 +1,6 @@
 # ACCA USA
 
-Learning platform for ACCA, CIMA and FIA students. This repository contains the **foundation and full UI**:
+Learning platform for ACCA and FIA students. This repository contains the **foundation and full UI**:
 design system, i18n (EN/RU/UZ), public site, student area, admin area, and the service/Prisma architecture the backend block will plug into.
 
 > Status: **P0 basic MVP in demo mode.** Real authentication (register / login / logout / forgot + reset password, roles, protected routes),
@@ -41,7 +41,7 @@ PROJECT_RULES.md  binding technical rules
 ```
 
 ## Routes
-Public: `/`, `/acca`, `/cima`, `/fia`, `/books`, `/forums`, `/search`, `/login`, `/register`
+Public: `/`, `/all-courses`, `/acca`, `/fia`, `/books`, `/forums`, `/search`, `/login`, `/register`
 Student: `/dashboard`, `/courses`, `/platform/[platform]`, `/subject/[subject]`, `/topic/[topic]`, `/test/[test]`, `/test/[test]/result`, `/exams`, `/progress`, `/ranking`, `/certificates`, `/payments`, `/notifications`, `/profile`
 Admin: `/admin` and `/admin/{platforms,subjects,topics,materials,question-bank,tests,exams,students,payments,statistics,settings}`
 

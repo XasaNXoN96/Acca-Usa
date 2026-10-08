@@ -2,7 +2,7 @@ import type { PlatformSlug } from "@/types";
 
 /**
  * One place that maps a platform to its colour tokens.
- * ACCA = red, CIMA = blue, FIA = green — used consistently in cards, badges, progress and CTAs.
+ * ACCA = red, FIA = green — used consistently in cards, badges, progress and CTAs.
  * Literal class names are required so Tailwind can see them.
  */
 export const platformTheme = {
@@ -18,18 +18,6 @@ export const platformTheme = {
     outlineButton: "outline-primary",
     gradient: "from-acca-soft via-background to-background",
   },
-  cima: {
-    text: "text-cima",
-    soft: "bg-cima-soft",
-    solid: "bg-cima",
-    onSolid: "text-cima-foreground",
-    border: "border-cima/30",
-    badge: "cima",
-    tone: "cima",
-    button: "cima",
-    outlineButton: "outline",
-    gradient: "from-cima-soft via-background to-background",
-  },
   fia: {
     text: "text-fia",
     soft: "bg-fia-soft",
@@ -44,8 +32,8 @@ export const platformTheme = {
   },
 } as const satisfies Record<PlatformSlug, Record<string, string>>;
 
-export const platformOrder: PlatformSlug[] = ["acca", "cima", "fia"];
+export const platformOrder: PlatformSlug[] = ["acca", "fia"];
 
 export function isPlatformSlug(value: string): value is PlatformSlug {
-  return value === "acca" || value === "cima" || value === "fia";
+  return value === "acca" || value === "fia";
 }

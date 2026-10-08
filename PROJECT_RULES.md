@@ -8,7 +8,7 @@ If a rule must be broken, record why in the pull request.
 
 ## 1. Brand and content
 - The product is **ACCA USA**. No legacy or third-party product names in code, UI, mock data, metadata or docs. `npm run check:brand` enforces this.
-- ACCA, CIMA and FIA are trademarks of their owners. Use neutral lettermark tiles, never their logos. Keep the footer disclaimer.
+- ACCA and FIA are trademarks of their owners. Use neutral lettermark tiles, never their logos. Keep the footer disclaimer.
 - Any placeholder figure, testimonial, price, ranking or certificate **must be visibly labelled** (`<DemoBadge />` + a note). Never show invented numbers as real results (no fake pass rates).
 - Third-party reference sites may inspire information architecture only — never copy branding, visuals or text.
 
@@ -114,8 +114,8 @@ If a rule must be broken, record why in the pull request.
 - Mega menus: label stays a link, chevron toggles (`aria-expanded`), `Esc` closes and restores focus, focus-out closes.
 
 ## 15. Design system
-- Use semantic tokens (`bg-primary`, `text-muted-foreground`, `bg-cima-soft`) — never raw hex or arbitrary colours in components.
-- **Red = ACCA brand, primary action and errors only.** Selected/active = navy. CIMA = blue, FIA = green. Don't paint whole screens red.
+- Use semantic tokens (`bg-primary`, `text-muted-foreground`, `bg-azure-soft`) — never raw hex or arbitrary colours in components.
+- **Red = ACCA brand, primary action and errors only.** Selected/active = navy. Azure = neutral info accent, FIA = green. Don't paint whole screens red.
 - Add new UI as a reusable component in `components/ui` first; features compose them. Don't restyle primitives inside a feature.
 - Typography uses the `type-*` utilities. Radius/shadow scales are fixed in `globals.css`.
 

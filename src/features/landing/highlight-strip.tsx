@@ -6,8 +6,8 @@ export async function HighlightStrip() {
   const items = [
     { key: "tutors", icon: GraduationCap, tone: "bg-primary-soft text-primary" },
     { key: "exam", icon: NotebookPen, tone: "bg-primary-soft text-primary" },
-    { key: "anytime", icon: MonitorSmartphone, tone: "bg-cima-soft text-cima" },
-    { key: "track", icon: BarChart3, tone: "bg-cima-soft text-cima" },
+    { key: "anytime", icon: MonitorSmartphone, tone: "bg-azure-soft text-azure" },
+    { key: "track", icon: BarChart3, tone: "bg-azure-soft text-azure" },
   ] as const;
   return (
     <div className="border-t border-border bg-background">

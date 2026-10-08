@@ -24,7 +24,7 @@ export async function TestsPreview({ results, available }: { results: DashboardO
             {results.map((r) => (
               <li key={r.attemptId}>
                 <Link href={routes.testResult(r.testId, r.attemptId)} className="flex items-center gap-3 rounded-xl border border-border p-3 transition-colors hover:bg-muted/50">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-cima-soft text-cima"><ClipboardList className="size-5" aria-hidden /></span>
+                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-azure-soft text-azure"><ClipboardList className="size-5" aria-hidden /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{r.testTitle}</span>
                     <span className="type-caption block truncate text-muted-foreground">{r.subjectName} · {formatRelative(r.submittedAt, locale)}</span>

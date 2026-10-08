@@ -39,7 +39,7 @@ export const progressService: ProgressService = {
   },
   async getPlatformProgress(userId) {
     const db = getDb();
-    return { acca: platformProgress(db, userId, "acca"), cima: platformProgress(db, userId, "cima"), fia: platformProgress(db, userId, "fia") } satisfies Record<PlatformSlug, number>;
+    return { acca: platformProgress(db, userId, "acca"), fia: platformProgress(db, userId, "fia") } satisfies Record<PlatformSlug, number>;
   },
   async recentActivity(userId, limit = 6) {
     return getDb().activity.filter((a) => a.userId === userId).slice(0, limit).map((a) => ({

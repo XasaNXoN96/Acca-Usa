@@ -37,7 +37,7 @@ export default async function AdminHome() {
       <PageHeader title={t("title")} description={t("description")} actions={<DemoBadge />} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard tone="primary" icon={<Users aria-hidden />} value={students.length} label={t("students")} />
-        <StatCard tone="cima" icon={<Library aria-hidden />} value={subjects.length} label={t("subjects")} />
+        <StatCard tone="azure" icon={<Library aria-hidden />} value={subjects.length} label={t("subjects")} />
         <StatCard tone="fia" icon={<BookOpen aria-hidden />} value={topics.length} label={t("topics")} />
         <StatCard tone="warning" icon={<ClipboardList aria-hidden />} value={tests.length} label={t("tests")} />
       </div>

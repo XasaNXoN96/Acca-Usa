@@ -29,7 +29,6 @@ export async function SiteFooter() {
         </div>
         {col(t("footer.qualifications"), [
           { href: routes.platform("acca"), label: t("nav.acca") },
-          { href: routes.platform("cima"), label: t("nav.cima") },
           { href: routes.platform("fia"), label: t("nav.fia") },
         ])}
         {col(t("footer.learn"), [

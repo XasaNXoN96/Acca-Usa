@@ -11,7 +11,7 @@ const indicatorVariants = cva("h-full rounded-full transition-[width] duration-3
       primary: "bg-primary",
       navy: "bg-navy",
       acca: "bg-acca",
-      cima: "bg-cima",
+      azure: "bg-azure",
       fia: "bg-fia",
       success: "bg-success",
     },

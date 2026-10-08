@@ -5,7 +5,7 @@
  */
 
 export type Role = "STUDENT" | "TEACHER" | "ADMIN";
-export type PlatformSlug = "acca" | "cima" | "fia";
+export type PlatformSlug = "acca" | "fia";
 export type Locale = "en" | "ru" | "uz";
 export type UserStatus = "active" | "suspended";
 

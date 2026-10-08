@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const tones = {
   primary: "bg-primary-soft text-primary",
-  cima: "bg-cima-soft text-cima",
+  azure: "bg-azure-soft text-azure",
   fia: "bg-fia-soft text-fia",
   warning: "bg-warning-soft text-warning",
   navy: "bg-navy-soft text-navy",

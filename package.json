@@ -2,7 +2,7 @@
   "name": "acca-usa",
   "version": "0.1.0",
   "private": true,
-  "description": "ACCA USA — online learning platform for ACCA, CIMA and FIA students.",
+  "description": "ACCA USA — online learning platform for ACCA and FIA students.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

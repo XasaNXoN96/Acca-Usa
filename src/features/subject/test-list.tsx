@@ -16,7 +16,7 @@ export async function TestList({ tests }: { tests: TestSummary[] }) {
       {tests.map((test) => (
         <li key={test.id}>
           <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-cima-soft text-cima">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-azure-soft text-azure">
               <ClipboardList className="size-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1 space-y-1">
