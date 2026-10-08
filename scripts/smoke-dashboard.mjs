@@ -44,7 +44,7 @@ await step("recent test result appears with real score; available tests list upd
   await s.goto("/dashboard"); await s.getByText("0% · Not passed").first().waitFor(); await s.getByText("Recent test results").first().waitFor();
 });
 await step("numbers are stable between loads (nothing random) and match the subject page", async () => {
-  const grab = async () => (await s.locator("[data-subject-progress]").innerText()).replace(/\s+/g, " "); await s.goto("/dashboard"); const a = await grab(); await s.goto("/dashboard"); const b = await grab(); assert(a === b, "dashboard values changed between loads");
+  const grab = async () => (await s.waitForLoadState("networkidle"), await s.locator("[data-subject-progress]").innerText()).replace(/\s+/g, " "); await s.goto("/dashboard"); const a = await grab(); await s.goto("/dashboard"); const b = await grab(); assert(a === b, "dashboard values changed between loads");
   const bt = /BT[^%]*?(\d+)%/.exec(a)?.[1]; await s.goto("/subject/bt"); await s.getByText(new RegExp(`\\b${bt}%`)).first().waitFor();
 });
 await step("mobile 360/390: continue first, no overflow, links reachable", async () => {

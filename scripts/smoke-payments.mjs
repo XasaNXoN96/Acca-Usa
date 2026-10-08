@@ -79,7 +79,7 @@ await step("students and guests cannot reach admin access management or its acti
   const g = await ctx(); assert((await g.request.get("/admin/access", { maxRedirects: 0 })).status() !== 200, "guest reached /admin/access"); await g.close();
 });
 await step("RU / UZ: checkout and access wording", async () => {
-  for (const [locale, text] of [["ru", "Платеж"], ["uz", "To'lov"]]) {
+  for (const [locale, text] of [["ru", "Платеж"], ["uz", "To‘lov"]]) {
     const c = await ctx(); const p = await c.newPage(); await demo(p, "Student"); await p.waitForURL(/dashboard$/); await c.addCookies([{ name: "NEXT_LOCALE", value: locale, url: BASE }]);
     await p.goto("/payments"); await p.getByRole("heading", { level: 1 }).waitFor(); const body = await p.locator("main").innerText();
     assert(body.includes(text) && !body.includes("Payments"), `${locale} payments page: ${body.slice(0, 120)}`);

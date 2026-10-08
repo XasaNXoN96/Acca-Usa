@@ -43,7 +43,9 @@ export function PublicTopicAccordion({
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-sm font-bold tabular-nums text-muted-foreground" aria-hidden>
               {pad(topic.order)}
             </span>
+            <span className="sr-only">: </span>
             <span className="min-w-0 flex-1 text-pretty font-semibold leading-snug">{topic.title}</span>
+            <span className="sr-only">. </span>
             <span className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground" aria-hidden>
               <Lock className="size-4" />
               <span className="hidden sm:inline">{t("locked")}</span>

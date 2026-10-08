@@ -35,7 +35,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={cn("gap-1.5 px-2.5", className)} aria-label={t("language")} disabled={pending}>
+        <Button variant="ghost" size="sm" className={cn("gap-1.5 px-2.5", className)} aria-label={`${t("language")}: ${localeLabels[locale].short}`} disabled={pending}>
           <Globe aria-hidden />
           <span>{localeLabels[locale].short}</span>
         </Button>

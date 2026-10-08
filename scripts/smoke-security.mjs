@@ -102,8 +102,9 @@ await step("18 hardened headers (CSP frame/base/form, COOP, nosniff) and control
   const h = (await gc.request.get("/login")).headers();
   assert(/frame-ancestors 'self'/.test(h["content-security-policy"] ?? "") && /base-uri 'self'/.test(h["content-security-policy"] ?? "") && /form-action 'self'/.test(h["content-security-policy"] ?? ""), `csp ${h["content-security-policy"]}`);
   assert(!/object-src/.test(h["content-security-policy"] ?? ""), "object-src would break the PDF viewer"); assert(h["cross-origin-opener-policy"] === "same-origin", "coop");
-  for (const next of ["/%09/evil.example", "/%5Cevil.example", "/\\evil.example", "/%0d%0a//evil.example", "javascript:alert(1)", "http://evil.example"]) {
-    const c = await ctx(); const p = await c.newPage(); await p.goto(`/login?next=${next}`); await p.getByRole("button", { name: "Student", exact: true }).click(); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/\/dashboard$/); assert(new URL(p.url()).host === new URL(BASE).host, `redirected off-site for next=${next}`); await c.close();
+  // Signed-in users visiting /login are redirected to a SAFE `next` (no login attempts → no rate limit involved).
+  for (const next of ["/%09/evil.example", "/%5Cevil.example", "/\\evil.example", "/%0d%0a//evil.example", "javascript:alert(1)", "http://evil.example", "//evil.example"]) {
+    await s.goto(`/login?next=${next}`); await s.waitForURL(/\/dashboard$/, { timeout: 15000 }); assert(new URL(s.url()).host === new URL(BASE).host, `redirected off-site for next=${next}`);
   }
 });
 await gc.close(); await sc.close(); await ac.close(); await browser.close();
