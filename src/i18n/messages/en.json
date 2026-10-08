@@ -638,11 +638,25 @@
   },
   "ranking": {
     "title": "Ranking",
-    "description": "Top learners by points earned.",
+    "description": "Learners ranked by test results in the selected platform or subject.",
     "rank": "Rank",
     "student": "Student",
-    "points": "Points",
-    "demoNote": "Demo ranking with fictional learners."
+    "points": "Score",
+    "tests": "Tests",
+    "progress": "Progress",
+    "yourPosition": "Your position: #{rank} of {total}",
+    "yourStats": "{points} points · {tests, plural, one {# test} other {# tests}} taken · {progress}% progress",
+    "notRanked": "You are not ranked in this selection yet — enroll in the platform to appear here.",
+    "empty": "No learners to rank yet.",
+    "emptyText": "Learners appear here once they are enrolled in the selected platform.",
+    "howItWorks": "Score = the sum of each learner’s best result (%) per test in the selection. Ties are broken by progress, then by tests taken. Other learners are shown as “First name + initial”.",
+    "filters": {
+      "title": "Ranking filters",
+      "platform": "Platform",
+      "subject": "Subject",
+      "all": "All",
+      "apply": "Apply"
+    }
   },
   "certificates": {
     "title": "Certificates",

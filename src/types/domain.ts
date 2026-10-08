@@ -303,12 +303,26 @@ export interface AdminStats {
   passFail: { passed: number; failed: number };
 }
 
+/**
+ * One row of the ranking. Deliberately has NO email / user id: other learners appear as "First L." and only the
+ * current user sees their own full name.
+ */
 export interface RankingEntry {
   rank: number;
-  userId: string;
   name: string;
+  /** Sum of the best score (%) per test taken in the selected scope. */
   points: number;
+  testsCompleted: number;
+  /** Learning progress in the selected scope (0–100). */
+  progress: number;
   isCurrentUser: boolean;
+}
+
+export interface RankingResult {
+  entries: RankingEntry[];
+  /** The current user's row, also when it is not among `entries`. */
+  me: RankingEntry | null;
+  total: number;
 }
 
 /** Student-facing certificate row: earned, revoked, or the learner's progress towards one. */

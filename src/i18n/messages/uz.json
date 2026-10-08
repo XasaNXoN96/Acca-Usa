@@ -638,11 +638,25 @@
   },
   "ranking": {
     "title": "Reyting",
-    "description": "To‘plangan ballar bo‘yicha eng yaxshi talabalar.",
+    "description": "Tanlangan platforma yoki fan bo‘yicha test natijalariga ko‘ra reytingga qo‘yilgan talabalar.",
     "rank": "O‘rin",
     "student": "Talaba",
     "points": "Ball",
-    "demoNote": "To‘qima talabalar bilan demo reyting."
+    "tests": "Testlar",
+    "progress": "Progress",
+    "yourPosition": "Sizning o‘rningiz: #{rank} / {total}",
+    "yourStats": "{points} ball · topshirilgan testlar: {tests} · progress {progress}%",
+    "notRanked": "Siz hozircha bu reytingda yo‘qsiz — ro‘yxatda ko‘rinish uchun platformaga yoziling.",
+    "empty": "Hozircha reytingga qo‘yish uchun talaba yo‘q.",
+    "emptyText": "Talabalar tanlangan platformaga yozilgandan keyin shu yerda paydo bo‘ladi.",
+    "howItWorks": "Ball = talabaning tanlovdagi har bir test bo‘yicha eng yaxshi natijalari (%) yig‘indisi. Teng bo‘lsa — progress, so‘ng topshirilgan testlar soni hisobga olinadi. Boshqa talabalar «ism + bosh harf» ko‘rinishida ko‘rsatiladi.",
+    "filters": {
+      "title": "Reyting filtrlari",
+      "platform": "Platforma",
+      "subject": "Fan",
+      "all": "Hammasi",
+      "apply": "Qo‘llash"
+    }
   },
   "certificates": {
     "title": "Sertifikatlar",

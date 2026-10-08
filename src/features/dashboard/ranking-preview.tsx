@@ -19,7 +19,7 @@ export async function RankingPreview({ entries }: { entries: RankingEntry[] }) {
         <ol className="space-y-1">
           {entries.map((e) => (
             <li
-              key={e.userId}
+              key={`${e.rank}-${e.name}`}
               aria-current={e.isCurrentUser ? "true" : undefined}
               className={cn("flex min-h-11 items-center gap-3 rounded-lg px-2 text-sm", e.isCurrentUser && "bg-navy-soft font-semibold")}
             >

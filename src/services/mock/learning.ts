@@ -1,8 +1,8 @@
 import "server-only";
 import type { CertificateService, ExamService, ProgressService, RankingService } from "../contracts";
-import type { Certificate } from "@/types";
+import type { Certificate, RankingEntry } from "@/types";
 import type { PlatformSlug } from "@/types";
-import { exams, ranking } from "@/data/mock/people";
+import { exams } from "@/data/mock/people";
 import { routes } from "@/lib/routes";
 import { getDb, nowIso, platformOfSubject, pushActivity, topicVisible, userProgress } from "./db";
 import { activeCertificate, createCertificate, issueIfEarned } from "./certs-core";
@@ -80,10 +80,62 @@ export const progressService: ProgressService = {
   },
 };
 
-/** Demo ranking: fictional learners + (for the demo student) their own row. Advanced ranking is a later block. */
+/** "Maria Lopez" → "Maria L." — other learners are never shown with a full surname. */
+const publicName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]![0]!.toUpperCase()}.` : parts[0] ?? "—";
+};
+
+/**
+ * Ranking from REAL records: active student accounts only, scored by the sum of their best test results in the
+ * selected scope (platform / subject), ties broken by learning progress, then tests taken. Competition ranking
+ * ("1, 2, 2, 4"): equal results share a rank. No invented learners.
+ */
+function computeRanking(userId: string, platform?: PlatformSlug, subjectSlug?: string): { all: RankingEntry[]; me: RankingEntry | null } {
+  const db = getDb();
+  const subjects = visibleSubjects(db).filter((s) => (!subjectSlug || s.slug === subjectSlug) && (!platform || platformOfSubject(db, s) === platform));
+  const slugs = new Set(subjects.map((s) => s.slug));
+  const platformsInScope = new Set(subjects.map((s) => platformOfSubject(db, s)));
+  const filtered = !!(platform || subjectSlug);
+  const students = db.users.filter((u) => u.role === "STUDENT" && u.status === "active" && !u.deletedAt);
+
+  const rows = students
+    .filter((u) => !filtered || [...platformsInScope].some((p) => isEnrolled(db, u.id, p)))
+    .map((u) => {
+      const best = new Map<string, number>();
+      for (const a of db.attempts) {
+        if (a.userId !== u.id || !a.result) continue;
+        const test = db.tests.find((x) => x.id === a.testId);
+        if (!test || !slugs.has(test.subjectSlug)) continue;
+        best.set(a.testId, Math.max(best.get(a.testId) ?? 0, a.result.scorePercent));
+      }
+      const enrolled = [...platformsInScope].filter((p) => isEnrolled(db, u.id, p));
+      const progress = subjectSlug
+        ? (enrolled.length ? subjectProgress(db, u.id, subjectSlug).percent : 0)
+        : enrolled.length ? Math.round(enrolled.reduce((sum, p) => sum + platformProgress(db, u.id, p), 0) / enrolled.length) : 0;
+      return { u, points: [...best.values()].reduce((x, y) => x + y, 0), testsCompleted: best.size, progress };
+    })
+    .sort((x, y) => y.points - x.points || y.progress - x.progress || y.testsCompleted - x.testsCompleted || x.u.name.localeCompare(y.u.name));
+
+  let rank = 0;
+  const all = rows.map((r, i) => {
+    const prev = rows[i - 1];
+    if (!prev || prev.points !== r.points || prev.progress !== r.progress || prev.testsCompleted !== r.testsCompleted) rank = i + 1;
+    const mine = r.u.id === userId;
+    return { rank, name: mine ? r.u.name : publicName(r.u.name), points: r.points, testsCompleted: r.testsCompleted, progress: r.progress, isCurrentUser: mine };
+  });
+  return { all, me: all.find((e) => e.isCurrentUser) ?? null };
+}
+
 export const rankingService: RankingService = {
   async top(userId, limit) {
-    return ranking.slice(0, Math.max(limit, 0)).map((r) => ({ ...r, isCurrentUser: r.userId === userId }));
+    const { all, me } = computeRanking(userId);
+    const top = all.slice(0, Math.max(limit, 0));
+    return me && !top.includes(me) ? [...top, me] : top;
+  },
+  async list({ userId, platform, subjectSlug, limit = 50 }) {
+    const { all, me } = computeRanking(userId, platform, subjectSlug);
+    return { entries: all.slice(0, limit), me, total: all.length };
   },
 };
 

@@ -1,7 +1,7 @@
 /**
  * DEMO DATA — fictional people, payments, notifications. None of this is real.
  */
-import type { AppNotification, Exam, Locale, Payment, PlatformSlug, RankingEntry, Role, UserStatus } from "@/types";
+import type { AppNotification, Exam, Locale, Payment, PlatformSlug, Role, UserStatus } from "@/types";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
 const daysFromNow = (d: number, hour = 9) => {
@@ -54,16 +54,6 @@ export const seedStudentSummary: Record<string, { platforms: PlatformSlug[]; pro
   "u-s5": { platforms: ["acca"], progress: 12 },
 };
 
-export const ranking: Omit<RankingEntry, "isCurrentUser">[] = [
-  { rank: 1, userId: "u-s2", name: "Aziza Karimova", points: 2480 },
-  { rank: 2, userId: "u-s6", name: "Omar Haddad", points: 2310 },
-  { rank: 3, userId: "u-s4", name: "Maria Lopez", points: 2195 },
-  { rank: 4, userId: "u-s7", name: "Chen Wei", points: 2040 },
-  { rank: 5, userId: "u-s3", name: "Daniil Sokolov", points: 1985 },
-  { rank: 6, userId: DEMO_STUDENT_ID, name: "Demo Student", points: 1720 },
-  { rank: 7, userId: "u-s8", name: "Sara Nilsson", points: 1655 },
-  { rank: 8, userId: "u-s5", name: "Jasur Rahimov", points: 1210 },
-];
 
 
 export const notifications: AppNotification[] = [

@@ -1,4 +1,5 @@
 import type {
+  RankingResult,
   ActivityItem,
   AdminStats,
   IssuedCertificate,
@@ -273,7 +274,9 @@ export interface PaymentService {
 }
 
 export interface RankingService {
+  /** Top learners overall (dashboard preview); always includes the current user's row. */
   top(userId: string, limit: number): Promise<RankingEntry[]>;
+  list(input: { userId: string; platform?: PlatformSlug; subjectSlug?: string; limit?: number }): Promise<RankingResult>;
 }
 
 export interface CertificateService {
