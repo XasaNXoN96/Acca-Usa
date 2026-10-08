@@ -5,6 +5,8 @@ import { DemoBadge } from "@/components/ui/demo-badge";
 import { ErrorState } from "@/components/ui/states";
 import { SettingsForm } from "@/features/admin/settings-form";
 import { can } from "@/lib/permissions";
+import { isDemoMode } from "@/lib/app-mode";
+import { Alert } from "@/components/ui/alert";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +21,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} actions={<DemoBadge />} />
-      <SettingsForm />
+      {isDemoMode ? <SettingsForm /> : <Alert variant="info"><div><p className="font-semibold">{t("liveTitle")}</p><p>{t("liveText")}</p></div></Alert>}
     </>
   );
 }

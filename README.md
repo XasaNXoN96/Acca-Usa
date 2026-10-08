@@ -3,12 +3,13 @@
 Learning platform for ACCA and FIA students. This repository contains the **foundation and full UI**:
 design system, i18n (EN/RU/UZ), public site, student area, admin area, and the service/Prisma architecture the backend block will plug into.
 
-> Status: **P0 basic MVP in demo mode.** Real authentication (register / login / logout / forgot + reset password, roles, protected routes),
-> a working student learning flow, admin content management, server-side tests and a storage abstraction with a demo provider.
-> Data lives in an in-memory demo store (resets on restart). PostgreSQL, production storage and payments are the next block — see `docs/DEMO_MODE.md`.
+> Status: **production-ready architecture, two modes.** *Demo* (default) runs standalone on fictional data. *Production* runs on
+> PostgreSQL + private S3-compatible storage + SMTP + Stripe Checkout and refuses to start with a missing or unsafe configuration.
+> Same UI and contracts in both. What is verified, and what is verified only against local stand-ins (S3, SMTP, Stripe), is spelled out in
+> `docs/PRODUCTION_ARCHITECTURE.md`, `docs/DEPLOYMENT_MODES.md` and `docs/SECURITY_AUDIT.md`.
 
 ## Stack
-Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · shadcn/ui-style components (Radix) · Lucide · next-intl · React Hook Form + Zod · Prisma + PostgreSQL (schema only) · Auth.js (config prepared).
+Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · shadcn/ui-style components (Radix) · Lucide · next-intl · React Hook Form + Zod · Prisma + PostgreSQL · own signed-cookie session layer (scrypt, no Auth.js) · pdf-lib (certificate PDFs) · nodemailer (SMTP) · Stripe Checkout over REST.
 
 ## Getting started
 ```bash
@@ -21,6 +22,14 @@ BASE_URL=http://localhost:3100 CHROMIUM=/path/to/chrome npm run smoke   # 47-ste
 ```
 No configuration is required: `NEXT_PUBLIC_APP_MODE=demo` is the default. Demo accounts are listed on the login page and in `docs/DEMO_MODE.md`.
 
+Run the demo on PostgreSQL (same UI, real database):
+```bash
+export DATABASE_URL="postgresql://user:pass@localhost:5432/acca_usa?schema=public"
+npm run db:migrate && npm run db:seed        # migrations + demo data (development only)
+DATA_PROVIDER=prisma npm run dev
+```
+Production setup, required environment and the first administrator: `docs/DEPLOYMENT_MODES.md`.
+
 ## Structure
 ```
 src/
@@ -29,21 +38,23 @@ src/
     ui/           design-system primitives (Button, Card, Dialog, Tabs, DataTable, …)
     layout/       header, mega menu, shells, sidebars, bottom nav, language switcher
   features/       screen-level modules: landing, dashboard, courses, subject, topic, test, result, admin, auth…
-  services/       contracts.ts (interfaces) + mock/ (demo data provider) + storage/ (StorageProvider: demo + production placeholder)
+  services/       contracts.ts (interfaces) · domain/ (pure rules shared by providers) · mock/ (in-memory demo provider) · prisma/ (PostgreSQL provider)
+                  storage/ (demo + S3) · email/ (demo + SMTP) · payments/ (demo + Stripe, state machine) · certificates/ (PDF)
   data/mock/      DEMO data (server-only)
   lib/            routes, navigation, permissions, format, validators, theme, app-mode, auth/ (token, password, session, guards), rate-limit
   i18n/           config, request, actions, messages/{en,ru,uz}.json
-  types/          domain types, next-intl typing, Auth.js augmentation
-  auth/           Auth.js config (prepared for the backend block; the demo session layer lives in lib/auth)
-prisma/schema.prisma   PostgreSQL schema (prepared)
-docs/             design system, architecture, QA
+  types/          domain types, next-intl typing
+prisma/           schema, migrations, seed (dev / demo only), bootstrap (production structure)
+scripts/          smoke / audit suites, integration tests (scripts/integration), admin:create
+docs/             architecture, database, auth, storage, media, certificates, e-mail, payments, access, security, deployment, QA
 PROJECT_RULES.md  binding technical rules
 ```
 
 ## Routes
-Public: `/`, `/all-courses`, `/acca`, `/fia`, `/books`, `/forums`, `/search`, `/login`, `/register`
+Public: `/`, `/all-courses`, `/acca`, `/fia`, `/books`, `/forums`, `/search`, `/login`, `/register`, `/verify/certificate/[number]`
 Student: `/dashboard`, `/courses`, `/platform/[platform]`, `/subject/[subject]` (public outline for guests), `/subject/[subject]/topic/[topic]`, `/subject/[subject]/topic/[topic]/material/[material]` (material viewer), `/test/[test]`, `/test/[test]/result`, `/exams`, `/progress`, `/ranking`, `/certificates`, `/certificates/[id]`, `/payments`, `/notifications`, `/profile`
-Admin: `/admin` and `/admin/{platforms,subjects,topics,materials,question-bank,tests,exams,students,certificates,payments,statistics,notifications,settings}`
+Admin: `/admin` and `/admin/{platforms,subjects,topics,materials,question-bank,tests,exams,students,access,certificates,payments,statistics,notifications,settings}`
+API: `/api/files/[id]` (authorised file bytes), `/api/uploads` (admin), `/api/certificates/[id]/pdf`, `/api/webhooks/payments` (signed provider callbacks)
 
 Roles: `ADMIN` and `STUDENT` only. Public registration always creates a student.
 
@@ -51,12 +62,9 @@ Roles: `ADMIN` and `STUDENT` only. Public registration always creates a student.
 Guest: `/` → `/all-courses` → subject → topics → locked materials (sign-in dialog). Student: material viewer (video, PDF, text, image, audio, file) → mark completed → topic test → result + review → progress → dashboard → certificate. Admin builds the content: subject → topic → material → question bank → test builder → publish; statistics, certificates and notifications are derived from real records.
 
 ## Quality gates
-`npm run check` (lint, typecheck, i18n parity + quality, brand) · `npm run build` · `npm run smoke:all` (every smoke / audit suite against a fresh server, see docs/QA.md).
+`npm run check` (lint, typecheck, i18n parity + quality, brand) · `npm run build` · `npm run smoke:all` (every smoke / audit suite against a fresh server, see docs/QA.md) · `npm run smoke:db` (the same suites on PostgreSQL) · `npm run test:storage|media|pdf|email|payments` · `npm run build:prod-test && npm run test:production`.
 
-## Next block (backend)
-1. `prisma migrate dev`, seed catalogue.
-2. Implement `services/prisma/*` against `services/contracts.ts`; swap them in `services/index.ts`.
-3. Swap the demo session layer for Auth.js (`src/auth/config.ts`); keep `lib/auth/guards.ts` as the call-site API.
-4. `ProductionStorageProvider` (private bucket + signed URLs); payments; email for password reset; shared rate-limit store.
+## Documentation
+`docs/PRODUCTION_ARCHITECTURE.md` (start here) · `DATABASE.md` · `AUTH.md` · `STORAGE.md` · `MEDIA.md` · `CERTIFICATES.md` · `EMAIL.md` · `PAYMENTS.md` · `ACCESS_CONTROL.md` · `SECURITY_AUDIT.md` · `DEPLOYMENT_MODES.md` · `QA.md` · `DEMO_MODE.md`.
 
 Read `PROJECT_RULES.md` before contributing.

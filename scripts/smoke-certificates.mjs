@@ -8,6 +8,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
 const ctx = async (o = {}) => { const c = await browser.newContext({ baseURL: BASE, viewport: { width: 1280, height: 900 }, ...o }); await c.addCookies([{ name: "NEXT_LOCALE", value: o.locale ?? "en", url: BASE }]); return c; };
 const demo = async (p, who) => { await p.goto("/login"); await p.getByRole("button", { name: who, exact: true }).click(); await p.getByRole("button", { name: "Sign in", exact: true }).click(); };
 const TAG = String(Date.now()).slice(-5);
+let verifyHref = "";
 
 const ac = await ctx(); const a = await ac.newPage(); await demo(a, "Admin"); await a.waitForURL(/admin$/);
 const sc = await ctx(); const s = await sc.newPage(); await demo(s, "Student"); await s.waitForURL(/dashboard$/);
@@ -31,13 +32,28 @@ await step("print: only the certificate is visible in print media and a PDF can 
   assert(vis.cert === "visible" && vis.nav === "hidden", `print visibility ${JSON.stringify(vis)}`);
   const pdf = await s.pdf({ landscape: true, printBackground: true }); assert(pdf.slice(0, 5).toString() === "%PDF-" && pdf.length > 3000, "pdf output"); await s.emulateMedia({ media: "screen" });
 });
-await step("access: owner and admin only — other students 404, guests redirected, PDF route authorised (501 in demo)", async () => {
+await step("page actions: Download PDF + Print + public verification link; verification page shows minimal data only", async () => {
+  await s.goto(certUrl); await s.getByRole("link", { name: "Download PDF" }).waitFor(); await s.getByRole("button", { name: "Print / Save as PDF" }).waitFor();
+  const href = await s.getByRole("link", { name: "Public verification page" }).getAttribute("href"); assert(/^\/verify\/certificate\/AU-\d{4}-000001$/.test(href ?? ""), `verify href ${href}`);
+  verifyHref = href ?? "";
+  const g = await ctx(); const v = await g.newPage(); const res = await v.goto(href); assert(res.status() === 200, `verify status ${res.status()}`);
+  await v.locator("[data-verify-status=issued]").waitFor(); const txt = await v.locator("main").innerText();
+  assert(/Valid certificate/.test(txt) && /Demo S\./.test(txt) && /BT — Business and Technology/.test(txt) && /AU-\d{4}-000001/.test(txt), `verify content: ${txt.slice(0, 200)}`);
+  assert(!/Demo Student|@|u-demo|cert-demo|password/i.test(await v.content().then((c) => c.replace(/<script[\s\S]*?<\/script>/g, ""))), "verification page leaks private data");
+  const nf = await g.newPage(); assert((await nf.goto("/verify/certificate/AU-2026-999999")).status() === 200, "unknown number page"); await nf.getByText("No certificate with this number was found.").waitFor();
+  await nf.goto("/verify/certificate/not-a-number"); await nf.getByText("No certificate with this number was found.").waitFor();
+  await g.close();
+});
+await step("access: owner and admin only — other students 404, guests redirected, owner downloads a real server-generated PDF", async () => {
   const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register"); await o.locator("#reg-name").fill("Cert Tester"); await o.locator("#reg-email").fill(`cert.${Date.now()}@example.com`);
   await o.locator("#reg-password").fill("Cert-pass12345"); await o.locator("#reg-confirm").fill("Cert-pass12345"); await o.locator("#reg-terms").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   await o.goto(certUrl); assert(!(await o.content()).includes("AU-") || (await o.locator("[data-certificate]").count()) === 0, "another student sees the certificate");
   assert((await oc.request.get("/api/certificates/cert-demo-bt/pdf")).status() === 404, "pdf of another student's certificate");
   const g = await ctx(); assert((await g.request.get(certUrl, { maxRedirects: 0 })).status() >= 300, "guest not redirected"); assert((await g.request.get("/api/certificates/cert-demo-bt/pdf")).status() === 401, "guest pdf"); await g.close();
-  const own = await sc.request.get("/api/certificates/cert-demo-bt/pdf"); assert(own.status() === 501, `owner pdf ${own.status()}`);
+  const own = await sc.request.get("/api/certificates/cert-demo-bt/pdf"); assert(own.status() === 200, `owner pdf ${own.status()}`);
+  const ownBytes = await own.body(); assert(own.headers()["content-type"] === "application/pdf" && ownBytes.slice(0, 5).toString() === "%PDF-" && ownBytes.length > 5000, "owner pdf is a PDF");
+  assert(/attachment; filename="AU-\d{4}-000001\.pdf"/.test(own.headers()["content-disposition"] ?? ""), "pdf file name is the certificate number");
+  assert(((await (await a.request.get("/api/certificates/cert-demo-bt/pdf")).body()).slice(0, 5).toString()) === "%PDF-", "admin may download any certificate");
   await a.goto(certUrl); await a.locator("[data-certificate]").waitFor(); // admin may open any certificate
   await oc.close();
 });
@@ -53,7 +69,7 @@ await step("auto-issue: finishing every topic of a subject issues exactly one ce
   await f.goto("/courses"); await f.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await f.getByText("Enrolled").first().waitFor();
   try {
   await f.goto(`/subject/${CODE.toLowerCase()}`); await f.getByRole("link", { name: new RegExp(`Only topic ${TAG}`) }).click(); await f.getByRole("link", { name: new RegExp(`Only notes ${TAG}`) }).first().click();
-  await f.getByRole("button", { name: "Mark as completed" }).click(); await f.getByRole("button", { name: "Completed" }).waitFor();
+  await f.getByRole("button", { name: "Mark as completed" }).click(); await f.getByRole("button", { name: "Completed" }).waitFor(); await f.waitForLoadState("networkidle"); // the action finishes issuing the certificate after the optimistic state
   await f.goto("/certificates"); const card = f.locator("[data-certificate-card=earned]");
   await card.getByText(new RegExp(`${CODE} — ${SUB}`)).waitFor(); assert((await card.count()) === 1, "exactly one certificate");
   await f.goto(`/subject/${CODE.toLowerCase()}`); await f.goto(`/subject/${CODE.toLowerCase()}/topic/${await f.evaluate(() => "")}`).catch(() => {});
@@ -75,6 +91,7 @@ await step("revoke → student sees Revoked (no print, PDF route 410); restore �
   await a.goto("/admin/certificates"); await a.getByRole("button", { name: /^Revoke: AU-\d{4}-000001/ }).first().click(); await a.getByRole("dialog").getByText("Revoke this certificate?").waitFor(); await a.getByRole("dialog").getByRole("button", { name: "Revoke" }).click(); await a.getByText("Certificate revoked.").waitFor();
   await s.goto("/certificates"); await s.locator("[data-certificate-card=revoked]").waitFor(); await s.goto(certUrl); await s.getByText("This certificate has been revoked").waitFor(); assert((await s.getByRole("button", { name: "Print / Save as PDF" }).count()) === 0, "print offered for a revoked certificate");
   assert((await sc.request.get("/api/certificates/cert-demo-bt/pdf")).status() === 410, "pdf of a revoked certificate");
+  { const g = await ctx(); const v = await g.newPage(); await v.goto(verifyHref); await v.locator("[data-verify-status=revoked]").waitFor(); assert(/revoked/i.test(await v.locator("main").innerText()), "verification page shows revoked"); await g.close(); }
   await a.locator("#flt-status").selectOption({ label: "Revoked" }); await a.getByRole("button", { name: /^Restore: AU-\d{4}-000001/ }).first().click(); await a.getByText("Certificate restored.").waitFor();
   await s.goto(certUrl); await s.getByRole("button", { name: "Print / Save as PDF" }).waitFor();
 });

@@ -23,7 +23,7 @@ If a rule must be broken, record why in the pull request.
 
 ## 3. Security
 - Secrets live only in server env (`lib/env.ts`, `server-only`). Never prefix a secret with `NEXT_PUBLIC_`. Never commit `.env`.
-- **Never fake production authentication.** Until Auth.js is wired, the session is an explicit demo session (`isDemo: true`) with a visible banner. Do not add "remember me" tricks, hard-coded passwords or role switches in the browser.
+- **Never fake production authentication.** The session layer is `lib/auth` (scrypt, signed httpOnly cookie, `docs/AUTH.md`); in demo mode the session carries `isDemo: true` and a visible banner. Do not add "remember me" tricks, hard-coded passwords or role switches in the browser.
 - UI permission checks (hiding buttons) are cosmetics. Every server action / route handler must validate input with Zod **and** re-check the role (`assertCan`).
 - Validate on the server even if the form validated on the client. Whitelist fields; never spread raw input into a service call.
 - Correct answers and explanations never leave the server before a test is submitted (`PublicQuestion` has no answer field).

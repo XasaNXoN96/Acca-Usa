@@ -2,7 +2,7 @@ import "server-only";
 import type { StatsService } from "../contracts";
 import type { AdminStats, PlatformSlug } from "@/types";
 import { getDb, platformOfSubject, subjectVisible, topicVisible } from "./db";
-import { subjectProgress } from "./calc";
+import { enrollmentActive, subjectProgress } from "./calc";
 
 const DAY = 86_400_000;
 const startOf = (iso: string) => new Date(`${iso}T00:00:00.000Z`).getTime();
@@ -32,7 +32,7 @@ export const statsService: StatsService = {
     const testIds = new Set(tests.map((t) => t.id));
 
     // Students in scope: every student account; with a platform / subject filter only those enrolled in the platform(s).
-    const students = db.users.filter((u) => u.role === "STUDENT" && !u.deletedAt && (!(filter.platform || filter.subjectSlug) || db.enrollments.some((e) => e.userId === u.id && platformsInScope.has(e.platform))));
+    const students = db.users.filter((u) => u.role === "STUDENT" && !u.deletedAt && (!(filter.platform || filter.subjectSlug) || db.enrollments.some((e) => e.userId === u.id && platformsInScope.has(e.platform) && enrollmentActive(e))));
     const studentIds = new Set(students.map((u) => u.id));
 
     type Event = { userId: string; at: number; kind: "attempt" | "material" | "topic" };
@@ -45,6 +45,12 @@ export const statsService: StatsService = {
       if (!studentIds.has(userId)) continue;
       for (const [topicId, p] of map) if (topicIds.has(topicId) && inRange(p.updatedAt)) events.push({ userId, at: new Date(p.updatedAt).getTime(), kind: "topic" });
     }
+
+    const newEnrollments = db.enrollments.filter((e) => platformsInScope.has(e.platform) && studentIds.has(e.userId) && inRange(e.createdAt)).length;
+    let completedTopics = 0;
+    for (const [userId, map] of db.progress) if (studentIds.has(userId)) for (const [topicId, p] of map) if (p.percent >= 100 && topicIds.has(topicId) && inRange(p.updatedAt)) completedTopics += 1;
+    const certificates = db.certificates.filter((c) => c.status === "issued" && subjectSlugs.has(c.subjectSlug) && studentIds.has(c.userId) && inRange(c.issuedAt)).length;
+    const paid = db.payments.filter((p) => p.status === "PAID" && platformsInScope.has(p.platform) && studentIds.has(p.userId) && inRange(p.paidAt));
 
     const scores = attempts.map((a) => a.result!.scorePercent);
     const passed = attempts.filter((a) => a.result!.passed).length;
@@ -81,7 +87,7 @@ export const statsService: StatsService = {
     const subjectRows = subjects
       .map((s) => {
         const platform = platformOfSubject(db, s);
-        const enrolled = students.filter((u) => db.enrollments.some((e) => e.userId === u.id && e.platform === platform));
+        const enrolled = students.filter((u) => db.enrollments.some((e) => e.userId === u.id && e.platform === platform && enrollmentActive(e)));
         const avg = enrolled.length ? Math.round(enrolled.reduce((sum, u) => sum + subjectProgress(db, u.id, s.slug).percent, 0) / enrolled.length) : 0;
         return { subjectSlug: s.slug, code: s.code, name: s.name, platform, students: enrolled.length, avgProgress: avg };
       })
@@ -98,6 +104,7 @@ export const statsService: StatsService = {
         passRate: attempts.length ? Math.round((passed / attempts.length) * 100) : null,
         avgScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
         completedMaterials: completed.length,
+        enrollments: newEnrollments, completedTopics, certificates, payments: paid.length, revenueCents: paid.reduce((sum, p) => sum + p.amountCents, 0),
       },
       activity, activityBucket: bucket, testPerformance, subjectProgress: subjectRows,
       passFail: { passed, failed: attempts.length - passed },

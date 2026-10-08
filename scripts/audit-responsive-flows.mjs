@@ -3,7 +3,7 @@
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
-const WIDTHS = [360, 390, 412, 768, 1024, 1280, 1440];
+const WIDTHS = [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920];
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
 let problems = 0, checks = 0;
 

@@ -54,6 +54,7 @@ export const routes = {
       | "tests"
       | "exams"
       | "students"
+      | "access"
       | "certificates"
       | "payments"
       | "statistics"

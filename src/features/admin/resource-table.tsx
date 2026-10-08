@@ -72,7 +72,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
     const q = query.trim().toLowerCase();
     return rows.filter(
       (r) =>
-        (showArchived || !r.archived || filterValues.status === "archived" || filterValues.status === "revoked") &&
+        (showArchived || !r.archived || filterValues.status === "archived" || filterValues.status === "revoked" || filterValues.status === "REVOKED") &&
         (q === "" || r.search.includes(q)) &&
         filters.every((f) => !filterValues[f.name] || r.filter[f.name] === filterValues[f.name]),
     );

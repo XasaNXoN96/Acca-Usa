@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Activity, BookOpen, CheckCircle2, ClipboardCheck, FileText, GraduationCap, Library, Percent, Target, Users } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { Activity, Award, BookOpen, CheckCircle2, ClipboardCheck, CreditCard, FileText, GraduationCap, Library, Percent, Target, UserPlus, Users, Wallet } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 import { DemoBadge } from "@/components/ui/demo-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
@@ -10,6 +10,8 @@ import { StatsFilters, rangePresets } from "@/features/admin/stats/stats-filters
 import { services } from "@/services";
 import { can } from "@/lib/permissions";
 import { isPlatformSlug } from "@/lib/platform-theme";
+import { formatMoney } from "@/lib/format";
+import { isDemoMode } from "@/lib/app-mode";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 import type { StatsFilter } from "@/types";
 
@@ -49,9 +51,10 @@ function parseFilter(sp: Record<string, string | string[] | undefined>, platform
 }
 
 export default async function StatisticsPage({ searchParams }: { searchParams: Search }) {
-  const [t, s, session, sp, platforms, subjects] = await Promise.all([
+  const [t, s, locale, session, sp, platforms, subjects] = await Promise.all([
     getTranslations("admin.statistics"),
     getTranslations("states"),
+    getLocale(),
     requireSession(STAFF_ROLES),
     searchParams,
     services.platforms.list(),
@@ -66,7 +69,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
 
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} actions={<DemoBadge />} />
+      <PageHeader title={t("title")} description={isDemoMode ? t("description") : t("descriptionLive")} actions={<DemoBadge />} />
       <StatsFilters
         filter={filter}
         preset={preset}
@@ -86,6 +89,11 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
         <StatCard tone="fia" icon={<Percent aria-hidden />} value={pct(c.passRate)} label={t("cards.passRate")} />
         <StatCard tone="warning" icon={<Target aria-hidden />} value={pct(c.avgScore)} label={t("cards.avgScore")} />
         <StatCard tone="navy" icon={<CheckCircle2 aria-hidden />} value={c.completedMaterials} label={t("cards.completedMaterials")} />
+        <StatCard tone="primary" icon={<UserPlus aria-hidden />} value={c.enrollments} label={t("cards.enrollments")} />
+        <StatCard tone="fia" icon={<GraduationCap aria-hidden />} value={c.completedTopics} label={t("cards.completedTopics")} />
+        <StatCard tone="warning" icon={<Award aria-hidden />} value={c.certificates} label={t("cards.certificates")} />
+        <StatCard tone="azure" icon={<CreditCard aria-hidden />} value={c.payments} label={t("cards.payments")} />
+        <StatCard tone="navy" icon={<Wallet aria-hidden />} value={formatMoney(c.revenueCents, "USD", locale)} label={t("cards.revenue")} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

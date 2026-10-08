@@ -1,16 +1,16 @@
 # Architecture
 
 ```
-Route (server) ──► services.* (contracts) ──► mock now / Prisma next
+Route (server) ──► services.* (contracts) ──► mock (demo) | Prisma (PostgreSQL)   — chosen once, in services/index.ts
       │
       └─► feature components ──► ui components
 Client features ──► server actions (Zod-validated, permission-checked) ──► services.*
 ```
-- Services are the only data boundary. Contracts in `services/contracts.ts`; swap implementations in `services/index.ts`.
+- Services are the only data boundary. Contracts in `services/contracts.ts`; `DATA_PROVIDER` picks the implementation in `services/index.ts`. Pure rules (progress, unlocking, access) live in `services/domain` and are shared by both providers. Full picture: `docs/PRODUCTION_ARCHITECTURE.md`.
 - Test answers are scored on the server; the browser receives questions without answers. Drafts autosave through `saveDraftAction`.
-- Roles/permissions: `lib/permissions.ts`; Auth.js config prepared in `src/auth/config.ts` (no providers → nothing can sign in).
+- Roles/permissions: `lib/permissions.ts`; sessions are our own signed cookie (`lib/auth`, see `docs/AUTH.md`); Auth.js was removed.
 - i18n: cookie-based locale, messages merged over English as a safety net.
-- Mock store (`services/mock/store.ts`) is in-memory and resets on restart by design.
+- The mock store (`services/mock/db.ts`) is in-memory and resets on restart by design; it is demo-only.
 
 ## P0 additions
 - **Auth**: `lib/auth/{token,password,session,guards,redirect,secret}` + `proxy.ts`; actions in `features/auth/actions.ts`.

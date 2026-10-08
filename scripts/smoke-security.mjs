@@ -98,6 +98,14 @@ await step("17 open redirects are blocked and unsafe ?next values fall back to t
   const c2 = await ctx(); const p2 = await c2.newPage(); await p2.goto("/login?next=//evil.example"); await p2.getByRole("button", { name: "Student", exact: true }).click(); await p2.getByRole("button", { name: "Sign in", exact: true }).click(); await p2.waitForURL(/dashboard$/); assert(new URL(p2.url()).origin === BASE, "protocol-relative redirect");
   const h = (await gc.request.get("/")).headers(); assert(h["x-content-type-options"] === "nosniff" && h["x-frame-options"] && h["referrer-policy"] && !h["x-powered-by"], "security headers"); await c.close(); await c2.close();
 });
+await step("18 hardened headers (CSP frame/base/form, COOP, nosniff) and control-character redirect tricks (/\\t/host, /\\\\host) are neutralised", async () => {
+  const h = (await gc.request.get("/login")).headers();
+  assert(/frame-ancestors 'self'/.test(h["content-security-policy"] ?? "") && /base-uri 'self'/.test(h["content-security-policy"] ?? "") && /form-action 'self'/.test(h["content-security-policy"] ?? ""), `csp ${h["content-security-policy"]}`);
+  assert(!/object-src/.test(h["content-security-policy"] ?? ""), "object-src would break the PDF viewer"); assert(h["cross-origin-opener-policy"] === "same-origin", "coop");
+  for (const next of ["/%09/evil.example", "/%5Cevil.example", "/\\evil.example", "/%0d%0a//evil.example", "javascript:alert(1)", "http://evil.example"]) {
+    const c = await ctx(); const p = await c.newPage(); await p.goto(`/login?next=${next}`); await p.getByRole("button", { name: "Student", exact: true }).click(); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/\/dashboard$/); assert(new URL(p.url()).host === new URL(BASE).host, `redirected off-site for next=${next}`); await c.close();
+  }
+});
 await gc.close(); await sc.close(); await ac.close(); await browser.close();
 const failed = results.filter((r) => !r[1]);
 console.log(`\n${results.length - failed.length}/${results.length} steps passed`); process.exit(failed.length ? 1 : 0);

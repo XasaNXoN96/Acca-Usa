@@ -2,6 +2,7 @@ import { json, sameOrigin } from "@/lib/api-guards";
 import { sessionOrNull, STAFF_ROLES } from "@/lib/auth/guards";
 import { rateLimit } from "@/lib/rate-limit";
 import { getStorage } from "@/services/storage";
+import { readMediaInfo } from "@/services/storage/media-info";
 import { uploadKinds, uploadRules, validateUpload, type UploadKind } from "@/services/storage/validation";
 
 export const runtime = "nodejs";
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   const session = await sessionOrNull(STAFF_ROLES);
   if (!session) return json({ ok: false, code: "FORBIDDEN" }, 403);
 
-  const rl = rateLimit(`upload:${session.user.id}`, 60, 60 * 60_000);
+  const rl = await rateLimit(`upload:${session.user.id}`, 60, 60 * 60_000);
   if (!rl.ok) return json({ ok: false, code: "RATE_LIMITED" }, 429);
 
   const declared = Number(req.headers.get("content-length") ?? 0);
@@ -37,6 +38,8 @@ export async function POST(req: Request) {
   const check = await validateUpload(kind as UploadKind, file);
   if (!check.ok) return json({ ok: false, code: check.code, max: uploadRules[kind as UploadKind].maxBytes, types: uploadRules[kind as UploadKind].exts }, check.code === "SIZE" ? 413 : 422);
 
-  const stored = await getStorage().put({ ownerId: session.user.id, file, mime: check.mime });
-  return json({ ok: true, file: { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size } });
+  // Duration of video / audio, read from the container header (best effort; unknown stays unknown).
+  const media = kind === "video" || kind === "audio" ? await readMediaInfo(file, check.ext) : null;
+  const stored = await getStorage().put({ ownerId: session.user.id, file, mime: check.mime, durationSeconds: media?.durationSeconds });
+  return json({ ok: true, file: { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size, durationSeconds: stored.durationSeconds } });
 }

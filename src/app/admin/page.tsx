@@ -9,6 +9,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { navIcons } from "@/components/layout/nav-icons";
 import { services } from "@/services";
 import { adminNav } from "@/lib/navigation";
+import { isDemoMode } from "@/lib/app-mode";
 import { can } from "@/lib/permissions";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 
@@ -29,12 +30,12 @@ export default async function AdminHome() {
   ]);
   const titles: Record<string, string> = {
     platforms: r("platforms.title"), subjects: r("subjects.title"), topics: r("topics.title"), materials: r("materials.title"),
-    "question-bank": r("question-bank.title"), tests: r("tests.title"), exams: r("exams.title"), students: r("students.title"), certificates: r("certificates.title"),
+    "question-bank": r("question-bank.title"), tests: r("tests.title"), exams: r("exams.title"), students: r("students.title"), access: r("access.title"), certificates: r("certificates.title"),
     payments: r("payments.title"), statistics: ts("statistics.title"), settings: ts("settings.title"),
   };
   return (
     <>
-      <PageHeader title={t("title")} description={t("description")} actions={<DemoBadge />} />
+      <PageHeader title={t("title")} description={isDemoMode ? t("description") : t("descriptionLive")} actions={<DemoBadge />} />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard tone="primary" icon={<Users aria-hidden />} value={students.length} label={t("students")} />
         <StatCard tone="azure" icon={<Library aria-hidden />} value={subjects.length} label={t("subjects")} />

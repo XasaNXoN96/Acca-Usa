@@ -1,6 +1,7 @@
 import { Award } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
+import { isDemoMode } from "@/lib/app-mode";
 import type { IssuedCertificate } from "@/types";
 
 /**
@@ -47,7 +48,7 @@ export async function CertificateDocument({ cert, printId = false }: { cert: Iss
           <div className="mt-8 flex flex-col items-center gap-1 border-t paper-line pt-4 text-xs paper-muted">
             <p className="font-semibold">{t("signature")}</p>
             <p className="max-w-2xl text-pretty">{t("disclaimer")}</p>
-            <p>{t("demo")}</p>
+            {isDemoMode ? <p>{t("demo")}</p> : null}
           </div>
 
           {revoked ? (

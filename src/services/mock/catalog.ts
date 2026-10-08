@@ -5,12 +5,13 @@ import type {
 import type { Material, MaterialKind, Platform, PlatformSlug, Subject } from "@/types";
 import { routes } from "@/lib/routes";
 import { getStorage } from "../storage";
+import { formatDuration } from "../storage/media-info";
 import { uploadKindFor, uploadRules } from "../storage/validation";
 import {
-  getDb, newId, notifyEnrolled, nowIso, platformOfSubject, pushActivity, slugify, subjectVisible, topicVisible,
-  type Db, type MaterialRec, type SubjectRec,
+  enrollmentActive, getDb, newId, notifyEnrolled, nowIso, platformOfSubject, pushActivity, pushNotification, slugify, subjectVisible, topicVisible,
+  type Db, type EnrollmentRec, type MaterialRec, type SubjectRec,
 } from "./db";
-import { platformProgress, subjectProgress, topicsWithStatus, visibleSubjects, visibleTopicsOf } from "./calc";
+import { isEnrolled, platformProgress, subjectProgress, topicsWithStatus, visibleSubjects, visibleTopicsOf } from "./calc";
 
 /* ---------------- platforms ---------------- */
 
@@ -18,7 +19,7 @@ function toPlatform(db: Db, slug: PlatformSlug): Platform | null {
   const p = db.platforms.find((x) => x.slug === slug);
   if (!p) return null;
   return {
-    slug: p.slug, name: p.name, fullName: p.fullName, archived: !!p.deletedAt,
+    slug: p.slug, name: p.name, fullName: p.fullName, priceCents: p.priceCents, archived: !!p.deletedAt,
     levels: db.levels.filter((l) => l.platform === slug).sort((a, b) => a.order - b.order),
   };
 }
@@ -42,6 +43,7 @@ export const platformService: PlatformService = {
     if (!p) return { ok: false, code: "NOT_FOUND" };
     p.name = input.name.trim();
     p.fullName = input.fullName.trim();
+    p.priceCents = input.priceCents;
     return { ok: true, data: undefined };
   },
   async setArchived(slug, archived) {
@@ -85,6 +87,7 @@ export const subjectService: SubjectService = {
   async create(input) {
     const db = getDb();
     if (!db.levels.some((l) => l.id === input.levelId)) return { ok: false, code: "NOT_FOUND", field: "level" };
+    if (db.subjects.some((s) => !s.deletedAt && s.levelId === input.levelId && s.code.toLowerCase() === input.code.trim().toLowerCase())) return { ok: false, code: "DUPLICATE", field: "code" };
     let slug = slugify(input.code);
     for (let n = 2; db.subjects.some((s) => s.slug === slug); n++) slug = `${slugify(input.code)}-${n}`;
     const rec: SubjectRec = { slug, code: input.code.trim(), name: input.name.trim(), levelId: input.levelId, createdAt: nowIso() };
@@ -96,6 +99,7 @@ export const subjectService: SubjectService = {
     const s = db.subjects.find((x) => x.slug === slug);
     if (!s) return { ok: false, code: "NOT_FOUND" };
     if (!db.levels.some((l) => l.id === input.levelId)) return { ok: false, code: "NOT_FOUND", field: "level" };
+    if (db.subjects.some((x) => x.slug !== slug && !x.deletedAt && x.levelId === input.levelId && x.code.toLowerCase() === input.code.trim().toLowerCase())) return { ok: false, code: "DUPLICATE", field: "code" };
     s.code = input.code.trim();
     s.name = input.name.trim();
     s.levelId = input.levelId;
@@ -118,7 +122,7 @@ async function toMaterial(r: MaterialRec): Promise<Material> {
   if (r.fileId) {
     const f = await getStorage().stat(r.fileId);
     if (f) {
-      meta = `${formatSize(f.size)} · ${f.name.split(".").pop()?.toUpperCase() ?? ""}`;
+      meta = `${f.durationSeconds ? `${formatDuration(f.durationSeconds)} · ` : ""}${formatSize(f.size)} · ${f.name.split(".").pop()?.toUpperCase() ?? ""}`;
       fileMime = f.mime;
     }
   }
@@ -165,6 +169,10 @@ export const materialService: MaterialService = {
   },
   async getById(id) {
     const r = getDb().materials.find((m) => m.id === id);
+    return r ? toMaterial(r) : null;
+  },
+  async getByFileId(fileId) {
+    const r = getDb().materials.find((m) => m.fileId === fileId && !m.deletedAt);
     return r ? toMaterial(r) : null;
   },
   async create(input) {
@@ -249,6 +257,7 @@ export const topicService: TopicService = {
   async create(input) {
     const db = getDb();
     if (!db.subjects.some((s) => s.slug === input.subjectSlug && !s.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "subject" };
+    if (db.topics.some((t) => !t.deletedAt && t.subjectSlug === input.subjectSlug && t.title.toLowerCase() === input.title.trim().toLowerCase())) return { ok: false, code: "DUPLICATE", field: "title" };
     let id = `${input.subjectSlug}-${slugify(input.title)}`;
     for (let n = 2; db.topics.some((t) => t.id === id); n++) id = `${input.subjectSlug}-${slugify(input.title)}-${n}`;
     const order = Math.max(0, ...db.topics.filter((t) => t.subjectSlug === input.subjectSlug).map((t) => t.order)) + 1;
@@ -286,31 +295,66 @@ export const topicService: TopicService = {
 
 /* ---------------- enrolment ("My platforms") ---------------- */
 
+/** Effective stored state: an ACTIVE / FREE enrolment past its expiry reads as EXPIRED. */
+const effectiveAccess = (e: EnrollmentRec) => (e.status === "FREE" || e.status === "ACTIVE") && !enrollmentActive(e) ? ("EXPIRED" as const) : e.status;
+
 export const enrollmentService: EnrollmentService = {
   async listForUser(userId) {
     const db = getDb();
     return db.platforms.filter((p) => !p.deletedAt).map((p) => {
-      const active = db.enrollments.some((e) => e.userId === userId && e.platform === p.slug);
-      return { platform: p.slug, status: active ? ("active" as const) : ("not_enrolled" as const), progress: active ? platformProgress(db, userId, p.slug) : 0 };
+      const rec = db.enrollments.find((e) => e.userId === userId && e.platform === p.slug);
+      const active = !!rec && enrollmentActive(rec);
+      return {
+        platform: p.slug, status: active ? ("active" as const) : ("not_enrolled" as const), access: rec ? effectiveAccess(rec) : undefined,
+        expiresAt: rec?.expiresAt, priceCents: p.priceCents, progress: active ? platformProgress(db, userId, p.slug) : 0,
+      };
     });
   },
   async isEnrolled(userId, platform) {
-    return getDb().enrollments.some((e) => e.userId === userId && e.platform === platform);
+    return isEnrolled(getDb(), userId, platform);
   },
   async enroll(userId, platform) {
     const db = getDb();
     const p = db.platforms.find((x) => x.slug === platform && !x.deletedAt);
     if (!p) return { ok: false, code: "NOT_FOUND" };
-    if (!db.enrollments.some((e) => e.userId === userId && e.platform === platform)) {
-      db.enrollments.push({ userId, platform, createdAt: nowIso() });
-      pushActivity(db, { userId, kind: "enroll", title: p.name, context: p.fullName, href: routes.coursePlatform(platform) });
-    }
+    if (p.priceCents > 0) return { ok: false, code: "PAYMENT_REQUIRED" };
+    const rec = db.enrollments.find((e) => e.userId === userId && e.platform === platform);
+    if (rec && enrollmentActive(rec)) return { ok: true, data: undefined };
+    if (rec?.status === "REVOKED") return { ok: false, code: "ACCESS_REVOKED" };
+    if (rec) Object.assign(rec, { status: "FREE", expiresAt: undefined });
+    else db.enrollments.push({ userId, platform, status: "FREE", source: "self", createdAt: nowIso() });
+    pushActivity(db, { userId, kind: "enroll", title: p.name, context: p.fullName, href: routes.coursePlatform(platform) });
     return { ok: true, data: undefined };
   },
   async leave(userId, platform) {
     const db = getDb();
-    db.enrollments = db.enrollments.filter((e) => !(e.userId === userId && e.platform === platform));
+    // Only self-service (free) enrolments can be left; paid / admin-granted access is managed by the school.
+    db.enrollments = db.enrollments.filter((e) => !(e.userId === userId && e.platform === platform && e.source === "self"));
     return { ok: true, data: undefined };
+  },
+  async grant({ userId, platform, expiresAt }) {
+    const db = getDb();
+    if (!db.users.some((u) => u.id === userId && u.role === "STUDENT" && !u.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "student" };
+    if (!db.platforms.some((p) => p.slug === platform && !p.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "platform" };
+    const rec = db.enrollments.find((e) => e.userId === userId && e.platform === platform);
+    if (rec) Object.assign(rec, { status: "ACTIVE", expiresAt: expiresAt ?? undefined, source: "admin" });
+    else db.enrollments.push({ userId, platform, status: "ACTIVE", source: "admin", expiresAt: expiresAt ?? undefined, createdAt: nowIso() });
+    pushNotification(db, userId, { code: "access_granted", params: { platform: platform.toUpperCase() }, target: { kind: "none" } });
+    return { ok: true, data: undefined };
+  },
+  async revoke({ userId, platform }) {
+    const rec = getDb().enrollments.find((e) => e.userId === userId && e.platform === platform);
+    if (!rec) return { ok: false, code: "NOT_FOUND" };
+    rec.status = "REVOKED";
+    pushNotification(getDb(), userId, { code: "access_revoked", params: { platform: platform.toUpperCase() }, target: { kind: "none" } });
+    return { ok: true, data: undefined };
+  },
+  async listAll() {
+    const db = getDb();
+    return db.enrollments.map((e) => ({
+      userId: e.userId, userName: db.users.find((u) => u.id === e.userId)?.name ?? "—", platform: e.platform, status: effectiveAccess(e),
+      active: enrollmentActive(e), source: e.source, expiresAt: e.expiresAt, createdAt: e.createdAt,
+    }));
   },
 };
 

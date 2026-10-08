@@ -1,6 +1,17 @@
-// ACCA USA — database schema (PREPARED, not yet connected).
-// Next stage: `npx prisma migrate dev`, then replace services/mock/* with Prisma-backed services.
-// Conventions: cuid ids, UTC timestamps, soft delete via `deletedAt`, no business logic in the schema.
+// ACCA USA — PostgreSQL schema.
+//
+// Conventions
+//  • Identifiers that appear in URLs are stable strings owned by the application (platform slug, subject slug,
+//    topic / test / material ids); everything else uses cuid().
+//  • Enum members are lower-case where the application already uses lower-case values (locale, status, kinds), so
+//    service code maps rows 1:1 without translation tables.
+//  • Soft delete (`deletedAt`) for users and content; per-user learning state cascades with the user.
+//  • Payments, certificates and attempts are records of fact: they RESTRICT deletes and keep snapshots
+//    (holder name, review) so later edits never rewrite history.
+//  • No business logic in the schema. Derived numbers (progress, ranking, statistics) are computed from these rows.
+//
+// Auth: the application uses its own signed-cookie session layer (src/lib/auth), not Auth.js, so there are no
+// Account / Session tables. Reset tokens and the rate-limit store live here instead.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,242 +22,294 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ───────────────────────────── enums ─────────────────────────────
+
 enum Role {
   STUDENT
   ADMIN
 }
 
-enum Locale {
-  EN
-  RU
-  UZ
+enum UserStatus {
+  active
+  suspended
 }
 
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
+enum Locale {
+  en
+  ru
+  uz
 }
 
 enum MaterialKind {
-  VIDEO
-  PDF
-  NOTES
-  AUDIO
-  SLIDES
-  BOOK
+  video
+  pdf
+  notes
+  audio
+  slides
+  image
+  file
+  book
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum QuestionStatus {
+  draft
+  published
+}
+
+enum TestKind {
+  topic_test
+  exam
 }
 
 enum AttemptStatus {
   IN_PROGRESS
   SUBMITTED
+}
+
+enum EnrollmentStatus {
+  FREE
+  ACTIVE
   EXPIRED
+  REVOKED
+}
+
+enum EnrollmentSource {
+  self
+  payment
+  admin
 }
 
 enum PaymentStatus {
   PENDING
   PAID
-  REFUNDED
   FAILED
+  CANCELLED
+  REFUNDED
 }
 
-enum ExamStatus {
-  SCHEDULED
-  OPEN
-  COMPLETED
+enum CertificateStatus {
+  issued
+  revoked
 }
 
-// ---------- Identity (Auth.js compatible) ----------
+enum CertificateSource {
+  auto
+  admin
+}
+
+enum ActivityKind {
+  topic
+  test
+  enroll
+}
+
+// ───────────────────────────── identity ─────────────────────────────
 
 model User {
-  id            String     @id @default(cuid())
-  name          String
-  email         String     @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String? // only for credentials sign-in; never exposed to the client
-  role          Role       @default(STUDENT)
-  status        UserStatus @default(ACTIVE)
-  locale        Locale     @default(EN)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  deletedAt     DateTime?
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique // stored lower-case
+  passwordHash String? // scrypt "s1$salt$hash"; null = no password yet (use reset). Never leaves the server.
+  role         Role       @default(STUDENT)
+  status       UserStatus @default(active)
+  locale       Locale     @default(en)
+  /// bumped on password reset / suspension / role change → revokes every older session cookie
+  tokenVersion Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
 
-  accounts      Account[]
-  sessions      Session[]
-  enrollments   Enrollment[]
-  progress      TopicProgress[]
+  enrollments      Enrollment[]
+  topicProgress    TopicProgress[]
   materialProgress MaterialProgress[]
-  attempts      TestAttempt[]
-  payments      Payment[]
-  certificates  Certificate[]
-  notifications Notification[]
-  examResults   ExamResult[]
+  lastMaterial     LastMaterial?
+  attempts         TestAttempt[]
+  payments         Payment[]
+  certificates     Certificate[]
+  notifications    Notification[]
+  activity         Activity[]
+  resetTokens      ResetToken[]
 
   @@index([role, status])
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+model ResetToken {
+  /// SHA-256 of the random token — the raw token is only ever in the e-mail / reset link.
+  tokenHash String    @id
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// Fixed-window rate limiter shared by every instance (login, register, reset, webhooks).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-// ---------- Catalogue ----------
+// ───────────────────────────── catalogue ─────────────────────────────
 
 model Platform {
-  id        String    @id @default(cuid())
-  slug      String    @unique // acca | fia
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  slug       String    @id // acca | fia
+  name       String
+  fullName   String
+  /// Price of full access in the smallest currency unit (USD cents). 0 = free enrolment (no payment involved).
+  priceCents Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   levels       Level[]
   enrollments  Enrollment[]
-  exams        Exam[]
+  payments     Payment[]
   certificates Certificate[]
-  translations PlatformTranslation[]
-}
-
-model PlatformTranslation {
-  platformId String
-  locale     Locale
-  name       String
-  fullName   String
-  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
-
-  @@id([platformId, locale])
 }
 
 model Level {
-  id         String    @id @default(cuid())
-  platformId String
-  order      Int
-  name       String
-  deletedAt  DateTime?
+  id           String @id // e.g. acca-l1
+  platformSlug String
+  order        Int
+  name         String
 
-  platform Platform  @relation(fields: [platformId], references: [id])
+  platform Platform  @relation(fields: [platformSlug], references: [slug], onDelete: Restrict)
   subjects Subject[]
 
-  @@unique([platformId, order])
+  @@unique([platformSlug, order])
 }
 
 model Subject {
-  id        String    @id @default(cuid())
-  slug      String    @unique
+  slug      String    @id
   code      String
+  name      String
   levelId   String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  level        Level                @relation(fields: [levelId], references: [id])
+  level        Level         @relation(fields: [levelId], references: [id], onDelete: Restrict)
   topics       Topic[]
-  tests        Test[]
   materials    Material[]
-  exams        Exam[]
-  translations SubjectTranslation[]
+  questions    Question[]
+  tests        Test[]
+  certificates Certificate[]
 
   @@index([levelId])
 }
 
-model SubjectTranslation {
-  subjectId String
-  locale    Locale
-  name      String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@id([subjectId, locale])
-}
-
 model Topic {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  subjectId String
-  order     Int
-  lessonCount     Int @default(0)
-  durationMinutes Int @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id              String    @id
+  subjectSlug     String
+  order           Int
+  title           String
+  description     String    @default("") @db.Text
+  keyPoints       String[]
+  lessonCount     Int       @default(0)
+  durationMinutes Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
-  subject      Subject            @relation(fields: [subjectId], references: [id])
-  materials    Material[]
-  tests        Test[]
-  progress     TopicProgress[]
-  translations TopicTranslation[]
+  subject   Subject         @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
+  materials Material[]
+  questions Question[]
+  tests     Test[]
+  progress  TopicProgress[]
 
-  @@unique([subjectId, order])
-}
-
-model TopicTranslation {
-  topicId     String
-  locale      Locale
-  title       String
-  description String   @db.Text
-  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@id([topicId, locale])
+  @@index([subjectSlug, order])
 }
 
 model Material {
-  id         String       @id @default(cuid())
-  subjectId  String
-  topicId    String?
-  kind       MaterialKind
-  title      String
-  storageKey String? // object-storage key; files are served via signed URLs
-  meta       String?
-  createdAt  DateTime     @default(now())
-  deletedAt  DateTime?
+  id          String       @id
+  subjectSlug String
+  topicId     String?
+  kind        MaterialKind
+  title       String
+  /// Storage object id (owned by the StorageProvider, not an FK: the demo provider keeps files on disk); null for notes
+  fileId      String?
+  fileMime    String?
+  body        String?      @db.Text // kind = notes: plain text, never rendered as HTML
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
 
-  subject Subject @relation(fields: [subjectId], references: [id])
-  topic   Topic?  @relation(fields: [topicId], references: [id])
+  subject  Subject            @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
+  topic    Topic?             @relation(fields: [topicId], references: [id], onDelete: Restrict)
   progress MaterialProgress[]
 
-  @@index([subjectId, topicId])
+  @@index([subjectSlug])
+  @@index([topicId])
+  @@index([fileId])
 }
 
-// ---------- Learning state ----------
+/// Metadata of an object kept by the production StorageProvider. Bytes never live in PostgreSQL. Referenced by
+/// Material.fileId / Question.imageId by id only (no FK) so every storage provider can own its own metadata.
+model StoredFile {
+  id              String   @id
+  storageKey      String   @unique // key inside the bucket / folder
+  name            String // sanitised original name
+  mime            String // derived from the validated extension, never from the client
+  size            Int
+  ownerId         String
+  attached        Boolean  @default(false)
+  /// media metadata (video / audio duration, thumbnail key, …) — see docs/MEDIA.md
+  durationSeconds Int?
+  thumbnailKey    String?
+  createdAt       DateTime @default(now())
+
+  @@index([attached, createdAt])
+}
+
+// ───────────────────────────── access ─────────────────────────────
 
 model Enrollment {
-  id         String   @id @default(cuid())
-  userId     String
-  platformId String
-  createdAt  DateTime @default(now())
+  id           String           @id @default(cuid())
+  userId       String
+  platformSlug String
+  status       EnrollmentStatus @default(ACTIVE)
+  source       EnrollmentSource @default(self)
+  paymentId    String?
+  /// null = does not expire
+  expiresAt    DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  user     User     @relation(fields: [userId], references: [id])
-  platform Platform @relation(fields: [platformId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform Platform @relation(fields: [platformSlug], references: [slug], onDelete: Restrict)
+  payment  Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, platformId])
+  @@unique([userId, platformSlug])
+  @@index([platformSlug, status])
+}
+
+// ───────────────────────────── learning state ─────────────────────────────
+
+model TopicProgress {
+  userId    String
+  topicId   String
+  /// "started" (10) or "completed" (100); partial progress is derived from materials + tests
+  percent   Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, topicId])
+  @@index([topicId])
 }
 
 model MaterialProgress {
@@ -258,165 +321,227 @@ model MaterialProgress {
   material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
   @@id([userId, materialId])
+  @@index([materialId])
+  @@index([completedAt])
 }
 
-model TopicProgress {
-  userId      String
-  topicId     String
-  percent     Int       @default(0)
-  completedAt DateTime?
-  updatedAt   DateTime  @updatedAt
+model LastMaterial {
+  userId     String   @id
+  materialId String
+  at         DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-
-  @@id([userId, topicId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ---------- Assessment ----------
+model Activity {
+  id      String       @id @default(cuid())
+  userId  String
+  kind    ActivityKind
+  title   String
+  context String
+  href    String
+  detail  String?
+  at      DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, at(sort: Desc)])
+}
+
+// ───────────────────────────── assessment ─────────────────────────────
 
 model Question {
-  id            String    @id @default(cuid())
-  text          String    @db.Text
-  explanation   String    @db.Text
-  correctOption String // option id; never sent to the client before submission
-  createdAt     DateTime  @default(now())
-  deletedAt     DateTime?
+  id              String         @id
+  subjectSlug     String
+  topicId         String?
+  text            String         @db.Text
+  /// [{ "id": "a", "text": "…" }, … ] — four options; the answer key is `correctOptionId` and stays on the server
+  options         Json
+  correctOptionId String
+  explanation     String         @db.Text
+  points          Int            @default(1)
+  difficulty      Difficulty     @default(medium)
+  tags            String[]
+  imageId         String?
+  status          QuestionStatus @default(draft)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
 
-  options Option[]
+  subject Subject        @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
+  topic   Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
   tests   TestQuestion[]
-}
 
-model Option {
-  id         String   @id @default(cuid())
-  questionId String
-  order      Int
-  text       String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@unique([questionId, order])
+  @@index([subjectSlug, status])
+  @@index([topicId])
 }
 
 model Test {
-  id              String    @id @default(cuid())
-  slug            String    @unique
-  subjectId       String
-  topicId         String?
-  title           String
-  durationMinutes Int
-  passMark        Int
-  createdAt       DateTime  @default(now())
-  deletedAt       DateTime?
+  id                 String    @id
+  subjectSlug        String
+  topicId            String?
+  kind               TestKind  @default(topic_test)
+  title              String
+  description        String    @default("") @db.Text
+  durationMinutes    Int
+  passMark           Int
+  /// 0 = unlimited
+  attemptsAllowed    Int       @default(0)
+  randomizeQuestions Boolean   @default(false)
+  randomizeAnswers   Boolean   @default(false)
+  published          Boolean   @default(false)
+  publishedAt        DateTime?
+  /// exams only: optional availability window
+  opensAt            DateTime?
+  closesAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
-  subject   Subject        @relation(fields: [subjectId], references: [id])
-  topic     Topic?         @relation(fields: [topicId], references: [id])
+  subject   Subject        @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
+  topic     Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
   questions TestQuestion[]
   attempts  TestAttempt[]
+
+  @@index([subjectSlug, published])
+  @@index([topicId])
+  @@index([kind, published])
 }
 
 model TestQuestion {
   testId     String
   questionId String
-  order      Int
+  position   Int
 
   test     Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id])
+  question Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
 
   @@id([testId, questionId])
-  @@unique([testId, order])
+  @@index([testId, position])
+  @@index([questionId])
 }
 
-/// Autosave target: IN_PROGRESS attempts hold the draft (answers/flags/position) on the server.
+/// One attempt. IN_PROGRESS rows hold the autosaved draft; SUBMITTED rows hold the frozen result snapshot.
 model TestAttempt {
-  id             String        @id @default(cuid())
-  testId         String
-  userId         String
-  status         AttemptStatus @default(IN_PROGRESS)
-  startedAt      DateTime      @default(now())
-  deadlineAt     DateTime // server-authoritative: startedAt + duration
-  submittedAt    DateTime?
-  answers        Json // { [questionId]: optionId }
-  flagged        Json // string[]
-  currentIndex   Int           @default(0)
-  elapsedSeconds Int           @default(0)
-  scorePercent   Int?
-  updatedAt      DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  testId           String
+  userId           String
+  status           AttemptStatus @default(IN_PROGRESS)
+  startedAt        DateTime      @default(now())
+  /// server-authoritative: startedAt + duration. The client timer is only a display.
+  deadlineAt       DateTime
+  submittedAt      DateTime?
+  /// { [questionId]: optionId }
+  answers          Json          @default("{}")
+  flagged          Json          @default("[]")
+  currentIndex     Int           @default(0)
+  // ── result (set on submit) ──
+  scorePercent     Int?
+  passed           Boolean?
+  timeSpentSeconds Int?
+  /// frozen TestResult (questions, answers, explanations) so later edits never rewrite history
+  result           Json?
+  updatedAt        DateTime      @updatedAt
 
-  test Test @relation(fields: [testId], references: [id])
+  test Test @relation(fields: [testId], references: [id], onDelete: Restrict)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, testId, status])
+  @@index([testId, submittedAt])
+  @@index([userId, submittedAt])
 }
 
-model Exam {
-  id              String     @id @default(cuid())
-  title           String
-  platformId      String
-  subjectId       String
-  startsAt        DateTime
-  durationMinutes Int
-  status          ExamStatus @default(SCHEDULED)
-  createdAt       DateTime   @default(now())
-  deletedAt       DateTime?
-
-  platform Platform     @relation(fields: [platformId], references: [id])
-  subject  Subject      @relation(fields: [subjectId], references: [id])
-  results  ExamResult[]
-}
-
-model ExamResult {
-  examId       String
-  userId       String
-  scorePercent Int
-  createdAt    DateTime @default(now())
-
-  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([examId, userId])
-}
-
-// ---------- Commerce & engagement ----------
+// ───────────────────────────── commerce ─────────────────────────────
 
 model Payment {
-  id          String        @id @default(cuid())
-  userId      String
-  description String
-  amountCents Int
-  currency    String        @default("USD")
-  status      PaymentStatus @default(PENDING)
-  provider    String?
-  providerRef String?       @unique
-  createdAt   DateTime      @default(now())
+  id                String        @id @default(cuid())
+  userId            String
+  platformSlug      String
+  description       String
+  amountCents       Int
+  currency          String        @default("USD")
+  status            PaymentStatus @default(PENDING)
+  provider          String
+  /// provider's own id (checkout session / charge); unique per provider
+  providerPaymentId String?
+  /// provider-hosted checkout page (kept so a retried request returns the same checkout)
+  checkoutUrl       String?
+  /// client-supplied idempotency key for payment creation
+  idempotencyKey    String?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user        User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  platform    Platform       @relation(fields: [platformSlug], references: [slug], onDelete: Restrict)
+  enrollments Enrollment[]
+  events      PaymentEvent[]
 
+  @@unique([provider, providerPaymentId])
+  @@unique([userId, idempotencyKey])
   @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+/// Every webhook delivery, keyed by the provider's event id → replays are detected and ignored (idempotency).
+model PaymentEvent {
+  id         String   @id @default(cuid())
+  provider   String
+  eventId    String
+  paymentId  String?
+  type       String
+  receivedAt DateTime @default(now())
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, eventId])
 }
 
 model Certificate {
-  id         String    @id @default(cuid())
-  userId     String
-  platformId String
-  title      String
-  issuedAt   DateTime?
-  createdAt  DateTime  @default(now())
+  id           String            @id @default(cuid())
+  /// AU-<year>-<6 digits>; also the public verification identifier
+  number       String            @unique
+  userId       String
+  platformSlug String
+  subjectSlug  String
+  /// snapshots at issue time
+  studentName  String
+  subjectCode  String
+  subjectName  String
+  title        String
+  status       CertificateStatus @default(issued)
+  source       CertificateSource @default(auto)
+  issuedAt     DateTime          @default(now())
+  revokedAt    DateTime?
 
-  user     User     @relation(fields: [userId], references: [id])
-  platform Platform @relation(fields: [platformId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  platform Platform @relation(fields: [platformSlug], references: [slug], onDelete: Restrict)
+  subject  Subject  @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
+
+  @@index([userId, subjectSlug])
+  @@index([status, issuedAt])
 }
 
+model CertificateCounter {
+  year Int @id
+  last Int @default(0)
+}
+
+// ───────────────────────────── engagement ─────────────────────────────
+
 model Notification {
-  id         String   @id @default(cuid())
-  userId     String
-  title      String
-  body       String
-  targetKind String // topic | test | result | exam | certificate | payment | none
-  targetId   String?
-  readAt     DateTime?
-  createdAt  DateTime @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  /// NotificationCode (translated at render time — no prose is stored)
+  code      String
+  params    Json?
+  /// NotificationTarget as JSON: { kind, … }
+  target    Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
+  @@index([userId, createdAt(sort: Desc)])
 }

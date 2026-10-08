@@ -111,13 +111,13 @@ function removeFiles(id: string) {
 export class DemoStorageProvider implements StorageProvider {
   readonly name = "demo" as const;
 
-  async put({ ownerId, file, mime }: { ownerId: string; file: File; mime: string }): Promise<StoredFileMeta> {
+  async put({ ownerId, file, mime, durationSeconds }: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
     ensureRoot();
     ensureSeed();
     gc();
     const id = randomUUID();
     await pipeline(Readable.fromWeb(file.stream() as never), createWriteStream(bin(id), { mode: 0o600 }));
-    const meta: StoredFileMeta = { id, name: sanitizeFileName(file.name), mime, size: file.size, createdAt: new Date().toISOString(), ownerId, attached: false };
+    const meta: StoredFileMeta = { id, name: sanitizeFileName(file.name), mime, size: file.size, createdAt: new Date().toISOString(), ownerId, attached: false, durationSeconds };
     writeFileSync(metaPath(id), JSON.stringify(meta), { mode: 0o600 });
     return meta;
   }
@@ -142,7 +142,7 @@ export class DemoStorageProvider implements StorageProvider {
     if (ID_RE.test(id) && !id.startsWith("seed-")) removeFiles(id);
   }
 
-  async replace(id: string, input: { ownerId: string; file: File; mime: string }): Promise<StoredFileMeta> {
+  async replace(id: string, input: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
     const next = await this.put(input);
     await this.delete(id);
     return next;
@@ -152,5 +152,15 @@ export class DemoStorageProvider implements StorageProvider {
     const meta = readMeta(id);
     if (!meta) return;
     writeFileSync(metaPath(id), JSON.stringify({ ...meta, attached }), { mode: 0o600 });
+  }
+
+  async exists(id: string): Promise<boolean> {
+    ensureSeed();
+    return readMeta(id) !== null && existsSync(bin(id));
+  }
+
+  /** The demo provider has no signing key and no public origin: files are only served through /api/files/[id]. */
+  async signedUrl(): Promise<string | null> {
+    return null;
   }
 }

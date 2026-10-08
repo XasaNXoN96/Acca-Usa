@@ -8,25 +8,42 @@ import { PageHeader } from "@/components/ui/page-header";
 import { services } from "@/services";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireSession } from "@/lib/auth/guards";
+import { isDemoMode } from "@/lib/app-mode";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("payments"))("title") };
 }
 
-const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive" } as const;
+const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive", cancelled: "neutral" } as const;
 
-export default async function PaymentsPage() {
+type Search = Promise<{ paid?: string; failed?: string; cancelled?: string }>;
+
+/**
+ * The banner after a checkout comes from the payment's STORED status, never from the URL: `?paid=<id>` alone proves nothing
+ * and grants nothing — only the provider's webhook marks a payment as paid.
+ */
+export default async function PaymentsPage({ searchParams }: { searchParams: Search }) {
   const session = await requireSession();
-  const [t, c, locale, payments] = await Promise.all([
+  const q = await searchParams;
+  const [t, c, locale, payments, returned] = await Promise.all([
     getTranslations("payments"),
     getTranslations("common"),
     getLocale(),
     services.payments.listForUser(session.user.id),
+    (async () => {
+      const id = q.paid ?? q.failed ?? q.cancelled;
+      return id && id.length <= 80 ? services.payments.getForUser(session.user.id, id) : null; // ownership is checked by the service
+    })(),
   ]);
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} />
-      <Alert variant="info">{t("notice")}</Alert>
+      {returned ? (
+        <Alert variant={returned.status === "paid" ? "success" : returned.status === "pending" ? "info" : "warning"}>
+          {returned.status === "paid" ? t("paid") : returned.status === "pending" ? (q.paid ? t("pendingConfirm") : t("cancelledBanner")) : returned.status === "failed" ? t("failedBanner") : t("cancelledBanner")}
+        </Alert>
+      ) : null}
+      <Alert variant="info">{isDemoMode ? t("demoNotice") : t("liveNotice")}</Alert>
       {payments.length === 0 ? (
         <EmptyState title={t("empty")} />
       ) : (

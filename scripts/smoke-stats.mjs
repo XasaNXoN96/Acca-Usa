@@ -27,12 +27,12 @@ await step("totals match the admin lists (students, subjects, topics, materials,
 // ---- real activity: the demo student takes a test and completes a material ----
 const sc = await ctx(); const s = await sc.newPage(); await demo(s, "Student"); await s.waitForURL(/dashboard$/);
 const T1 = "bt-business-organisations-and-their-stakeholders";
-await s.goto(`/subject/bt/topic/${T1}/material/${T1}-notes`); await s.getByRole("button", { name: "Mark as completed" }).click(); await s.getByRole("button", { name: "Completed" }).waitFor();
+await s.goto(`/subject/bt/topic/${T1}/material/${T1}-notes`); await s.getByRole("button", { name: "Mark as completed" }).click(); await s.getByRole("button", { name: "Completed" }).waitFor(); await s.waitForLoadState("networkidle");
 await s.goto("/test/bt-stakeholders-test"); await s.getByRole("button", { name: "Start test" }).click(); await s.getByText("Question 1 of 8").waitFor();
 await s.getByRole("button", { name: "Submit test" }).first().click(); await s.getByRole("dialog").getByRole("button", { name: "Submit now" }).click(); await s.waitForURL(/result/);
 
 await step("statistics reflect the real activity: 1 attempt, 0% pass rate / average, 1 completed material, active student", async () => {
-  await a.goto("/admin/statistics"); const c = await cards(a);
+  await a.goto("/admin/statistics"); await a.locator("[data-stats-cards]").waitFor(); const c = await cards(a);
   assert(c["Test attempts"] === "1", `attempts ${c["Test attempts"]}`); assert(c["Pass rate"] === "0%" && c["Average score"] === "0%", "rates"); assert(c["Completed materials"] === "1", "completed materials"); assert(Number(c["Active students"]) >= 1, "active students");
   await a.locator("[data-chart=tests]").getByText(/Stakeholders — topic test/).waitFor(); await a.locator("[data-chart=passfail]").getByText("Not passed").waitFor(); await a.locator("[data-chart=activity] [role=img]").waitFor(); await a.locator("[data-chart=subjects]").getByText(/ACCA · BT/).waitFor();
 });
@@ -44,7 +44,9 @@ await step("filters: platform / subject / period change the numbers; invalid par
   c = await go("?range=custom&from=2020-01-01&to=2020-01-31"); assert(c["Test attempts"] === "0" && c["Completed materials"] === "0", "past range"); await a.getByText("Period: 2020-01-01 – 2020-01-31").waitFor();
   c = await go("?range=custom&from=garbage&to=nope&platform=cima&subject=../../etc"); assert(c["Test attempts"] === "1", "invalid params should fall back to defaults"); await a.getByText(/Period:/).waitFor();
   c = await go("?range=7"); assert(c["Test attempts"] === "1", "7 days");
-  await a.goto("/admin/statistics"); await a.locator("#st-platform").selectOption({ label: "FIA" }); await a.getByRole("button", { name: "Apply" }).click(); await a.waitForURL(/platform=fia/); c = await cards(a); assert(c["Test attempts"] === "0", "form submit");
+  await a.goto("/admin/statistics"); await a.locator("#st-platform").selectOption({ label: "FIA" }); await a.getByRole("button", { name: "Apply" }).click(); await a.waitForURL(/platform=fia/);
+  for (let i = 0; i < 40; i++) { c = await cards(a); if (c["Test attempts"] === "0") break; await a.waitForTimeout(250); } // client navigation: wait for the new server render
+  assert(c["Test attempts"] === "0", "form submit");
 });
 await step("access: students and guests cannot open statistics", async () => {
   assert((await sc.request.get("/admin/statistics", { maxRedirects: 0 })).status() !== 200, "student reached statistics");

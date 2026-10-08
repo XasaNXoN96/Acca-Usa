@@ -16,6 +16,7 @@ export const platforms: Platform[] = [
   {
     slug: "acca",
     name: "ACCA",
+    priceCents: 0, // demo catalogue is free; real prices are set by an administrator
     fullName: "Association of Chartered Certified Accountants",
     levels: [
       lvl("acca", 1, "Applied Knowledge"),
@@ -26,6 +27,7 @@ export const platforms: Platform[] = [
   {
     slug: "fia",
     name: "FIA",
+    priceCents: 0,
     fullName: "Foundations in Accountancy",
     levels: [lvl("fia", 1, "Foundations in Accountancy")],
   },

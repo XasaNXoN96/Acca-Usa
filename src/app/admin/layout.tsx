@@ -25,6 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     tests: r("tests.title"),
     exams: r("exams.title"),
     students: r("students.title"),
+    access: r("access.title"),
     certificates: r("certificates.title"),
     payments: r("payments.title"),
     statistics: ts("statistics.title"),

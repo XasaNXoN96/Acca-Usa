@@ -25,6 +25,9 @@ export function serviceErrorKey(code: string): string {
     case "NOT_ENROLLED": return "notEnrolled";
     case "CERT_EXISTS": return "certExists";
     case "NOT_FOUND": return "notFound";
+    case "DUPLICATE": return "duplicate";
+    case "PAYMENT_REQUIRED": return "paymentRequired";
+    case "ACCESS_REVOKED": return "accessRevoked";
     default: return "generic";
   }
 }

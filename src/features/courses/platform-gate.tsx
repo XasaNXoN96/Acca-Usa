@@ -31,7 +31,7 @@ export async function PlatformGate({ slug }: { slug: PlatformSlug }) {
           </li>
         ))}
       </ul>
-      <EnrollButton platform={slug} size="lg" className="max-w-xs" />
+      <EnrollButton platform={slug} size="lg" className="max-w-xs" priceCents={platform.priceCents} />
     </Card>
   );
 }

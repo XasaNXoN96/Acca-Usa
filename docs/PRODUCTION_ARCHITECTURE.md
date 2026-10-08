@@ -110,17 +110,20 @@ are server-side on every resource that carries a user id. See `docs/SECURITY_AUD
 
 ## 11. Status
 
-| Area | Status at `0d10583` |
-| --- | --- |
-| Services contracts | done |
-| Demo data provider | done |
-| Prisma schema | stale (pre-dates question/test/certificate/notification models) |
-| Prisma services | not implemented |
-| Auth hardening for production | partial (demo secret fallback exists) |
-| Storage (S3) | placeholder |
-| Payments | fixtures only |
-| Email | none |
-| Certificate PDF | browser print only |
-| Env validation | partial (`AUTH_SECRET`, app mode) |
-
-The phases that follow update this table.
+| Area | Status | Where |
+| --- | --- | --- |
+| Services contracts | done | `src/services/contracts.ts` |
+| Demo data provider | done | `src/services/mock/*` |
+| Prisma schema + migrations | done (`init`, `platform_price`, `payment_checkout_url`) | `prisma/` — `docs/DATABASE.md` |
+| Prisma services (every contract) | done; the browser suites run against both providers | `src/services/prisma/*` |
+| Auth hardening | done (shared rate limiter, safer redirects, env-enforced secret, `admin:create`) | `docs/AUTH.md` |
+| Storage | S3-compatible provider done, tested against a local S3 stub (not a real vendor) | `docs/STORAGE.md` |
+| Media metadata | done (container-level duration; codecs not verified) | `docs/MEDIA.md` |
+| Certificate PDF + public verification | done | `docs/CERTIFICATES.md` |
+| E-mail | SMTP provider done, tested against a local SMTP sink | `docs/EMAIL.md` |
+| Payments | Stripe adapter + state machine done, tested with signed fixtures (not Stripe itself) | `docs/PAYMENTS.md` |
+| Enrolment / access control | done (FREE / ACTIVE / EXPIRED / REVOKED, admin Access screen) | `docs/ACCESS_CONTROL.md` |
+| Exams | `Test.kind = exam` with availability window, real scores | `docs/DATABASE.md` |
+| Analytics | enrolments, completions, certificates, payments, revenue added | admin → Statistics |
+| Security audit | done, with stated limits | `docs/SECURITY_AUDIT.md` |
+| Demo / production separation + env validation | done, verified by `test:production` | `docs/DEPLOYMENT_MODES.md` |

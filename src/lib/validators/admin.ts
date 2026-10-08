@@ -14,7 +14,7 @@ const int = (min: number, max: number) =>
 const id = z.string().trim().min(1, "required").max(120, "invalidChoice");
 const optionalId = z.string().trim().max(120, "invalidChoice").optional().default("");
 
-export const platformSchema = z.object({ name: text(2, 20), fullName: text(3, 120) });
+export const platformSchema = z.object({ name: text(2, 20), fullName: text(3, 120), price: int(0, 100000) });
 
 export const subjectSchema = z.object({ code: text(1, 12), name: text(3, 120), level: id });
 
@@ -112,6 +112,18 @@ export const studentSchemaFor = (isNew: boolean) =>
 
 export const certificateSchema = z.object({ student: id, subject: id });
 
+/** Grant / extend access: optional expiry as YYYY-MM-DD (empty = no expiry), never in the past. */
+export const accessSchema = z.object({
+  student: id,
+  platform: z.enum(["acca", "fia"], { message: "invalidChoice" }),
+  expiresAt: z.string().trim().max(10).optional().default("").superRefine((v, ctx) => {
+    if (!v) return;
+    const t = /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T23:59:59Z`) : NaN;
+    if (Number.isNaN(t) || new Date(t).toISOString().slice(0, 10) !== v) ctx.addIssue({ code: "custom", message: "dateInvalid" });
+    else if (t < Date.now()) ctx.addIssue({ code: "custom", message: "datePast" });
+  }),
+});
+
 export type PlatformForm = z.infer<typeof platformSchema>;
 export type SubjectForm = z.infer<typeof subjectSchema>;
 export type TopicForm = z.infer<typeof topicSchema>;
@@ -120,7 +132,7 @@ export type QuestionForm = z.infer<typeof questionSchema>;
 export type TestForm = z.infer<typeof testSchema>;
 export type StudentForm = z.infer<ReturnType<typeof studentSchemaFor>>;
 
-export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "students", "certificates"] as const;
+export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "students", "access", "certificates"] as const;
 export type EditableResource = (typeof editableResources)[number];
 
 export function schemaFor(resource: EditableResource, isNew: boolean) {
@@ -132,6 +144,7 @@ export function schemaFor(resource: EditableResource, isNew: boolean) {
     case "question-bank": return questionSchema;
     case "tests": return testSchema;
     case "students": return studentSchemaFor(isNew);
+    case "access": return accessSchema;
     case "certificates": return certificateSchema;
   }
 }

@@ -1,9 +1,9 @@
-// Responsive audit: horizontal overflow, clipped elements and small touch targets on key pages at 7 widths.
+// Responsive audit: horizontal overflow, clipped elements and small touch targets on key pages at 12 widths (315 … 1920).
 //   BASE_URL=http://localhost:3100 CHROMIUM=... node scripts/audit-responsive.mjs [extra paths…]   (fresh server)
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
-const WIDTHS = [360, 390, 412, 768, 1024, 1280, 1440];
+const WIDTHS = [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920];
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search", "/login", "/register"];
 const STUDENT = ["/dashboard", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, `/subject/bt/topic/${T1}/material/${T1}-video`, `/subject/bt/topic/${T1}/material/${T1}-pdf`, `/subject/bt/topic/${T1}/material/${T1}-audio`, `/subject/bt/topic/${T1}/material/${T1}-diagram`, `/subject/bt/topic/${T1}/material/${T1}-glossary`, "/exams", "/progress", "/ranking", "/ranking?platform=acca&subject=bt", "/certificates", "/certificates/cert-demo-bt", "/notifications", "/payments", "/profile"];

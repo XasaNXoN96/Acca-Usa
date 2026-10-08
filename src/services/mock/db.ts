@@ -1,9 +1,9 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { AppNotification, Difficulty, IssuedCertificate, Material, MaterialKind, PlatformSlug, Role, TestResult, Topic, UserStatus, Locale } from "@/types";
+import type { AppNotification, Difficulty, IssuedCertificate, MaterialKind, PlatformSlug } from "@/types";
 import { platforms as seedPlatforms, subjects as seedSubjects, allTopics as seedTopics, materials as seedMaterials } from "@/data/mock/catalog";
 import { btQuestions, questionBank, testRecords } from "@/data/mock/assessments";
-import { DEMO_STUDENT_ID, notifications as seedNotifications, seedUsers } from "@/data/mock/people";
+import { DEMO_STUDENT_ID, notifications as seedNotifications, payments as seedPayments, seedUsers } from "@/data/mock/people";
 
 /**
  * In-memory DEMO database for the demo data provider.
@@ -12,76 +12,9 @@ import { DEMO_STUDENT_ID, notifications as seedNotifications, seedUsers } from "
  * - Records are soft-deleted via `deletedAt`; services filter them out of student views.
  */
 
-export interface UserRec {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  status: UserStatus;
-  locale: Locale;
-  passwordHash: string | null;
-  /** bumped on password reset / suspension / role change → revokes all older session tokens */
-  tokenVersion: number;
-  createdAt: string;
-  deletedAt?: string;
-}
-export interface PlatformRec { slug: PlatformSlug; name: string; fullName: string; deletedAt?: string }
-export interface LevelRec { id: string; platform: PlatformSlug; name: string; order: number }
-export interface SubjectRec { slug: string; code: string; name: string; levelId: string; createdAt: string; deletedAt?: string }
-export interface TopicRec extends Omit<Topic, "archived"> { createdAt: string; deletedAt?: string }
-export interface MaterialRec extends Omit<Material, "archived" | "meta"> { deletedAt?: string }
-export interface QuestionRec {
-  id: string;
-  subjectSlug: string;
-  text: string;
-  options: { id: string; text: string }[];
-  correctOptionId: string;
-  explanation: string;
-  points: number;
-  difficulty: Difficulty;
-  topicId?: string;
-  tags: string[];
-  imageId?: string;
-  status: "draft" | "published";
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-}
-export interface TestRec {
-  id: string;
-  subjectSlug: string;
-  topicId?: string;
-  title: string;
-  durationMinutes: number;
-  passMark: number;
-  questionIds: string[];
-  description: string;
-  /** 0 = unlimited */
-  attemptsAllowed: number;
-  randomizeQuestions: boolean;
-  randomizeAnswers: boolean;
-  published: boolean;
-  publishedAt?: string;
-  createdAt: string;
-  deletedAt?: string;
-}
-export interface AttemptRec {
-  id: string;
-  userId: string;
-  testId: string;
-  status: "IN_PROGRESS" | "SUBMITTED";
-  startedAt: string;
-  deadlineAt: string;
-  answers: Record<string, string>;
-  flagged: string[];
-  currentIndex: number;
-  elapsedSeconds: number;
-  submittedAt?: string;
-  result?: TestResult;
-}
-export interface ActivityRec { id: string; userId: string; kind: "topic" | "test" | "enroll"; title: string; context: string; href: string; at: string; detail?: string }
-export interface ResetTokenRec { tokenHash: string; userId: string; expiresAt: number; usedAt?: number }
-export interface ProgressEntry { percent: number; updatedAt: string }
+export * from "../domain/records";
+import type { ActivityRec, AttemptRec, EnrollmentRec, LevelRec, MaterialRec, PlatformRec, ProgressEntry, QuestionRec, ResetTokenRec, SubjectRec, TestRec, TopicRec, UserRec } from "../domain/records";
+import type { PaymentRec } from "../payments/contracts";
 
 export interface Db {
   users: UserRec[];
@@ -92,7 +25,10 @@ export interface Db {
   materials: MaterialRec[];
   questions: QuestionRec[];
   tests: TestRec[];
-  enrollments: { userId: string; platform: PlatformSlug; createdAt: string }[];
+  enrollments: EnrollmentRec[];
+  payments: PaymentRec[];
+  /** webhook deliveries already applied (provider + event id) — idempotency */
+  paymentEvents: { provider: string; eventId: string }[];
   progress: Map<string, Map<string, ProgressEntry>>;
   /** Student + Material completion (PostgreSQL later: MaterialProgress(userId, materialId, completedAt)). */
   materialProgress: { userId: string; materialId: string; completedAt: string }[];
@@ -115,14 +51,7 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString
 const ts = () => new Date().toISOString();
 export const newId = (prefix: string) => `${prefix}-${randomUUID().slice(0, 8)}`;
 
-export function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 60) || "item";
-}
+export { slugify } from "../domain/ids";
 
 function seed(): Db {
   const created = "2026-01-10T10:00:00.000Z";
@@ -133,7 +62,7 @@ function seed(): Db {
   };
   const db: Db = {
     users: seedUsers.map((u) => ({ ...u, tokenVersion: 0 })),
-    platforms: seedPlatforms.map((p) => ({ slug: p.slug, name: p.name, fullName: p.fullName })),
+    platforms: seedPlatforms.map((p) => ({ slug: p.slug, name: p.name, fullName: p.fullName, priceCents: p.priceCents })),
     levels: seedPlatforms.flatMap((p) => p.levels.map((l) => ({ id: l.id, platform: l.platform, name: l.name, order: l.order }))),
     subjects: seedSubjects.map((s) => ({ slug: s.slug, code: s.code, name: s.name, levelId: s.levelId, createdAt: created })),
     topics: seedTopics.map((t) => ({ ...t, createdAt: created })),
@@ -159,8 +88,19 @@ function seed(): Db {
       ...t, description: "", attemptsAllowed: 0, randomizeQuestions: false, randomizeAnswers: false, published: true, publishedAt: created, createdAt: created,
     })),
     enrollments: [
-      { userId: DEMO_STUDENT_ID, platform: "acca", createdAt: hoursAgo(900) },
+      { userId: DEMO_STUDENT_ID, platform: "acca", status: "ACTIVE", source: "admin", createdAt: hoursAgo(900) },
     ],
+    payments: seedPayments.flatMap((p) => {
+      const userId = seedUsers.find((u) => u.name === p.studentName)?.id;
+      if (!userId) return [];
+      const status = { paid: "PAID", pending: "PENDING", refunded: "REFUNDED", failed: "FAILED", cancelled: "CANCELLED" } as const;
+      return [{
+        id: p.id, userId, platform: p.description.startsWith("FIA") ? ("fia" as const) : ("acca" as const), description: p.description,
+        amountCents: p.amountCents, currency: p.currency, status: status[p.status], provider: "demo", createdAt: p.createdAt,
+        paidAt: p.status === "paid" ? p.createdAt : undefined,
+      }];
+    }),
+    paymentEvents: [],
     progress: new Map(),
     materialProgress: [],
     lastMaterial: new Map(),
@@ -205,19 +145,8 @@ export function getDb(): Db {
   return (g.__accaDb ??= seed());
 }
 
-/* ---------- visibility helpers (soft delete cascades at read time) ---------- */
-
-export function subjectVisible(db: Db, s: SubjectRec | undefined): s is SubjectRec {
-  if (!s || s.deletedAt) return false;
-  const level = db.levels.find((l) => l.id === s.levelId);
-  const platform = level && db.platforms.find((p) => p.slug === level.platform);
-  return !!platform && !platform.deletedAt;
-}
-export const platformOfSubject = (db: Db, s: SubjectRec): PlatformSlug => db.levels.find((l) => l.id === s.levelId)?.platform ?? "acca";
-
-export function topicVisible(db: Db, t: TopicRec | undefined): t is TopicRec {
-  return !!t && !t.deletedAt && subjectVisible(db, db.subjects.find((s) => s.slug === t.subjectSlug));
-}
+import { enrollmentActive } from "../domain/calc";
+export { enrollmentActive, platformOfSubject, subjectVisible, topicVisible, userProgress } from "../domain/calc";
 
 export const nowIso = ts;
 export const kindLabel = (k: MaterialKind) => k;
@@ -229,7 +158,7 @@ export function pushActivity(db: Db, a: Omit<ActivityRec, "id" | "at">) {
 
 /** Notify every ACTIVE student enrolled in the platform (e.g. new material / test / topic). */
 export function notifyEnrolled(db: Db, platform: PlatformSlug, n: Omit<AppNotification, "id" | "createdAt" | "read">) {
-  const ids = new Set(db.enrollments.filter((e) => e.platform === platform).map((e) => e.userId));
+  const ids = new Set(db.enrollments.filter((e) => e.platform === platform && enrollmentActive(e)).map((e) => e.userId));
   for (const u of db.users) if (ids.has(u.id) && u.role === "STUDENT" && u.status === "active" && !u.deletedAt) pushNotification(db, u.id, n);
 }
 
@@ -251,11 +180,3 @@ export function pushNotification(db: Db, userId: string, n: Omit<AppNotification
   userNotifications(db, userId).unshift({ ...n, id: newId("n"), createdAt: ts(), read: false });
 }
 
-export function userProgress(db: Db, userId: string): Map<string, ProgressEntry> {
-  let m = db.progress.get(userId);
-  if (!m) {
-    m = new Map();
-    db.progress.set(userId, m);
-  }
-  return m;
-}

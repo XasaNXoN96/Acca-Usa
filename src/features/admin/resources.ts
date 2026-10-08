@@ -1,7 +1,7 @@
 import type { Permission } from "@/lib/permissions";
 import type { EditableResource } from "@/lib/validators/admin";
 
-export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "certificates", "payments"] as const;
+export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "access", "certificates", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
 export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file";
@@ -37,8 +37,8 @@ export interface ResourceConfig {
 export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
   platforms: {
     permission: "manage_content", editPermission: "manage_content", canCreate: false, filters: [],
-    columns: ["name", "fullName", "levels", "subjects"],
-    fields: [{ name: "name", kind: "text", required: true }, { name: "fullName", kind: "text", required: true }],
+    columns: ["name", "fullName", "price", "levels", "subjects"],
+    fields: [{ name: "name", kind: "text", required: true }, { name: "fullName", kind: "text", required: true }, { name: "price", kind: "number", required: true, default: "0" }],
   },
   subjects: {
     permission: "manage_content", editPermission: "manage_content", canCreate: true, filters: ["platform"],
@@ -98,6 +98,11 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
       { name: "role", kind: "select", required: true }, { name: "status", kind: "select", required: true },
       { name: "password", kind: "password" },
     ],
+  },
+  access: {
+    permission: "view_students", editPermission: "manage_students", canCreate: true, filters: ["platform", "status"], customArchiveLabels: true,
+    columns: ["student", "platform", "status", "source", "expires"],
+    fields: [{ name: "student", kind: "select", required: true }, { name: "platform", kind: "select", required: true }, { name: "expiresAt", kind: "text" }],
   },
   certificates: {
     permission: "view_students", editPermission: "manage_students", canCreate: true, filters: ["platform", "subject", "status"], customArchiveLabels: true,

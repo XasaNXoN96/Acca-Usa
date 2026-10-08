@@ -6,6 +6,7 @@ import { services } from "@/services";
 import { getStorage } from "@/services/storage";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { platformTheme } from "@/lib/platform-theme";
+import { isDemoMode } from "@/lib/app-mode";
 import { materialKinds, type PlatformSlug } from "@/types";
 import type { FilterDef, ResourceRow } from "./resource-table";
 import { QuestionPreview } from "./question-preview";
@@ -50,8 +51,8 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
         rows: platforms.map((p) =>
           mk(p.slug, {
             name: <span className="flex items-center gap-2">{platformBadge(p.slug)}{bold(p.name)}</span>,
-            fullName: p.fullName, levels: p.levels.length, subjects: subjects.filter((s) => s.platform === p.slug && !s.archived).length,
-          }, { name: p.name, fullName: p.fullName }, [p.name, p.fullName], p.name, !!p.archived),
+            fullName: p.fullName, price: p.priceCents > 0 ? formatMoney(p.priceCents, "USD", locale) : ts("priceFree"), levels: p.levels.length, subjects: subjects.filter((s) => s.platform === p.slug && !s.archived).length,
+          }, { name: p.name, fullName: p.fullName, price: String(p.priceCents / 100) }, [p.name, p.fullName], p.name, !!p.archived),
         ),
       };
 
@@ -209,6 +210,24 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
       };
     }
 
+    case "access": {
+      const [records, students] = await Promise.all([services.enrollments.listAll(), services.users.listStudents()]);
+      const statusFilter: Option[] = (["FREE", "ACTIVE", "EXPIRED", "REVOKED"] as const).map((x) => ({ value: x, label: ts(`accessStatus.${x}`) }));
+      const studentOptions: Option[] = students.filter((u) => u.role === "STUDENT" && !u.archived).map((u) => ({ value: u.id, label: `${u.name} (${u.email})` }));
+      const tone = { FREE: "info", ACTIVE: "success", EXPIRED: "warning", REVOKED: "destructive" } as const;
+      return {
+        options: { student: studentOptions, platform: platformOptions },
+        filters: { platform: platformOptions, status: statusFilter },
+        rows: records.map((e) => ({
+          ...mk(`${e.userId}|${e.platform}`, {
+            student: bold(e.userName), platform: platformBadge(e.platform), status: <Badge variant={tone[e.status]}>{ts(`accessStatus.${e.status}`)}</Badge>,
+            source: ts(`accessSource.${e.source}`), expires: e.expiresAt ? formatDate(e.expiresAt, locale) : "—",
+          }, { student: e.userId, platform: e.platform, expiresAt: e.expiresAt ? e.expiresAt.slice(0, 10) : "" }, [e.userName, e.platform, e.status], `${e.userName} · ${e.platform.toUpperCase()}`, e.status === "REVOKED",
+          { platform: e.platform, status: e.status }),
+        })),
+      };
+    }
+
     case "certificates": {
       const [certs, students] = await Promise.all([services.certificates.listAll(), services.users.listStudents()]);
       const statusFilter: Option[] = (["issued", "revoked"] as const).map((x) => ({ value: x, label: ts(`certStatus.${x}`) }));
@@ -221,7 +240,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
             number: <span className="font-mono font-semibold">{x.number}</span>, student: x.studentName, platform: platformBadge(x.platform), subject: `${x.subjectCode} — ${x.subjectName}`,
             issued: formatDate(x.issuedAt, locale), status: <Badge variant={x.status === "issued" ? "success" : "destructive"}>{ts(`certStatus.${x.status}`)}</Badge>,
           }, {}, [x.number, x.studentName, x.subjectCode, x.subjectName, x.platform], x.number, x.status === "revoked",
-          { platform: x.platform, subject: x.subjectSlug, status: x.status }, undefined, <div className="space-y-3"><p className="type-caption text-muted-foreground">{ts(`certSource.${x.source}`)}</p><CertificateDocument cert={x} /></div>),
+          { platform: x.platform, subject: x.subjectSlug, status: x.status }, undefined, <div className="space-y-3"><p className="type-caption text-muted-foreground">{x.source === "admin" && !isDemoMode ? ts("certSource.adminLive") : ts(`certSource.${x.source}`)}</p><CertificateDocument cert={x} /></div>),
           noEdit: true,
         })),
       };
@@ -229,7 +248,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
 
     case "payments": {
       const [payments, ps] = await Promise.all([services.payments.listAll(), getTranslations("payments")]);
-      const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive" } as const;
+      const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive", cancelled: "neutral" } as const;
       return {
         options: {}, filters: {},
         rows: payments.map((p) =>

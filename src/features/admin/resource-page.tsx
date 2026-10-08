@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/app-mode";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { DemoBadge } from "@/components/ui/demo-badge";
@@ -50,7 +51,7 @@ export async function AdminResourcePage({ resource }: { resource: ResourceKey })
 
   return (
     <>
-      <PageHeader title={title} description={t(`${resource}.description`)} actions={<DemoBadge />} />
+      <PageHeader title={title} description={!isDemoMode && (resource === "exams" || resource === "payments") ? t(`${resource}.descriptionLive`) : t(`${resource}.description`)} actions={<DemoBadge />} />
       <AdminResourceTable
         resource={resource}
         columns={columns}

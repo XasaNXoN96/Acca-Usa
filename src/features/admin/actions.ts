@@ -59,7 +59,7 @@ export async function saveResourceAction(resource: string, id: string | null, ra
 
   switch (resource) {
     case "platforms":
-      res = await services.platforms.update(String(id), { name: String(d.name), fullName: String(d.fullName) });
+      res = await services.platforms.update(String(id), { name: String(d.name), fullName: String(d.fullName), priceCents: Math.round(Number(d.price) * 100) });
       break;
     case "subjects": {
       const input = { code: String(d.code), name: String(d.name), levelId: String(d.level) };
@@ -101,6 +101,11 @@ export async function saveResourceAction(resource: string, id: string | null, ra
       res = id ? await services.tests.update(id, input) : await services.tests.create(input);
       break;
     }
+    case "access": {
+      // Grant / change access. The row id is `<userId>|<platform>`; the browser never sets who the grant is for except through the form's student field.
+      res = await services.enrollments.grant({ userId: String(d.student), platform: d.platform as never, expiresAt: d.expiresAt ? `${String(d.expiresAt)}T23:59:59.000Z` : null });
+      break;
+    }
     case "certificates": {
       if (id) return { ok: false, code: "FORBIDDEN" }; // certificates are issued / revoked, never edited
       res = await services.certificates.issue({ userId: String(d.student), subjectSlug: String(d.subject) });
@@ -140,6 +145,12 @@ export async function setArchivedAction(resource: string, id: string, archived: 
     case "tests": res = await services.tests.setArchived(id, archived); break;
     case "students": res = await services.users.setArchived(id, archived); break;
     case "certificates": res = await services.certificates.setRevoked(id, archived); break;
+    case "access": {
+      const [userId, platform] = id.split("|");
+      if (!userId || (platform !== "acca" && platform !== "fia")) return { ok: false, code: "FORBIDDEN" };
+      res = archived ? await services.enrollments.revoke({ userId, platform }) : await services.enrollments.grant({ userId, platform });
+      break;
+    }
   }
   if (!res.ok) return fail(res);
   refresh(resource);

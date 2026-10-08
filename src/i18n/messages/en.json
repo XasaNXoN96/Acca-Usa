@@ -226,7 +226,13 @@
       "students": "Students",
       "lessons": "Video lessons",
       "questions": "Practice questions",
-      "access": "Access on any device"
+      "access": "Access on any device",
+      "titleLive": "What you can learn here",
+      "live": {
+        "subjects": "Subjects",
+        "topics": "Topics",
+        "tests": "Practice tests"
+      }
     },
     "testimonials": {
       "title": "What students say",
@@ -415,7 +421,12 @@
     "gateTitle": "Enroll to access {platform}",
     "gateText": "Subjects, topics, materials and tests of this platform open after you enroll.",
     "viewSubjects": "View subjects",
-    "actionError": "Could not update your enrolment. Please try again."
+    "actionError": "Could not update your enrolment. Please try again.",
+    "buyCta": "Buy access — {price}",
+    "renewCta": "Renew access — {price}",
+    "revoked": "Your access to this platform was withdrawn. Contact support if you think this is a mistake.",
+    "rateLimited": "Too many attempts. Please wait a few minutes.",
+    "enrollFreeCta": "Enroll (free)"
   },
   "subject": {
     "tabs": {
@@ -561,7 +572,9 @@
       "attemptsOf": "{used} of {allowed}",
       "noAttempts": "No attempts left",
       "noAttemptsText": "You have used all attempts for this test. You can still review your result.",
-      "viewResult": "View my result"
+      "viewResult": "View my result",
+      "examNotOpen": "This exam has not opened yet.",
+      "examClosed": "This exam is closed."
     },
     "questionImage": "Question image"
   },
@@ -624,7 +637,9 @@
     "practiceTests": "Practice tests",
     "practiceText": "Topic tests are available inside each subject.",
     "empty": "No exams scheduled.",
-    "durationHeader": "Duration"
+    "durationHeader": "Duration",
+    "action": "Action",
+    "start": "Start exam"
   },
   "progressPage": {
     "title": "Progress",
@@ -681,6 +696,28 @@
       "disclaimer": "Issued by ACCA USA, an independent learning platform, to confirm completion of an online course. It is not an ACCA or other awarding-body qualification and grants no professional status.",
       "demo": "Demo build — sample certificate.",
       "revoked": "Revoked"
+    },
+    "downloadPdf": "Download PDF",
+    "verifyLink": "Public verification page",
+    "pdf": {
+      "verify": "Verify this certificate at"
+    },
+    "verify": {
+      "title": "Certificate verification",
+      "description": "Check that a certificate was issued by ACCA USA.",
+      "valid": "Valid certificate",
+      "revoked": "This certificate has been revoked",
+      "notFound": "No certificate with this number was found.",
+      "notFoundHint": "Check the number printed on the certificate (format AU-2026-000123).",
+      "holder": "Holder",
+      "course": "Course",
+      "platform": "Platform",
+      "issued": "Date of issue",
+      "number": "Certificate number",
+      "status": "Status",
+      "privacy": "For privacy, only the holder's first name and the initial of the surname are shown.",
+      "limited": "Too many verification requests. Please try again in a few minutes.",
+      "home": "ACCA USA home"
     }
   },
   "payments": {
@@ -690,10 +727,28 @@
       "paid": "Paid",
       "pending": "Pending",
       "refunded": "Refunded",
-      "failed": "Failed"
+      "failed": "Failed",
+      "cancelled": "Cancelled"
     },
-    "notice": "Online payments are not enabled yet. The records below are demo data.",
-    "empty": "No payments yet."
+    "empty": "No payments yet.",
+    "demo": {
+      "title": "Demo checkout",
+      "description": "A simulated payment page.",
+      "notice": "This is a DEMO simulation — no real payment is made and no card is requested. In production the learner is sent to the payment provider instead.",
+      "item": "Item",
+      "amount": "Amount",
+      "pay": "Simulate successful payment",
+      "fail": "Simulate failed payment",
+      "cancel": "Cancel",
+      "alreadyDone": "This payment has already been completed.",
+      "error": "Could not complete the simulation."
+    },
+    "paid": "Payment confirmed — your access is active.",
+    "pendingConfirm": "We are waiting for the payment provider to confirm your payment. This usually takes a few seconds; refresh this page.",
+    "failedBanner": "The payment was not completed. You have not been charged.",
+    "cancelledBanner": "The payment was cancelled.",
+    "demoNotice": "Demo mode: payments are simulated and no real money moves.",
+    "liveNotice": "Payments are processed by our payment provider. Access starts only after the provider confirms the payment."
   },
   "notificationsPage": {
     "title": "Notifications",
@@ -762,6 +817,18 @@
       "system_event": {
         "title": "System event",
         "body": "A test attempt on “{detail}” was closed automatically when the time ran out."
+      },
+      "payment_failed": {
+        "title": "Payment failed",
+        "body": "Your payment was not completed. You have not been charged."
+      },
+      "access_granted": {
+        "title": "Access granted",
+        "body": "You now have access to {platform}."
+      },
+      "access_revoked": {
+        "title": "Access withdrawn",
+        "body": "Your access to {platform} was withdrawn. Contact support if you think this is a mistake."
       }
     },
     "unreadCount": "{count, plural, =0 {No unread notifications} one {# unread notification} other {# unread notifications}}"
@@ -772,7 +839,7 @@
     "details": "Personal details",
     "preferences": "Preferences",
     "preferredLanguage": "Interface language",
-    "saved": "Profile saved (demo — not stored).",
+    "saved": "Profile saved.",
     "fields": {
       "name": "Full name",
       "email": "Email",
@@ -781,7 +848,8 @@
     "errors": {
       "nameMin": "Enter your full name (at least 2 characters).",
       "emailInvalid": "Enter a valid email address."
-    }
+    },
+    "emailHint": "To change your e-mail address, contact support."
   },
   "books": {
     "title": "Books",
@@ -833,7 +901,8 @@
       "subjects": "Subjects",
       "topics": "Topics",
       "tests": "Tests",
-      "quickLinks": "Manage"
+      "quickLinks": "Manage",
+      "descriptionLive": "Platform at a glance."
     },
     "table": {
       "search": "Search this list",
@@ -885,11 +954,13 @@
           "fullName": "Full name",
           "levels": "Levels",
           "subjects": "Subjects",
-          "status": "Status"
+          "status": "Status",
+          "price": "Price"
         },
         "fields": {
           "name": "Short name",
-          "fullName": "Full name"
+          "fullName": "Full name",
+          "price": "Price of full access (USD, whole dollars; 0 = free)"
         }
       },
       "subjects": {
@@ -1051,7 +1122,8 @@
           "title": "Exam title",
           "platform": "Platform",
           "duration": "Duration (minutes)"
-        }
+        },
+        "descriptionLive": "Published exams and their availability windows."
       },
       "students": {
         "title": "Students",
@@ -1091,11 +1163,12 @@
         "fields": {
           "student": "Student",
           "amount": "Amount (USD)"
-        }
+        },
+        "descriptionLive": "Payments confirmed by the payment provider. Read-only ledger."
       },
       "certificates": {
         "title": "Certificates",
-        "description": "Course-completion certificates. They are issued automatically when a student completes every topic of a subject; you can also issue one manually (demo), revoke or restore it.",
+        "description": "Course-completion certificates. They are issued automatically when a student completes every topic of a subject; you can also issue one manually, revoke or restore it.",
         "add": "Issue certificate",
         "columns": {
           "number": "Number",
@@ -1123,6 +1196,36 @@
           "archivedDone": "Certificate revoked.",
           "restoredDone": "Certificate restored."
         }
+      },
+      "access": {
+        "title": "Access",
+        "description": "Who can learn on which platform. Access comes from a verified payment, free enrolment or an administrator; revoke or restore it here.",
+        "add": "Grant access",
+        "columns": {
+          "student": "Student",
+          "platform": "Platform",
+          "status": "Status",
+          "source": "Source",
+          "expires": "Expires"
+        },
+        "fields": {
+          "student": "Student",
+          "platform": "Platform",
+          "expiresAt": "Expires on (YYYY-MM-DD, empty = never)"
+        },
+        "filters": {
+          "platform": "Platform",
+          "status": "Status"
+        },
+        "labels": {
+          "archive": "Revoke",
+          "restore": "Restore",
+          "confirmTitle": "Revoke this access?",
+          "confirmText": "The student loses access to the platform immediately. Their progress is kept and you can restore access later.",
+          "archivedBadge": "Revoked",
+          "archivedDone": "Access revoked.",
+          "restoredDone": "Access restored."
+        }
       }
     },
     "validation": {
@@ -1149,7 +1252,12 @@
       "forbidden": "You do not have permission for this action.",
       "tagsInvalid": "Use up to 10 tags, each at most 30 characters.",
       "notEnrolled": "The student is not enrolled in this subject’s platform.",
-      "certExists": "This student already has an active certificate for this subject."
+      "certExists": "This student already has an active certificate for this subject.",
+      "dateInvalid": "Enter a valid date as YYYY-MM-DD.",
+      "datePast": "The date must be in the future.",
+      "paymentRequired": "This platform is paid — access comes with a completed payment.",
+      "accessRevoked": "Access to this platform was revoked by an administrator.",
+      "duplicate": "A record with the same name already exists here."
     },
     "statistics": {
       "title": "Statistics",
@@ -1182,7 +1290,12 @@
         "attempts": "Test attempts",
         "passRate": "Pass rate",
         "avgScore": "Average score",
-        "completedMaterials": "Completed materials"
+        "completedMaterials": "Completed materials",
+        "enrollments": "New enrolments",
+        "completedTopics": "Completed topics",
+        "certificates": "Certificates issued",
+        "payments": "Paid payments",
+        "revenue": "Revenue"
       },
       "charts": {
         "activity": "Student activity",
@@ -1200,7 +1313,8 @@
         "activity": "No student activity in this period.",
         "attempts": "No test attempts in this period.",
         "subjects": "No enrolled students for this selection."
-      }
+      },
+      "descriptionLive": "Learning statistics calculated from real records: students, enrolments, material completions, test results, certificates and payments."
     },
     "settings": {
       "title": "Settings",
@@ -1215,7 +1329,9 @@
       "sequentialHint": "Students must complete a topic before the next one opens.",
       "reminders": "Send learning reminders",
       "remindersHint": "Email students who have been inactive for 7 days.",
-      "saved": "Settings saved (demo — not stored)."
+      "saved": "Settings saved (demo — not stored).",
+      "liveTitle": "Settings are configured by the deployment",
+      "liveText": "Platform-wide settings (sender address, URLs, providers, secrets) live in the server environment and are validated at startup. See docs/DEPLOYMENT_MODES.md."
     },
     "difficulty": {
       "easy": "Easy",
@@ -1279,7 +1395,20 @@
     },
     "certSource": {
       "auto": "Earned automatically",
-      "admin": "Issued by an administrator (demo)"
+      "admin": "Issued by an administrator (demo)",
+      "adminLive": "Issued by an administrator"
+    },
+    "priceFree": "Free",
+    "accessStatus": {
+      "FREE": "Free",
+      "ACTIVE": "Active",
+      "EXPIRED": "Expired",
+      "REVOKED": "Revoked"
+    },
+    "accessSource": {
+      "self": "Self-service",
+      "payment": "Payment",
+      "admin": "Administrator"
     }
   },
   "states": {
@@ -1292,7 +1421,11 @@
     "goDashboard": "Go to dashboard",
     "emptyTitle": "Nothing here yet",
     "forbiddenTitle": "You don’t have access",
-    "forbiddenText": "Your role does not allow viewing this page."
+    "forbiddenText": "Your role does not allow viewing this page.",
+    "fileUnauthorized": "Please sign in to open this file.",
+    "fileForbidden": "You don’t have access to this file.",
+    "fileNotFound": "File not found.",
+    "fileRange": "The requested range is not valid."
   },
   "theme": {
     "label": "Theme",
@@ -1368,5 +1501,45 @@
     "pageOf": "Material {current} of {total}",
     "lockedTitle": "This topic is locked",
     "lockedText": "Complete the previous topics to unlock this material."
+  },
+  "email": {
+    "footer": "You receive this e-mail because you have an ACCA USA account.",
+    "welcome": {
+      "subject": "Welcome to ACCA USA",
+      "hello": "Hello {name},",
+      "body": "Your account is ready. Choose ACCA or FIA, enrol and start learning at your own pace."
+    },
+    "reset": {
+      "subject": "Reset your ACCA USA password",
+      "hello": "Hello {name},",
+      "body": "We received a request to reset your password. The link below is valid for {minutes} minutes and can be used once.",
+      "ignore": "If you did not ask for this, you can ignore this e-mail — your password stays the same.",
+      "cta": "Choose a new password"
+    },
+    "certificate": {
+      "subject": "Your ACCA USA certificate is ready",
+      "hello": "Hello {name},",
+      "body": "Congratulations! You have completed {title}.",
+      "number": "Certificate number: {number}",
+      "verify": "Anyone can verify it at {url}",
+      "cta": "View certificate"
+    },
+    "notification": {
+      "hello": "Hello {name},",
+      "cta": "Open"
+    },
+    "paymentOk": {
+      "subject": "Payment received",
+      "hello": "Hello {name},",
+      "body": "We received your payment of {amount} for {description}. Your access is active.",
+      "reference": "Reference: {id}"
+    },
+    "paymentFailed": {
+      "subject": "Your payment did not go through",
+      "hello": "Hello {name},",
+      "body": "The payment for {description} was not completed and you have not been charged for it.",
+      "hint": "You can try again at any time.",
+      "cta": "Try again"
+    }
   }
 }

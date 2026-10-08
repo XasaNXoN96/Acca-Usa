@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
@@ -12,6 +13,8 @@ import { isDemoMode } from "@/lib/app-mode";
 import { routes } from "@/lib/routes";
 import { forgotSchema, loginSchema, registerSchema, resetSchema } from "@/lib/validators/auth";
 import { isLocale } from "@/i18n/config";
+import { absoluteUrl, sendEmail } from "@/services/email";
+import { RESET_TTL_MINUTES } from "@/services/auth-constants";
 
 /**
  * Auth server actions. Input is ALWAYS re-validated here (the browser is not trusted), attempts
@@ -32,7 +35,7 @@ export async function loginAction(input: unknown, next?: string | null): Promise
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
   const email = parsed.data.email.toLowerCase();
 
-  const rl = rateLimit(`login:${await clientKey()}:${email}`, 8, 10 * 60_000);
+  const rl = await rateLimit(`login:${await clientKey()}:${email}`, 8, 10 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
 
   const res = await services.auth.verifyCredentials(email, parsed.data.password);
@@ -46,7 +49,7 @@ export async function registerAction(input: unknown, next?: string | null): Prom
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
 
-  const rl = rateLimit(`register:${await clientKey()}`, 10, 60 * 60_000);
+  const rl = await rateLimit(`register:${await clientKey()}`, 10, 60 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
 
   const locale = await getLocale();
@@ -57,6 +60,8 @@ export async function registerAction(input: unknown, next?: string | null): Prom
     locale: isLocale(locale) ? locale : "en",
   });
   if (!created.ok) return { ok: false, code: "EMAIL_TAKEN" };
+  // After the response: a slow or failing mail server must not delay (or break) registration.
+  after(() => sendEmail({ email: created.data.email, locale: created.data.locale }, { kind: "welcome", name: created.data.name }));
 
   // Self-registration only ever creates a STUDENT; staff roles are granted by an administrator.
   const login = await services.auth.verifyCredentials(parsed.data.email, parsed.data.password);
@@ -77,20 +82,25 @@ export type ForgotResult =
 export async function forgotPasswordAction(input: unknown): Promise<ForgotResult> {
   const parsed = forgotSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-  const rl = rateLimit(`forgot:${await clientKey()}`, 5, 15 * 60_000);
+  const rl = await rateLimit(`forgot:${await clientKey()}`, 5, 15 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
 
   const res = await services.auth.requestPasswordReset(parsed.data.email);
-  // The response is identical whether or not the account exists. In DEMO mode only, the link is shown
-  // on screen because no email provider exists; production mode sends it by email and shows nothing.
-  if (res && isDemoMode) return { ok: true, demoResetPath: `${routes.resetPassword}?token=${encodeURIComponent(res.token)}` };
+  // The response is identical whether or not the account exists. The link goes out by e-mail (the demo provider only
+  // records it); in DEMO mode ONLY it is also shown on screen so the flow can be tried without a mailbox.
+  if (res) {
+    const resetPath = `${routes.resetPassword}?token=${encodeURIComponent(res.token)}`;
+    // After the response, so response time does not reveal whether the account exists.
+    after(() => sendEmail({ email: res.user.email, locale: res.user.locale }, { kind: "passwordReset", name: res.user.name, resetUrl: absoluteUrl(resetPath), expiresMinutes: RESET_TTL_MINUTES }));
+    if (isDemoMode) return { ok: true, demoResetPath: resetPath };
+  }
   return { ok: true };
 }
 
 export async function resetPasswordAction(input: unknown): Promise<AuthResult> {
   const parsed = resetSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
-  const rl = rateLimit(`reset:${await clientKey()}`, 10, 15 * 60_000);
+  const rl = await rateLimit(`reset:${await clientKey()}`, 10, 15 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
 
   const ok = await services.auth.resetPassword(parsed.data.token, parsed.data.password);

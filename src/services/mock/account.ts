@@ -1,21 +1,11 @@
 import "server-only";
-import type { DashboardService, NotificationService, PaymentService } from "../contracts";
+import type { DashboardService, NotificationService } from "../contracts";
 import type { DashboardOverview, PlatformSlug } from "@/types";
-import { DEMO_STUDENT_ID, payments } from "@/data/mock/people";
 import { getDb, platformOfSubject, topicVisible, userNotifications, userProgress } from "./db";
-import { platformProgress, subjectProgress, topicPercent, visibleSubjects, visibleTopicsOf } from "./calc";
+import { activePlatformsOf, platformProgress, subjectProgress, topicPercent, visibleSubjects, visibleTopicsOf } from "./calc";
 import { authService, toUser, userService } from "./auth-users";
 import { certificateService, progressService, rankingService } from "./learning";
 import { testService } from "./assessment";
-
-export const paymentService: PaymentService = {
-  async listForUser(userId) {
-    return userId === DEMO_STUDENT_ID ? payments.filter((p) => p.studentName === "Demo Student") : [];
-  },
-  async listAll() {
-    return payments;
-  },
-};
 
 export const notificationService: NotificationService = {
   async list(userId) {
@@ -48,11 +38,12 @@ export const dashboardService: DashboardService = {
       testService.listPublished(userId),
     ]);
 
-    const enrolledPlatforms = new Set<PlatformSlug>(db.enrollments.filter((e) => e.userId === userId).map((e) => e.platform));
+    const enrolledPlatforms = new Set<PlatformSlug>(activePlatformsOf(db, userId));
     const enrollments = db.platforms
       .filter((p) => !p.deletedAt)
       .map((p) => ({
         platform: p.slug,
+        priceCents: p.priceCents,
         status: enrolledPlatforms.has(p.slug) ? ("active" as const) : ("not_enrolled" as const),
         progress: enrolledPlatforms.has(p.slug) ? platformProgress(db, userId, p.slug) : 0,
       }));

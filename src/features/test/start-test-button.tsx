@@ -30,7 +30,7 @@ export function StartTestButton({ testId, resume }: { testId: string; resume: bo
         <Play aria-hidden />
         {resume ? t("resume") : t("start")}
       </Button>
-      {error ? <p role="alert" className="type-small font-medium text-destructive">{error === "ATTEMPTS_EXHAUSTED" ? t("noAttemptsText") : t("startError")}</p> : null}
+      {error ? <p role="alert" className="type-small font-medium text-destructive">{error === "ATTEMPTS_EXHAUSTED" ? t("noAttemptsText") : error === "EXAM_NOT_OPEN" ? t("examNotOpen") : error === "EXAM_CLOSED" ? t("examClosed") : t("startError")}</p> : null}
     </div>
   );
 }

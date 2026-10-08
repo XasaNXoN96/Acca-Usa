@@ -25,7 +25,7 @@ export default async function ExamsPage() {
     getTranslations("exams"),
     getTranslations("common"),
     getLocale(),
-    services.exams.list(),
+    services.exams.list(session.user.id),
     services.tests.listPublished(session.user.id),
     services.subjects.list(),
   ]);
@@ -45,6 +45,7 @@ export default async function ExamsPage() {
             { key: "duration", header: t("durationHeader") },
             { key: "status", header: c("status") },
             { key: "score", header: t("score"), align: "right" },
+            { key: "action", header: t("action"), align: "right" },
           ]}
           rows={exams.map((e) => ({
             id: e.id,
@@ -59,6 +60,7 @@ export default async function ExamsPage() {
               duration: t("duration", { count: e.durationMinutes }),
               status: <Badge variant={statusVariant[e.status]}>{t(`status.${e.status}`)}</Badge>,
               score: e.score !== undefined ? `${e.score}%` : "—",
+              action: e.startable ? <Button asChild size="sm"><Link href={routes.test(e.id)}>{t("start")}</Link></Button> : "—",
             },
           }))}
         />

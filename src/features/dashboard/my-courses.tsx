@@ -73,7 +73,7 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
               {active ? (
                 <Button asChild variant={theme.button} size="sm" className="mt-auto w-full"><Link href={routes.coursePlatform(e.platform)}>{t("continue")}</Link></Button>
               ) : (
-                <EnrollButton platform={e.platform} size="sm" label={t("enroll")} className="mt-auto" />
+                <EnrollButton platform={e.platform} size="sm" label={t("enroll")} priceCents={e.priceCents} className="mt-auto" />
               )}
             </Card>
           );

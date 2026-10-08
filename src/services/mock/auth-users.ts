@@ -5,7 +5,7 @@ import type { PlatformSlug, StudentRecord, User } from "@/types";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { seedStudentSummary } from "@/data/mock/people";
 import { getDb, newId, notifyAdmins, nowIso, pushNotification, type UserRec } from "./db";
-import { platformProgress } from "./calc";
+import { activePlatformsOf, platformProgress } from "./calc";
 
 export const toUser = (r: UserRec): User => ({
   id: r.id, name: r.name, email: r.email, role: r.role, status: r.status, locale: r.locale, createdAt: r.createdAt,
@@ -13,7 +13,9 @@ export const toUser = (r: UserRec): User => ({
 
 const normEmail = (e: string) => e.trim().toLowerCase();
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
-const RESET_TTL_MS = 30 * 60 * 1000;
+export { RESET_TTL_MINUTES } from "../auth-constants";
+import { RESET_TTL_MINUTES } from "../auth-constants";
+const RESET_TTL_MS = RESET_TTL_MINUTES * 60 * 1000;
 
 export const authService: AuthService = {
   async register({ name, email, password, locale }) {
@@ -45,7 +47,7 @@ export const authService: AuthService = {
     db.resetTokens = db.resetTokens.filter((t) => t.userId !== rec.id && t.expiresAt > Date.now());
     const token = randomBytes(32).toString("base64url");
     db.resetTokens.push({ tokenHash: sha256(token), userId: rec.id, expiresAt: Date.now() + RESET_TTL_MS });
-    return { token };
+    return { token, user: { name: rec.name, email: rec.email, locale: rec.locale } };
   },
 
   async resetPassword(token, newPassword) {
@@ -85,7 +87,7 @@ export const userService: UserService = {
   async listStudents() {
     const db = getDb();
     return db.users.map<StudentRecord>((u) => {
-      const enrolled = db.enrollments.filter((e) => e.userId === u.id).map((e) => e.platform);
+      const enrolled = activePlatformsOf(db, u.id);
       const seeded = seedStudentSummary[u.id];
       const platforms: PlatformSlug[] = enrolled.length || !seeded ? enrolled : seeded.platforms;
       const progress = enrolled.length
@@ -132,6 +134,14 @@ export const userService: UserService = {
     if (archived && rec.role === "ADMIN" && activeAdmins(id) === 0) return { ok: false, code: "LAST_ADMIN" };
     rec.deletedAt = archived ? nowIso() : undefined;
     rec.tokenVersion += 1;
+    return { ok: true, data: undefined };
+  },
+
+  async updateProfile(userId, input) {
+    const rec = getDb().users.find((u) => u.id === userId && !u.deletedAt);
+    if (!rec) return { ok: false, code: "NOT_FOUND" };
+    rec.name = input.name.trim();
+    rec.locale = input.locale;
     return { ok: true, data: undefined };
   },
 

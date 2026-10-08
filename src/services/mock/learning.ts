@@ -3,6 +3,7 @@ import type { CertificateService, ExamService, ProgressService, RankingService }
 import type { Certificate, RankingEntry } from "@/types";
 import type { PlatformSlug } from "@/types";
 import { exams } from "@/data/mock/people";
+import { publicName } from "../domain/names";
 import { routes } from "@/lib/routes";
 import { getDb, nowIso, platformOfSubject, pushActivity, pushNotification, topicVisible, userProgress } from "./db";
 import { activeCertificate, createCertificate, issueIfEarned } from "./certs-core";
@@ -80,11 +81,6 @@ export const progressService: ProgressService = {
   },
 };
 
-/** "Maria Lopez" → "Maria L." — other learners are never shown with a full surname. */
-const publicName = (name: string) => {
-  const parts = name.trim().split(/\s+/);
-  return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]![0]!.toUpperCase()}.` : parts[0] ?? "—";
-};
 
 /**
  * Ranking from REAL records: active student accounts only, scored by the sum of their best test results in the
@@ -162,6 +158,10 @@ export const certificateService: CertificateService = {
     const c = getDb().certificates.find((x) => x.id === id);
     return c && (asAdmin || c.userId === userId) ? c : null;
   },
+  async verifyByNumber(number) {
+    const c = getDb().certificates.find((x) => x.number === number);
+    return c ? { number: c.number, holder: publicName(c.studentName), platform: c.platform, subjectCode: c.subjectCode, subjectName: c.subjectName, issuedAt: c.issuedAt, status: c.status } : null;
+  },
   async listAll() {
     return [...getDb().certificates].sort((x, y) => y.issuedAt.localeCompare(x.issuedAt));
   },
@@ -190,6 +190,6 @@ export const certificateService: CertificateService = {
 
 export const examService: ExamService = {
   async list() {
-    return exams;
+    return exams; // demo fixtures: illustrative only — never startable, scores are sample data
   },
 };

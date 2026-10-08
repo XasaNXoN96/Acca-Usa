@@ -226,7 +226,13 @@
       "students": "Talabalar",
       "lessons": "Video darslar",
       "questions": "Amaliy savollar",
-      "access": "Istalgan qurilmada kirish"
+      "access": "Istalgan qurilmada kirish",
+      "titleLive": "Bu yerda nimani o‘rganish mumkin",
+      "live": {
+        "subjects": "Fanlar",
+        "topics": "Mavzular",
+        "tests": "Amaliy testlar"
+      }
     },
     "testimonials": {
       "title": "Talabalar nima deydi",
@@ -415,7 +421,12 @@
     "gateTitle": "{platform} ni ochish uchun yoziling",
     "gateText": "Bu platformaning fanlari, mavzulari, materiallari va testlari yozilgandan so‘ng ochiladi.",
     "viewSubjects": "Fanlarni ko‘rish",
-    "actionError": "Yozilishni yangilab bo‘lmadi. Qayta urinib ko‘ring."
+    "actionError": "Yozilishni yangilab bo‘lmadi. Qayta urinib ko‘ring.",
+    "buyCta": "Kirishni sotib olish — {price}",
+    "renewCta": "Kirishni uzaytirish — {price}",
+    "revoked": "Bu platformaga kirishingiz bekor qilingan. Xato deb o‘ylasangiz, yordamga murojaat qiling.",
+    "rateLimited": "Urinishlar juda ko‘p. Bir necha daqiqa kuting.",
+    "enrollFreeCta": "Yozilish (bepul)"
   },
   "subject": {
     "tabs": {
@@ -561,7 +572,9 @@
       "attemptsOf": "{allowed} tadan {used}",
       "noAttempts": "Urinishlar qolmadi",
       "noAttemptsText": "Bu test uchun barcha urinishlardan foydalandingiz. Natijani ko‘rishingiz mumkin.",
-      "viewResult": "Natijamni ko‘rish"
+      "viewResult": "Natijamni ko‘rish",
+      "examNotOpen": "Bu imtihon hali ochilmagan.",
+      "examClosed": "Bu imtihon yopilgan."
     },
     "questionImage": "Savol rasmi"
   },
@@ -624,7 +637,9 @@
     "practiceTests": "Amaliy testlar",
     "practiceText": "Mavzu testlari har bir fan ichida mavjud.",
     "empty": "Rejalashtirilgan imtihonlar yo‘q.",
-    "durationHeader": "Davomiyligi"
+    "durationHeader": "Davomiyligi",
+    "action": "Amal",
+    "start": "Imtihonni boshlash"
   },
   "progressPage": {
     "title": "Progress",
@@ -681,6 +696,28 @@
       "disclaimer": "Mustaqil o‘quv platformasi ACCA USA tomonidan onlayn kursni tugatganlikni tasdiqlash uchun berilgan. Bu ACCA yoki boshqa attestatsiya tashkiloti malakasi emas va kasbiy maqom bermaydi.",
       "demo": "Demo versiya — namunaviy sertifikat.",
       "revoked": "Bekor qilingan"
+    },
+    "downloadPdf": "PDF yuklab olish",
+    "verifyLink": "Ommaviy tekshiruv sahifasi",
+    "pdf": {
+      "verify": "Sertifikatni tekshirish:"
+    },
+    "verify": {
+      "title": "Sertifikatni tekshirish",
+      "description": "Sertifikat ACCA USA tomonidan berilganini tekshiring.",
+      "valid": "Sertifikat haqiqiy",
+      "revoked": "Bu sertifikat bekor qilingan",
+      "notFound": "Bu raqamli sertifikat topilmadi.",
+      "notFoundHint": "Sertifikatdagi raqamni tekshiring (format AU-2026-000123).",
+      "holder": "Egasi",
+      "course": "Kurs",
+      "platform": "Platforma",
+      "issued": "Berilgan sana",
+      "number": "Sertifikat raqami",
+      "status": "Holati",
+      "privacy": "Maxfiylik uchun faqat egasining ismi va familiyasining bosh harfi ko‘rsatiladi.",
+      "limited": "Tekshiruv so‘rovlari juda ko‘p. Bir necha daqiqadan keyin qayta urinib ko‘ring.",
+      "home": "ACCA USA bosh sahifasi"
     }
   },
   "payments": {
@@ -690,10 +727,28 @@
       "paid": "To‘langan",
       "pending": "Kutilmoqda",
       "refunded": "Qaytarilgan",
-      "failed": "Xatolik"
+      "failed": "Xatolik",
+      "cancelled": "Bekor qilingan"
     },
-    "notice": "Onlayn to‘lovlar hali yoqilmagan. Quyidagi yozuvlar — demo ma’lumot.",
-    "empty": "Hozircha to‘lovlar yo‘q."
+    "empty": "Hozircha to‘lovlar yo‘q.",
+    "demo": {
+      "title": "Demo to‘lov",
+      "description": "To‘lovni taqlid qiluvchi sahifa.",
+      "notice": "Bu DEMO taqlid — haqiqiy to‘lov amalga oshirilmaydi va karta ma‘lumotlari so‘ralmaydi. Ishchi rejimda foydalanuvchi to‘lov provayderi sahifasiga o‘tkaziladi.",
+      "item": "Mahsulot",
+      "amount": "Summa",
+      "pay": "Muvaffaqiyatli to‘lovni taqlid qilish",
+      "fail": "Muvaffaqiyatsiz to‘lovni taqlid qilish",
+      "cancel": "Bekor qilish",
+      "alreadyDone": "Bu to‘lov allaqachon yakunlangan.",
+      "error": "Taqlidni yakunlab bo‘lmadi."
+    },
+    "paid": "To‘lov tasdiqlandi — kirish faollashtirildi.",
+    "pendingConfirm": "To‘lov provayderining tasdig‘ini kutyapmiz. Odatda bir necha soniya ketadi — sahifani yangilang.",
+    "failedBanner": "To‘lov yakunlanmadi. Pul yechilmadi.",
+    "cancelledBanner": "To‘lov bekor qilindi.",
+    "demoNotice": "Demo rejim: to‘lovlar taqlid qilinadi, haqiqiy pul harakatlanmaydi.",
+    "liveNotice": "To‘lovlarni to‘lov provayderi qayta ishlaydi. Kirish faqat provayder to‘lovni tasdiqlagandan keyin boshlanadi."
   },
   "notificationsPage": {
     "title": "Bildirishnomalar",
@@ -762,6 +817,18 @@
       "system_event": {
         "title": "Tizim hodisasi",
         "body": "“{detail}” testidagi urinish vaqt tugagani uchun avtomatik yopildi."
+      },
+      "payment_failed": {
+        "title": "To‘lov amalga oshmadi",
+        "body": "To‘lov yakunlanmadi. Pul yechilmadi."
+      },
+      "access_granted": {
+        "title": "Kirish berildi",
+        "body": "Endi sizda {platform} ga kirish bor."
+      },
+      "access_revoked": {
+        "title": "Kirish bekor qilindi",
+        "body": "{platform} ga kirishingiz bekor qilindi. Xato deb o‘ylasangiz, yordamga murojaat qiling."
       }
     },
     "unreadCount": "{count, plural, =0 {O‘qilmagan bildirishnomalar yo‘q} other {# ta o‘qilmagan bildirishnoma}}"
@@ -772,7 +839,7 @@
     "details": "Shaxsiy ma’lumotlar",
     "preferences": "Sozlamalar",
     "preferredLanguage": "Interfeys tili",
-    "saved": "Profil saqlandi (demo — ma’lumot saqlanmaydi).",
+    "saved": "Profil saqlandi.",
     "fields": {
       "name": "To‘liq ism",
       "email": "Elektron pochta",
@@ -781,7 +848,8 @@
     "errors": {
       "nameMin": "To‘liq ismingizni kiriting (kamida 2 belgi).",
       "emailInvalid": "To‘g‘ri elektron pochta manzilini kiriting."
-    }
+    },
+    "emailHint": "E-mail manzilini o‘zgartirish uchun yordamga murojaat qiling."
   },
   "books": {
     "title": "Kitoblar",
@@ -833,7 +901,8 @@
       "subjects": "Fanlar",
       "topics": "Mavzular",
       "tests": "Testlar",
-      "quickLinks": "Boshqaruv"
+      "quickLinks": "Boshqaruv",
+      "descriptionLive": "Platforma bir qarashda."
     },
     "table": {
       "search": "Ro‘yxatdan qidirish",
@@ -885,11 +954,13 @@
           "fullName": "To‘liq nomi",
           "levels": "Darajalar",
           "subjects": "Fanlar",
-          "status": "Holat"
+          "status": "Holat",
+          "price": "Narx"
         },
         "fields": {
           "name": "Qisqa nomi",
-          "fullName": "To‘liq nomi"
+          "fullName": "To‘liq nomi",
+          "price": "To‘liq kirish narxi (USD, butun dollar; 0 = bepul)"
         }
       },
       "subjects": {
@@ -1051,7 +1122,8 @@
           "title": "Imtihon nomi",
           "platform": "Platforma",
           "duration": "Davomiyligi (daqiqa)"
-        }
+        },
+        "descriptionLive": "E’lon qilingan imtihonlar va ularning ochiq bo‘lish oynalari."
       },
       "students": {
         "title": "Talabalar",
@@ -1091,11 +1163,12 @@
         "fields": {
           "student": "Talaba",
           "amount": "Summa (USD)"
-        }
+        },
+        "descriptionLive": "To‘lov provayderi tasdiqlagan to‘lovlar. Faqat o‘qish uchun jurnal."
       },
       "certificates": {
         "title": "Sertifikatlar",
-        "description": "Kursni tugatganlik sertifikatlari. Talaba fanning barcha mavzularini tugatganda avtomatik beriladi; qo‘lda ham berish (demo), bekor qilish yoki tiklash mumkin.",
+        "description": "Kursni tugatganlik sertifikatlari. Talaba fanning barcha mavzularini tugatganda avtomatik beriladi; qo‘lda berish, bekor qilish yoki tiklash ham mumkin.",
         "add": "Sertifikat berish",
         "columns": {
           "number": "Raqam",
@@ -1123,6 +1196,36 @@
           "archivedDone": "Sertifikat bekor qilindi.",
           "restoredDone": "Sertifikat tiklandi."
         }
+      },
+      "access": {
+        "title": "Kirish",
+        "description": "Kim qaysi platformada o‘qiy olishi. Kirish tasdiqlangan to‘lov, bepul yozilish yoki administrator orqali beriladi; bu yerda uni bekor qilish yoki tiklash mumkin.",
+        "add": "Kirish berish",
+        "columns": {
+          "student": "Talaba",
+          "platform": "Platforma",
+          "status": "Holati",
+          "source": "Manba",
+          "expires": "Amal qilish muddati"
+        },
+        "fields": {
+          "student": "Talaba",
+          "platform": "Platforma",
+          "expiresAt": "Muddati (YYYY-MM-DD, bo‘sh = cheksiz)"
+        },
+        "filters": {
+          "platform": "Platforma",
+          "status": "Holati"
+        },
+        "labels": {
+          "archive": "Bekor qilish",
+          "restore": "Tiklash",
+          "confirmTitle": "Bu kirish bekor qilinsinmi?",
+          "confirmText": "Talaba platformaga kirish huquqini darhol yo‘qotadi. Uning natijalari saqlanadi, kirishni keyin tiklash mumkin.",
+          "archivedBadge": "Bekor qilingan",
+          "archivedDone": "Kirish bekor qilindi.",
+          "restoredDone": "Kirish tiklandi."
+        }
       }
     },
     "validation": {
@@ -1149,7 +1252,12 @@
       "forbidden": "Bu amal uchun ruxsatingiz yo‘q.",
       "tagsInvalid": "Ko‘pi bilan 10 ta teg, har biri 30 belgigacha.",
       "notEnrolled": "Talaba bu fan platformasiga yozilmagan.",
-      "certExists": "Bu talabaning shu fan bo‘yicha amaldagi sertifikati allaqachon bor."
+      "certExists": "Bu talabaning shu fan bo‘yicha amaldagi sertifikati allaqachon bor.",
+      "dateInvalid": "Sanani YYYY-MM-DD formatida kiriting.",
+      "datePast": "Sana kelajakda bo‘lishi kerak.",
+      "paymentRequired": "Bu platforma pullik — kirish to‘lov yakunlangach ochiladi.",
+      "accessRevoked": "Bu platformaga kirish administrator tomonidan bekor qilingan.",
+      "duplicate": "Bunday yozuv allaqachon mavjud."
     },
     "statistics": {
       "title": "Statistika",
@@ -1182,7 +1290,12 @@
         "attempts": "Test urinishlari",
         "passRate": "O‘tganlar ulushi",
         "avgScore": "O‘rtacha ball",
-        "completedMaterials": "Tugatilgan materiallar"
+        "completedMaterials": "Tugatilgan materiallar",
+        "enrollments": "Yangi yozilishlar",
+        "completedTopics": "Tugatilgan mavzular",
+        "certificates": "Berilgan sertifikatlar",
+        "payments": "To‘langan to‘lovlar",
+        "revenue": "Daromad"
       },
       "charts": {
         "activity": "Talabalar faolligi",
@@ -1200,7 +1313,8 @@
         "activity": "Bu davrda talabalar faolligi yo‘q.",
         "attempts": "Bu davrda test urinishlari yo‘q.",
         "subjects": "Bu tanlov uchun yozilgan talabalar yo‘q."
-      }
+      },
+      "descriptionLive": "Haqiqiy ma’lumotlar asosidagi o‘qish statistikasi: talabalar, yozilishlar, tugatilgan materiallar, test natijalari, sertifikatlar va to‘lovlar."
     },
     "settings": {
       "title": "Sozlamalar",
@@ -1215,7 +1329,9 @@
       "sequentialHint": "Keyingisi ochilishi uchun talaba mavzuni tugatishi kerak.",
       "reminders": "O‘qish eslatmalarini yuborish",
       "remindersHint": "7 kun faol bo‘lmagan talabalarga pochta yuborish.",
-      "saved": "Sozlamalar saqlandi (demo — ma’lumot saqlanmaydi)."
+      "saved": "Sozlamalar saqlandi (demo — ma’lumot saqlanmaydi).",
+      "liveTitle": "Sozlamalar joylashtirish vaqtida beriladi",
+      "liveText": "Platforma sozlamalari (jo‘natuvchi manzili, URL, provayderlar, sirlar) server muhitida saqlanadi va ishga tushishda tekshiriladi. docs/DEPLOYMENT_MODES.md ga qarang."
     },
     "difficulty": {
       "easy": "Oson",
@@ -1279,7 +1395,20 @@
     },
     "certSource": {
       "auto": "Avtomatik olingan",
-      "admin": "Administrator tomonidan berilgan (demo)"
+      "admin": "Administrator tomonidan berilgan (demo)",
+      "adminLive": "Administrator tomonidan berilgan"
+    },
+    "priceFree": "Bepul",
+    "accessStatus": {
+      "FREE": "Bepul",
+      "ACTIVE": "Faol",
+      "EXPIRED": "Muddati tugagan",
+      "REVOKED": "Bekor qilingan"
+    },
+    "accessSource": {
+      "self": "O‘zi",
+      "payment": "To‘lov",
+      "admin": "Admin tomonidan"
     }
   },
   "states": {
@@ -1292,7 +1421,11 @@
     "goDashboard": "Panelga",
     "emptyTitle": "Hozircha hech narsa yo‘q",
     "forbiddenTitle": "Ruxsat yo‘q",
-    "forbiddenText": "Sizning rolingiz bu sahifani ko‘rishga ruxsat bermaydi."
+    "forbiddenText": "Sizning rolingiz bu sahifani ko‘rishga ruxsat bermaydi.",
+    "fileUnauthorized": "Bu faylni ochish uchun tizimga kiring.",
+    "fileForbidden": "Bu faylga kirish huquqingiz yo‘q.",
+    "fileNotFound": "Fayl topilmadi.",
+    "fileRange": "So‘ralgan diapazon yaroqsiz."
   },
   "theme": {
     "label": "Mavzu",
@@ -1368,5 +1501,45 @@
     "pageOf": "{total} tadan {current}-material",
     "lockedTitle": "Mavzu yopiq",
     "lockedText": "Bu materialni ochish uchun oldingi mavzularni tugating."
+  },
+  "email": {
+    "footer": "Siz bu xatni ACCA USA hisobingiz borligi uchun olyapsiz.",
+    "welcome": {
+      "subject": "ACCA USA ga xush kelibsiz",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "Hisobingiz tayyor. ACCA yoki FIA ni tanlang, yoziling va o‘zingizga qulay tezlikda o‘qing."
+    },
+    "reset": {
+      "subject": "ACCA USA parolini tiklash",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "Parolni tiklash so‘rovi olindi. Quyidagi havola {minutes} daqiqa amal qiladi va bir marta ishlaydi.",
+      "ignore": "Agar siz so‘ramagan bo‘lsangiz, bu xatni e‘tiborsiz qoldiring — parolingiz o‘zgarmaydi.",
+      "cta": "Yangi parol tanlash"
+    },
+    "certificate": {
+      "subject": "ACCA USA sertifikatingiz tayyor",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "Tabriklaymiz! Siz kursni tugatdingiz: {title}.",
+      "number": "Sertifikat raqami: {number}",
+      "verify": "Uni istalgan kishi shu yerda tekshirishi mumkin: {url}",
+      "cta": "Sertifikatni ochish"
+    },
+    "notification": {
+      "hello": "Assalomu alaykum, {name}!",
+      "cta": "Ochish"
+    },
+    "paymentOk": {
+      "subject": "To‘lov qabul qilindi",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "{description} uchun {amount} to‘lovingiz qabul qilindi. Kirish faollashtirildi.",
+      "reference": "To‘lov raqami: {id}"
+    },
+    "paymentFailed": {
+      "subject": "To‘lov amalga oshmadi",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "{description} uchun to‘lov yakunlanmadi va hisobingizdan pul yechilmadi.",
+      "hint": "Istalgan vaqtda qayta urinib ko‘rishingiz mumkin.",
+      "cta": "Qayta urinish"
+    }
   }
 }

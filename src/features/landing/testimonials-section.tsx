@@ -1,10 +1,13 @@
 import { Quote } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { DemoBadge } from "@/components/ui/demo-badge";
+import { isDemoMode } from "@/lib/app-mode";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Section } from "./section";
 
+/** Sample quotes from fictional people: DEMO mode only. Production shows no testimonials until real, consented ones exist. */
 export async function TestimonialsSection() {
+  if (!isDemoMode) return null;
   const t = await getTranslations("landing.testimonials");
   const items = ["t1", "t2", "t3"] as const;
   return (

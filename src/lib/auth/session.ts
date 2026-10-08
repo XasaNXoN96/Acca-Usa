@@ -3,9 +3,8 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { services, type Session } from "@/services";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, signSession, verifySession } from "./token";
-import { isDemoMode } from "@/lib/app-mode";
+import { APP_MODE, isDemoMode } from "@/lib/app-mode";
 import type { User } from "@/types";
-import {  } from "@/lib/auth/guards";
 
 /** Issues the session cookie: httpOnly (no JS access), SameSite=Lax, Secure in production. */
 export async function startSession(user: Pick<User, "id" | "role">, tokenVersion: number) {
@@ -13,7 +12,7 @@ export async function startSession(user: Pick<User, "id" | "role">, tokenVersion
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" || APP_MODE === "production",
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });

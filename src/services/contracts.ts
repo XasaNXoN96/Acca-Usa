@@ -1,3 +1,4 @@
+import type { ProcessOutcome, ProviderEvent } from "./payments/contracts";
 import type {
   RankingResult,
   ActivityItem,
@@ -9,6 +10,7 @@ import type {
   AttemptDraft,
   BankQuestion,
   Certificate,
+  CertificateVerification,
   DashboardOverview,
   Difficulty,
   Enrollment,
@@ -53,7 +55,7 @@ export interface AuthService {
   /** Returns the user only when email + password match and the account is active. */
   verifyCredentials(email: string, password: string): Promise<{ user: User; tokenVersion: number } | { error: "INVALID" | "SUSPENDED" }>;
   /** Creates a single-use reset token. The raw token is returned ONLY to the caller (demo mode shows it; production emails it). */
-  requestPasswordReset(email: string): Promise<{ token: string } | null>;
+  requestPasswordReset(email: string): Promise<{ token: string; user: { name: string; email: string; locale: Locale } } | null>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   /** Used by the session layer: re-reads the user on every request (role/status changes apply immediately). */
   getSessionUser(userId: string, tokenVersion: number): Promise<User | null>;
@@ -75,6 +77,8 @@ export interface UserService {
   update(id: string, input: UserInput): Promise<ServiceResult<User>>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
   updateLocale(userId: string, locale: Locale): Promise<void>;
+  /** The learner edits THEIR OWN name and language (e-mail changes need verification and are not self-service). */
+  updateProfile(userId: string, input: { name: string; locale: Locale }): Promise<ServiceResult>;
 }
 
 /* ---------------- catalogue ---------------- */
@@ -83,7 +87,7 @@ export interface PlatformService {
   list(): Promise<Platform[]>;
   listAll(): Promise<Platform[]>;
   getBySlug(slug: string): Promise<Platform | null>;
-  update(slug: string, input: { name: string; fullName: string }): Promise<ServiceResult>;
+  update(slug: string, input: { name: string; fullName: string; priceCents: number }): Promise<ServiceResult>;
   setArchived(slug: string, archived: boolean): Promise<ServiceResult>;
 }
 
@@ -152,6 +156,8 @@ export interface MaterialService {
   listForSubject(subjectSlug: string): Promise<Material[]>;
   listAll(): Promise<Material[]>;
   getById(id: string): Promise<Material | null>;
+  /** The non-archived material that uses this storage file (one indexed lookup — used by the file route on every request). */
+  getByFileId(fileId: string): Promise<Material | null>;
   create(input: MaterialInput): Promise<ServiceResult<Material>>;
   update(id: string, input: MaterialInput): Promise<ServiceResult>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
@@ -161,9 +167,29 @@ export interface MaterialService {
 
 export interface EnrollmentService {
   listForUser(userId: string): Promise<Enrollment[]>;
+  /** True only while access is active: status FREE / ACTIVE and not past `expiresAt`. The server's single access check. */
   isEnrolled(userId: string, platform: PlatformSlug): Promise<boolean>;
+  /** Self-service enrolment for FREE platforms. Paid platforms answer `PAYMENT_REQUIRED` — access then comes only from a verified payment. */
   enroll(userId: string, platform: PlatformSlug): Promise<ServiceResult>;
   leave(userId: string, platform: PlatformSlug): Promise<ServiceResult>;
+  /** Admin: grants (or re-activates) access; `expiresAt` null = no expiry. */
+  grant(input: { userId: string; platform: PlatformSlug; expiresAt?: string | null }): Promise<ServiceResult>;
+  /** Admin: withdraws access (status REVOKED). The learner's progress is kept. */
+  revoke(input: { userId: string; platform: PlatformSlug }): Promise<ServiceResult>;
+  /** Admin: every enrolment record with its state (access management screen). */
+  listAll(): Promise<EnrollmentRecordView[]>;
+}
+
+export interface EnrollmentRecordView {
+  userId: string;
+  userName: string;
+  platform: PlatformSlug;
+  status: "FREE" | "ACTIVE" | "EXPIRED" | "REVOKED";
+  /** effective access right now (status AND expiry) */
+  active: boolean;
+  source: "self" | "payment" | "admin";
+  expiresAt?: string;
+  createdAt: string;
 }
 
 export interface ProgressService {
@@ -265,12 +291,25 @@ export interface TestResultService {
 }
 
 export interface ExamService {
-  list(): Promise<Exam[]>;
+  /** Published exams; with a `userId` the learner's best REAL score and whether they can start now are filled in. */
+  list(userId?: string): Promise<Exam[]>;
 }
 
 export interface PaymentService {
   listForUser(userId: string): Promise<Payment[]>;
+  /** Admin ledger. */
   listAll(): Promise<Payment[]>;
+  /** One payment, only if it belongs to `userId` (the id from the URL is never trusted to name the owner). */
+  getForUser(userId: string, paymentId: string): Promise<Payment | null>;
+  /**
+   * Starts a purchase of full access to a paid platform. Idempotent per (userId, idempotencyKey): a double click returns the
+   * same checkout. Access is NOT granted here — only by a verified provider event (`applyProviderEvent`).
+   */
+  startCheckout(input: { userId: string; platform: PlatformSlug; idempotencyKey: string; origin: string }): Promise<ServiceResult<{ paymentId: string; checkoutUrl: string }>>;
+  /** Applies an AUTHENTICATED provider event (webhook route only). Idempotent per provider event id. */
+  applyProviderEvent(provider: "demo" | "stripe", event: ProviderEvent): Promise<ProcessOutcome>;
+  /** DEMO ONLY: completes a simulated checkout. Refuses (`DEMO_ONLY`) outside demo mode. */
+  completeDemoCheckout(input: { userId: string; paymentId: string; outcome: "paid" | "failed" | "cancelled" }): Promise<ServiceResult>;
 }
 
 export interface RankingService {
@@ -284,6 +323,8 @@ export interface CertificateService {
   listForUser(userId: string): Promise<Certificate[]>;
   /** One certificate record, only if it belongs to `userId` (admins pass `asAdmin`). */
   getForUser(userId: string, id: string, asAdmin?: boolean): Promise<IssuedCertificate | null>;
+  /** Public lookup by certificate number: minimal data only (abbreviated holder, no e-mail / ids). Null if unknown. */
+  verifyByNumber(number: string): Promise<CertificateVerification | null>;
   /* admin */
   listAll(): Promise<IssuedCertificate[]>;
   /** Manual (demo) issue for an enrolled student. Fails if an active certificate for the subject already exists. */

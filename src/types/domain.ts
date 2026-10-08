@@ -30,6 +30,8 @@ export interface Platform {
   slug: PlatformSlug;
   name: string;
   fullName: string;
+  /** Price of full access in USD cents. 0 = free enrolment. */
+  priceCents: number;
   levels: Level[];
   archived?: boolean;
 }
@@ -217,7 +219,12 @@ export interface ResultListItem {
 
 export interface Enrollment {
   platform: PlatformSlug;
+  /** "active" = the learner has access right now (FREE / ACTIVE and not expired). */
   status: "active" | "not_enrolled";
+  /** Stored enrolment state, if any: lets the UI offer "renew" for EXPIRED and explain REVOKED. */
+  access?: "FREE" | "ACTIVE" | "EXPIRED" | "REVOKED";
+  expiresAt?: string;
+  priceCents: number;
   progress: number;
 }
 
@@ -294,6 +301,15 @@ export interface AdminStats {
     passRate: number | null;
     avgScore: number | null;
     completedMaterials: number;
+    /** New enrolments created in the range (platforms in scope). */
+    enrollments: number;
+    /** Topics completed in the range. */
+    completedTopics: number;
+    /** Certificates issued in the range. */
+    certificates: number;
+    /** Payments confirmed (PAID) in the range, and their sum in USD cents. Refunds are not netted out. */
+    payments: number;
+    revenueCents: number;
   };
   /** One bucket per day (short ranges) or month (long ranges), oldest first. */
   activity: { key: string; label: string; activeStudents: number; attempts: number; completedMaterials: number }[];
@@ -357,6 +373,17 @@ export interface IssuedCertificate {
   source: "auto" | "admin";
 }
 
+/** What the PUBLIC verification page may show: no e-mail, no ids, abbreviated holder name. */
+export interface CertificateVerification {
+  number: string;
+  holder: string;
+  platform: PlatformSlug;
+  subjectCode: string;
+  subjectName: string;
+  issuedAt: string;
+  status: "issued" | "revoked";
+}
+
 export type NotificationTarget =
   | { kind: "topic"; id: string }
   | { kind: "test"; id: string }
@@ -378,6 +405,9 @@ export type NotificationCode =
   | "certificate_issued"
   | "certificate_revoked"
   | "payment_received"
+  | "payment_failed"
+  | "access_granted"
+  | "access_revoked"
   | "enrolled"
   // student: content updates
   | "material_added"
@@ -404,7 +434,7 @@ export interface Payment {
   description: string;
   amountCents: number;
   currency: "USD";
-  status: "paid" | "pending" | "refunded" | "failed";
+  status: "paid" | "pending" | "refunded" | "failed" | "cancelled";
   createdAt: string;
   studentName?: string;
 }
@@ -417,7 +447,10 @@ export interface Exam {
   startsAt: string;
   durationMinutes: number;
   status: "scheduled" | "open" | "completed";
+  /** Best real result of the current learner (only when a user is known and has submitted an attempt). */
   score?: number;
+  /** The current learner can open the exam player now (window open, access active). Demo fixtures are never startable. */
+  startable?: boolean;
 }
 
 export interface StudentRecord extends User {

@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/app-mode";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Logo } from "@/components/layout/logo";
@@ -46,7 +47,7 @@ export async function SiteFooter() {
         <div className="container-page flex flex-col gap-2 py-5 text-white/75 md:flex-row md:items-center md:justify-between">
           <p className="type-caption max-w-3xl">{t("footer.disclaimer")}</p>
           <p className="type-caption md:text-right">
-            {t("footer.copyright", { year: new Date().getUTCFullYear() })} · {t("footer.demoBuild")}
+            {t("footer.copyright", { year: new Date().getUTCFullYear() })}{isDemoMode ? ` · ${t("footer.demoBuild")}` : ""}
           </p>
         </div>
       </div>

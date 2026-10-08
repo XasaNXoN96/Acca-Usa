@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth/session";
 import { services } from "@/services";
 import { getStorage } from "@/services/storage";
@@ -24,38 +25,41 @@ function parseRange(header: string | null, size: number): { start: number; end: 
  * they are enrolled in. Supports HTTP Range (video/audio seeking). Never trusts a stored/declared type for inline rendering.
  */
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  // Plain-text errors in the viewer's language (the browser may show them directly, e.g. an opened download link).
+  const fail = async (status: number, key: "fileUnauthorized" | "fileForbidden" | "fileNotFound" | "fileRange", headers?: HeadersInit) =>
+    new Response((await getTranslations("states"))(key), { status, headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff", ...headers } });
   const session = await getSession();
-  if (!session) return new Response("Unauthorized", { status: 401 });
+  if (!session) return fail(401, "fileUnauthorized");
   const { id } = await ctx.params;
   const storage = getStorage();
   const meta = await storage.stat(id);
-  if (!meta) return new Response("Not found", { status: 404 });
+  if (!meta) return fail(404, "fileNotFound");
 
   if (session.user.role === "STUDENT") {
-    const material = (await services.materials.listAll()).find((m) => m.fileId === id && !m.archived);
+    const material = await services.materials.getByFileId(id);
     if (material) {
       const subject = await services.subjects.getBySlug(material.subjectSlug);
-      if (!subject) return new Response("Not found", { status: 404 });
-      if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return new Response("Forbidden", { status: 403 });
+      if (!subject) return fail(404, "fileNotFound");
+      if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return fail(403, "fileForbidden");
       if (material.topicId) {
         const tctx = await services.topics.getContext(material.topicId, session.user.id);
-        if (!tctx || tctx.topic.status === "locked") return new Response("Forbidden", { status: 403 });
+        if (!tctx || tctx.topic.status === "locked") return fail(403, "fileForbidden");
       }
     } else {
       // Not a material file: a question illustration is readable only for a published question in a published test
       // of a platform the student is enrolled in.
       const access = await services.questions.imageAccess(id);
       const subject = access && (await services.subjects.getBySlug(access.subjectSlug));
-      if (!subject) return new Response("Not found", { status: 404 });
-      if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return new Response("Forbidden", { status: 403 });
+      if (!subject) return fail(404, "fileNotFound");
+      if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return fail(403, "fileForbidden");
     }
   }
 
   const range = parseRange(req.headers.get("range"), meta.size);
-  if (range === "invalid") return new Response("Range Not Satisfiable", { status: 416, headers: { "Content-Range": `bytes */${meta.size}` } });
+  if (range === "invalid") return fail(416, "fileRange", { "Content-Range": `bytes */${meta.size}` });
 
   const opened = await storage.open(id, range ?? undefined);
-  if (!opened) return new Response("Not found", { status: 404 });
+  if (!opened) return fail(404, "fileNotFound");
 
   const url = new URL(req.url);
   const inline = inlineMimes.has(meta.mime) && url.searchParams.get("download") !== "1";
