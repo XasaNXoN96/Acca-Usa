@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -15,11 +15,16 @@ import { routes } from "@/lib/routes";
 import { platformTheme } from "@/lib/platform-theme";
 import { cn } from "@/lib/utils";
 
-/** Public-site drawer: search, platform accordions, links, language and auth actions. */
+const chip =
+  "inline-flex min-h-10 min-w-0 items-center justify-center rounded-lg border border-border px-1.5 text-center text-[0.8125rem] font-semibold leading-tight hover:bg-muted pointer-coarse:min-h-11";
+
+/** Public-site drawer: search, compact single-row groups (qualifications, learn, account), language and theme. */
 export function PublicMobileMenu({ platforms, home, homeLabel }: { platforms: MegaPlatform[]; home: string | null; homeLabel: string }) {
   const t = useTranslations();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+  const activePlatform = platforms.find((p) => p.slug === active) ?? null;
   const [lastPath, setLastPath] = useState(pathname);
   // Close the drawer after navigation (derived-state pattern, no effect needed).
   if (lastPath !== pathname) {
@@ -46,7 +51,7 @@ export function PublicMobileMenu({ platforms, home, homeLabel }: { platforms: Me
           </SheetDescription>
         </div>
 
-        <nav aria-label={t("nav.mobile")} className="flex-1 space-y-4 overflow-y-auto p-4 pb-safe">
+        <nav aria-label={t("nav.mobile")} className="flex-1 space-y-3 overflow-y-auto p-3 pb-safe">
           <form action="/search" role="search" className="relative">
             <label htmlFor="mobile-search" className="sr-only">
               {t("common.search")}
@@ -57,78 +62,79 @@ export function PublicMobileMenu({ platforms, home, homeLabel }: { platforms: Me
               name="q"
               type="search"
               placeholder={t("common.search")}
-              className="h-11 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-base"
+              className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-base"
             />
           </form>
 
-          <ul className="space-y-1">
-            {platforms.map((p) => (
-              <li key={p.slug}>
-                <details className="group rounded-xl border border-border">
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 font-semibold [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center gap-2">
-                      <span className={cn("size-2.5 rounded-full", platformTheme[p.slug].solid)} aria-hidden />
-                      {p.name}
-                    </span>
-                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
-                  </summary>
-                  <div className="space-y-3 border-t border-border px-3 py-3">
-                    <Link href={routes.platform(p.slug)} className={cn("block rounded-lg py-1.5 text-sm font-semibold", platformTheme[p.slug].text)}>
-                      {t("mega.viewPlatform", { platform: p.name })}
-                    </Link>
-                    {p.levels.map((level) => (
-                      <div key={level.id}>
-                        <p className="type-eyebrow mb-1 text-muted-foreground">{level.name}</p>
-                        <ul>
-                          {level.subjects.map((s) => (
-                            <li key={s.slug}>
-                              <Link href={routes.subject(s.slug)} className="flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm">
-                                <span className="min-w-9 font-bold text-muted-foreground">{s.code}</span>
-                                <span className="truncate">{s.name}</span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              </li>
-            ))}
-            <li>
-              <Link href={routes.books} className="flex min-h-12 items-center rounded-xl px-3 font-semibold hover:bg-muted">
-                {t("nav.books")}
-              </Link>
-            </li>
-            <li>
-              <Link href={routes.forums} className="flex min-h-12 items-center rounded-xl px-3 font-semibold hover:bg-muted">
-                {t("nav.forums")}
-              </Link>
-            </li>
-            <li>
-              <Link href={routes.search()} className="flex min-h-12 items-center rounded-xl px-3 font-semibold hover:bg-muted">
-                {t("nav.search")}
-              </Link>
-            </li>
-          </ul>
+          <section aria-labelledby="mm-qual" className="space-y-1.5">
+            <h2 id="mm-qual" className="type-eyebrow text-muted-foreground">{t("nav.qualifications")}</h2>
+            <div className="grid grid-cols-3 gap-1.5">
+              {platforms.map((p) => (
+                <button
+                  key={p.slug}
+                  type="button"
+                  aria-pressed={active === p.slug}
+                  aria-controls="mm-subjects"
+                  onClick={() => setActive(active === p.slug ? null : p.slug)}
+                  className={cn(chip, "gap-1.5", active === p.slug && "border-primary bg-muted")}
+                >
+                  <span className={cn("size-2 shrink-0 rounded-full", platformTheme[p.slug].solid)} aria-hidden />
+                  {p.name}
+                </button>
+              ))}
+            </div>
+            <div id="mm-subjects" aria-live="polite">
+              {activePlatform ? (
+                <div className="space-y-2 rounded-lg border border-border p-2.5">
+                  <Link href={routes.platform(activePlatform.slug)} className={cn("block py-1 text-sm font-semibold", platformTheme[activePlatform.slug].text)}>
+                    {t("mega.viewPlatform", { platform: activePlatform.name })}
+                  </Link>
+                  {activePlatform.levels.map((level) => (
+                    <div key={level.id}>
+                      <p className="type-eyebrow mb-0.5 text-muted-foreground">{level.name}</p>
+                      <ul>
+                        {level.subjects.map((s) => (
+                          <li key={s.slug}>
+                            <Link href={routes.subject(s.slug)} className="flex min-h-10 items-center gap-2 rounded-md px-1 text-sm">
+                              <span className="min-w-9 font-bold text-muted-foreground">{s.code}</span>
+                              <span className="truncate">{s.name}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          <section aria-labelledby="mm-learn" className="space-y-1.5">
+            <h2 id="mm-learn" className="type-eyebrow text-muted-foreground">{t("nav.learn")}</h2>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Link href={routes.books} className={chip}>{t("nav.books")}</Link>
+              <Link href={routes.forums} className={chip}>{t("nav.forums")}</Link>
+              <Link href={routes.search()} className={chip}>{t("nav.search")}</Link>
+            </div>
+          </section>
+
+          <section aria-labelledby="mm-account" className="space-y-1.5">
+            <h2 id="mm-account" className="type-eyebrow text-muted-foreground">{t("nav.account")}</h2>
+            <div className="grid grid-cols-3 gap-1.5">
+              {home ? (
+                <Link href={home} className={cn(chip, "col-span-3 border-primary bg-primary text-primary-foreground")}>{homeLabel}</Link>
+              ) : (
+                <>
+                  <Link href={routes.login} className={chip}>{t("common.signIn")}</Link>
+                  <Link href={routes.register} className={cn(chip, "border-primary bg-primary text-primary-foreground")}>{t("common.register")}</Link>
+                  <Link href={routes.dashboard} className={chip}>{t("nav.dashboard")}</Link>
+                </>
+              )}
+            </div>
+          </section>
 
           <LanguageSegmented />
           <ThemeSegmented />
-
-          {home ? (
-            <div className="pb-2">
-              <Button asChild size="lg" className="w-full"><Link href={home}>{homeLabel}</Link></Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 pb-2">
-              <Button asChild variant="outline" size="lg">
-                <Link href={routes.login}>{t("common.signIn")}</Link>
-              </Button>
-              <Button asChild size="lg">
-                <Link href={routes.register}>{t("common.register")}</Link>
-              </Button>
-            </div>
-          )}
         </nav>
       </SheetContent>
     </Sheet>
