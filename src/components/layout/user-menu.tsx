@@ -24,9 +24,9 @@ export function UserMenu({ name, email, showStudentLinks = true }: { name: strin
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-11 gap-2 px-1.5 sm:px-2" aria-label={t("student.userMenu")}>
+        <Button variant="ghost" className="h-11 gap-2 px-1.5 sm:px-2" aria-label={`${t("student.userMenu")}: ${name}`}>
           <Avatar className="size-8">
-            <AvatarFallback aria-hidden>{initial}</AvatarFallback>
+            <AvatarFallback aria-hidden data-initial={initial} className="before:content-[attr(data-initial)]" />
           </Avatar>
           <span className="hidden max-w-32 truncate text-left text-sm lg:block">
             <span className="block truncate font-semibold leading-tight">{name}</span>

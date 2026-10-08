@@ -83,7 +83,7 @@ await step("RU / UZ: checkout and access wording", async () => {
     const c = await ctx(); const p = await c.newPage(); await demo(p, "Student"); await p.waitForURL(/dashboard$/); await c.addCookies([{ name: "NEXT_LOCALE", value: locale, url: BASE }]);
     await p.goto("/payments"); await p.getByRole("heading", { level: 1 }).waitFor(); const body = await p.locator("main").innerText();
     assert(body.includes(text) && !body.includes("Payments"), `${locale} payments page: ${body.slice(0, 120)}`);
-    await p.goto(`/payments?paid=${paidId}`); await p.getByText(locale === "ru" ? "Оплата подтверждена — доступ активирован." : "To'lov tasdiqlandi — kirish faollashtirildi.").waitFor(); await c.close();
+    await p.goto(`/payments?paid=${paidId}`); await p.getByText(locale === "ru" ? "Оплата подтверждена — доступ активирован." : "To‘lov tasdiqlandi — kirish faollashtirildi.").waitFor(); await c.close();
   }
 });
 

@@ -31,7 +31,7 @@ await step("no CIMA in home, header, mega menu, mobile menu, footer, forums, /ci
   await p.getByRole("button", { name: "Open menu" }).click(); await p.getByRole("dialog").waitFor(); assert(!/cima/i.test(await p.getByRole("dialog").innerHTML()), "CIMA in mobile menu"); await m.close();
 });
 await step("click BT → /subject/bt with topics; expand topic → locked materials; click material → modal", async () => {
-  await page.goto("/all-courses"); await page.getByRole("link", { name: /^Open BT — / }).click(); await page.waitForURL(/\/subject\/bt$/);
+  await page.goto("/all-courses"); await page.getByRole("link", { name: /^BT — / }).click(); await page.waitForURL(/\/subject\/bt$/);
   await page.getByRole("heading", { name: "Course Topics" }).waitFor();
   const first = page.locator("[data-topic-row]").first(); await first.locator("button").first().click(); await page.waitForTimeout(350);
   const mats = page.locator("[role=region][data-state=open] [data-material-row] button"); assert((await mats.count()) >= 2, "no materials listed");
@@ -68,7 +68,7 @@ await step("responsive chain: home → all courses → subject → topic → mod
     const x = await ctx({ viewport: { width: w, height: 800 }, hasTouch: w < 1024 }); const p = await x.newPage();
     await p.goto("/"); assert((await over(p)) <= 0, `${w}: home overflow`);
     await p.goto("/all-courses"); await p.getByRole("heading", { name: "All courses", level: 1 }).waitFor(); assert((await over(p)) <= 0, `${w}: all-courses overflow`);
-    const link = p.getByRole("link", { name: /^Open BT — / }); const lb = await link.boundingBox(); assert(lb.height >= 44 && lb.x >= 0 && lb.x + lb.width <= w, `${w}: subject link size/position`);
+    const link = p.getByRole("link", { name: /^BT — / }); const lb = await link.boundingBox(); assert(lb.height >= 44 && lb.x >= 0 && lb.x + lb.width <= w, `${w}: subject link size/position`);
     await link.click(); await p.waitForURL(/\/subject\/bt$/); assert((await over(p)) <= 0, `${w}: subject overflow`);
     await p.locator("[data-topic-row] button").first().click(); await p.waitForTimeout(350); assert((await over(p)) <= 0, `${w}: overflow with topic open`);
     const mb = await p.locator("[data-material-row] button").first().boundingBox(); assert(mb.height >= 44 && mb.x + mb.width <= w, `${w}: material row`);

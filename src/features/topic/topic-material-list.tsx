@@ -27,7 +27,6 @@ export async function TopicMaterialList({ subjectSlug, topicId, materials, compl
               <li key={m.id} data-material-item="">
                 <Link
                   href={routes.subjectMaterial(subjectSlug, topicId, m.id)}
-                  aria-label={`${t("openMaterial")}: ${m.title}`}
                   className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 transition-colors hover:bg-muted/60"
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-navy-soft text-navy"><Icon className="size-4" aria-hidden /></span>

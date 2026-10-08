@@ -39,7 +39,7 @@ export function PublicTopicAccordion({
     <Accordion type="single" collapsible className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
       {topics.map((topic) => (
         <AccordionItem key={topic.id} value={topic.id} data-topic-row="">
-          <AccordionTrigger aria-label={`${t("topicNumber", { number: pad(topic.order) })}: ${topic.title}. ${t("locked")}`}>
+          <AccordionTrigger>
             <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-sm font-bold tabular-nums text-muted-foreground" aria-hidden>
               {pad(topic.order)}
             </span>

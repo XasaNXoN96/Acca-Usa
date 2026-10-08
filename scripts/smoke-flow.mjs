@@ -16,7 +16,7 @@ const save = (p) => p.getByRole("button", { name: "Save", exact: true }).click()
 const gc = await ctx(); const g = await gc.newPage();
 await step("GUEST: Homepage → View courses → All Courses → ACCA → BT → topic → locked material → Login modal → Login → back on BT", async () => {
   await g.goto("/"); await g.getByRole("link", { name: "View courses" }).first().click(); await g.waitForURL(/\/all-courses$/);
-  await g.locator("[data-platform-section=acca]").getByRole("heading", { name: "Applied Knowledge" }).waitFor(); await g.getByRole("link", { name: /^Open BT — / }).click(); await g.waitForURL(/\/subject\/bt$/);
+  await g.locator("[data-platform-section=acca]").getByRole("heading", { name: "Applied Knowledge" }).waitFor(); await g.getByRole("link", { name: /^BT — / }).click(); await g.waitForURL(/\/subject\/bt$/);
   await g.locator("[data-topic-row] button").first().click(); await g.waitForTimeout(350);
   await g.locator("[data-material-row] button").first().click(); await g.getByRole("dialog").getByText("To study this material, sign in to your account.").waitFor();
   await g.getByRole("dialog").getByRole("link", { name: "Sign in" }).click(); await g.waitForURL(/\/login\?next=%2Fsubject%2Fbt$/);
