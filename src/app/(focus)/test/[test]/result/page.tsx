@@ -1,0 +1,58 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/layout/logo";
+import { ScoreSummary } from "@/features/result/score-summary";
+import { ProgressUpdate } from "@/features/result/progress-update";
+import { ReviewList } from "@/features/result/review-list";
+import { services } from "@/services";
+import { routes } from "@/lib/routes";
+
+type Params = Promise<{ test: string }>;
+type Search = Promise<{ attempt?: string | string[] }>;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("result"))("title") };
+}
+
+export default async function ResultPage({ params, searchParams }: { params: Params; searchParams: Search }) {
+  const [{ test: testId }, sp] = await Promise.all([params, searchParams]);
+  const attemptId = Array.isArray(sp.attempt) ? sp.attempt[0] : sp.attempt;
+  const session = await services.auth.getSession("STUDENT");
+  const [t, result] = await Promise.all([getTranslations("result"), services.tests.getResult(testId, session.user.id, attemptId)]);
+  if (!result) notFound();
+
+  return (
+    <>
+      <header className="border-b border-border bg-background">
+        <div className="container-page flex h-16 items-center justify-between">
+          <Logo href={routes.dashboard} />
+          <Button asChild variant="ghost" size="sm">
+            <Link href={routes.subject(result.subjectSlug)}>{t("backToSubject")}</Link>
+          </Button>
+        </div>
+      </header>
+      <main id="main" tabIndex={-1} className="container-page max-w-4xl space-y-6 py-8 outline-none sm:py-12">
+        {result.isDemo ? <Alert variant="info">{t("demoNotice")}</Alert> : null}
+        <ScoreSummary result={result} />
+        <ProgressUpdate result={result} />
+
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-3 sm:flex-row">
+          <Button asChild size="lg" className="flex-1">
+            <a href="#review">{t("review")}</a>
+          </Button>
+          <Button asChild size="lg" variant="outline-primary" className="flex-1">
+            <Link href={routes.test(result.testId)}>{t("retake")}</Link>
+          </Button>
+        </div>
+
+        <div className="pt-6">
+          <ReviewList items={result.review} />
+        </div>
+      </main>
+    </>
+  );
+}

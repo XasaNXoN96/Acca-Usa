@@ -1,0 +1,240 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+
+/* ==========================================================================
+   ACCA USA design tokens
+   Single source of truth. Components consume semantic tokens only
+   (bg-primary, text-muted-foreground, ...) — never raw hex values.
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --background: #ffffff;
+  --app: #f6f8fb; /* app shell canvas behind cards */
+  --foreground: #0b1f3a; /* deep navy */
+  --card: #ffffff;
+  --card-foreground: #0b1f3a;
+  --muted: #f1f4f8;
+  --muted-foreground: #475569; /* 7.5:1 on white */
+  --subtle-foreground: #64748b; /* 4.8:1 on white — minimum for secondary text */
+  --border: #e2e8f0;
+  --input: #94a3b8; /* 3:1 non-text contrast for form control borders */
+
+  /* Brand: ACCA red = primary action */
+  --primary: #c8102e;
+  --primary-hover: #a80d26;
+  --primary-foreground: #ffffff;
+  --primary-soft: #fdeef1;
+
+  /* Navy = selected / structural */
+  --navy: #0b1f3a;
+  --navy-soft: #eaf0f8;
+  --navy-foreground: #ffffff;
+
+  --secondary: #eaf0f8;
+  --secondary-foreground: #0b1f3a;
+  --accent: #f1f4f8;
+  --accent-foreground: #0b1f3a;
+
+  /* Platforms */
+  --acca: #c8102e;
+  --acca-soft: #fdeef1;
+  --cima: #1e4fc2;
+  --cima-soft: #eaf0fd;
+  --fia: #0f7b5a;
+  --fia-soft: #e6f5ef;
+
+  /* Status (never rely on colour alone — always pair with icon/text) */
+  --success: #0f7b5a;
+  --success-soft: #e6f5ef;
+  --warning: #9a5b00;
+  --warning-soft: #fdf3dc;
+  --destructive: #b42318;
+  --destructive-soft: #fef0ee;
+  --info: #1e4fc2;
+  --info-soft: #eaf0fd;
+
+  --ring: #1d4ed8;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgb(11 31 58 / 0.06);
+  --shadow-sm: 0 1px 3px rgb(11 31 58 / 0.08), 0 1px 2px rgb(11 31 58 / 0.04);
+  --shadow-md: 0 8px 24px -10px rgb(11 31 58 / 0.18), 0 2px 6px rgb(11 31 58 / 0.05);
+  --shadow-lg: 0 24px 48px -16px rgb(11 31 58 / 0.25);
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --color-background: var(--background);
+  --color-app: var(--app);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-acca: var(--acca);
+  --color-acca-soft: var(--acca-soft);
+  --color-cima: var(--cima);
+  --color-cima-soft: var(--cima-soft);
+  --color-fia: var(--fia);
+  --color-fia-soft: var(--fia-soft);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --breakpoint-xs: 30rem;
+}
+
+/* ---------- Typography scale (use these instead of ad-hoc sizes) ---------- */
+@utility type-display {
+  font-size: clamp(2.25rem, 1.4rem + 3.6vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+@utility type-h1 {
+  font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@utility type-h2 {
+  font-size: clamp(1.375rem, 1.15rem + 0.9vw, 1.875rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+@utility type-h3 {
+  font-size: 1.125rem;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+@utility type-body {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+@utility type-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+@utility type-caption {
+  /* Smallest allowed text size in the product. */
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+@utility type-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Page container used by public and app shells */
+@utility container-page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+  /* Visible, consistent keyboard focus everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  /* Grid items default to min-width:auto and blow the layout out on narrow screens. */
+  .grid > * {
+    min-width: 0;
+  }
+  ::selection {
+    background: var(--navy-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Bottom navigation spacing on mobile app shells (safe area aware). */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pb-bottomnav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  @media (min-width: 64rem) {
+    padding-bottom: 0;
+  }
+}

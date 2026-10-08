@@ -1,0 +1,850 @@
+{
+  "meta": {
+    "title": "ACCA USA — ACCA, CIMA and FIA learning platform",
+    "description": "Video lessons, practice questions and mock exams for ACCA, CIMA and FIA students — all in one place.",
+    "titleTemplate": "%s | ACCA USA"
+  },
+  "common": {
+    "brand": "ACCA USA",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "create": "Create",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "viewAll": "View all",
+    "open": "Open",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "continue": "Continue",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "search": "Search",
+    "searchPlaceholder": "Search courses, topics, materials…",
+    "language": "Language",
+    "signIn": "Sign in",
+    "register": "Register",
+    "signOut": "Sign out",
+    "demoData": "Demo data",
+    "demoNotice": "Demo preview: sign-in and real data are not connected yet.",
+    "skipToContent": "Skip to main content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menu": "Menu",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "progress": "Progress",
+    "status": "Status",
+    "actions": "Actions",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "date": "Date",
+    "amount": "Amount",
+    "description": "Description",
+    "noResults": "No results",
+    "comingSoon": "Coming soon",
+    "optional": "Optional",
+    "topicsCount": "{count, plural, one {# topic} other {# topics}}",
+    "testsCount": "{count, plural, one {# test} other {# tests}}",
+    "lessonsCount": "{count, plural, one {# lesson} other {# lessons}}",
+    "minutes": "{count} min",
+    "percent": "{value}%"
+  },
+  "nav": {
+    "acca": "ACCA",
+    "cima": "CIMA",
+    "fia": "FIA",
+    "books": "Books",
+    "forums": "Forums",
+    "search": "Search",
+    "dashboard": "Dashboard",
+    "courses": "My Courses",
+    "exams": "Mock Exams",
+    "progress": "Progress",
+    "ranking": "Ranking",
+    "certificates": "Certificates",
+    "payments": "Payments",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "main": "Main navigation",
+    "mobile": "Mobile navigation",
+    "student": "Student navigation",
+    "admin": "Admin navigation",
+    "learn": "Learn",
+    "account": "Account",
+    "qualifications": "Qualifications",
+    "backToSite": "Back to site",
+    "adminPanel": "Admin panel",
+    "studentArea": "Student area",
+    "more": "More"
+  },
+  "mega": {
+    "levels": "Levels and subjects",
+    "resources": "Resources",
+    "viewPlatform": "{platform} overview",
+    "allCourses": "All {platform} courses",
+    "practiceTests": "Practice tests and mock exams",
+    "books": "Books and revision kits",
+    "forums": "Community forums",
+    "promoTitle": "Start with {platform}",
+    "promoText": "Create a free account to explore the syllabus structure and demo lessons."
+  },
+  "footer": {
+    "tagline": "Premium finance education for ACCA, CIMA and FIA students.",
+    "qualifications": "Qualifications",
+    "learn": "Learn",
+    "account": "Account",
+    "disclaimer": "ACCA USA is an independent learning platform. ACCA, CIMA and FIA are trademarks of their respective owners and are used for identification only.",
+    "copyright": "© {year} ACCA USA. All rights reserved.",
+    "demoBuild": "Demo build — content and figures are placeholders."
+  },
+  "landing": {
+    "hero": {
+      "titleLine1": "Your Path to a",
+      "titleLine2": "Global Career with",
+      "titleAccent": "ACCA",
+      "subtitle": "High-quality ACCA, CIMA and FIA courses, video lessons, practice questions and mock exams — all in one place.",
+      "primary": "Start learning",
+      "secondary": "View courses",
+      "cardTitle": "Learn at your own pace",
+      "cardText": "Structured topics, clear progress and exam-style practice."
+    },
+    "highlights": {
+      "tutors": {
+        "title": "Expert tutors",
+        "text": "With real experience"
+      },
+      "exam": {
+        "title": "Exam-focused",
+        "text": "Materials and practice"
+      },
+      "anytime": {
+        "title": "Learn anytime",
+        "text": "On any device"
+      },
+      "track": {
+        "title": "Track progress",
+        "text": "Reach your goals"
+      }
+    },
+    "platforms": {
+      "title": "Choose your qualification",
+      "subtitle": "Three qualifications, one consistent learning experience.",
+      "acca": {
+        "name": "ACCA",
+        "full": "Association of Chartered Certified Accountants",
+        "text": "A globally recognised qualification for a successful career in finance, accounting and business.",
+        "cta": "Explore ACCA"
+      },
+      "cima": {
+        "name": "CIMA",
+        "full": "Chartered Institute of Management Accountants",
+        "text": "Develop the skills to manage and lead in a changing world.",
+        "cta": "Explore CIMA"
+      },
+      "fia": {
+        "name": "FIA",
+        "full": "Foundations in Accountancy",
+        "text": "A practical start for a future career in accountancy and finance.",
+        "cta": "Explore FIA"
+      }
+    },
+    "features": {
+      "title": "Everything you need to prepare",
+      "subtitle": "Built around how accountancy students actually study.",
+      "video": {
+        "title": "Video lessons",
+        "text": "Short, focused lectures for every topic."
+      },
+      "notes": {
+        "title": "Notes and workbooks",
+        "text": "Downloadable PDFs, notes and slides."
+      },
+      "tests": {
+        "title": "Practice questions",
+        "text": "Topic tests with explained answers."
+      },
+      "mocks": {
+        "title": "Mock exams",
+        "text": "Timed exams that mirror exam conditions."
+      },
+      "progress": {
+        "title": "Progress tracking",
+        "text": "See what is done and what comes next."
+      },
+      "certificates": {
+        "title": "Certificates",
+        "text": "Completion certificates for finished courses."
+      }
+    },
+    "process": {
+      "title": "How learning works",
+      "subtitle": "A simple loop that builds exam confidence.",
+      "step1": {
+        "title": "Choose a qualification",
+        "text": "Pick ACCA, CIMA or FIA and your subject."
+      },
+      "step2": {
+        "title": "Learn topic by topic",
+        "text": "Watch lessons, read notes and complete topics in order."
+      },
+      "step3": {
+        "title": "Practice and review",
+        "text": "Take tests and learn from explained answers."
+      },
+      "step4": {
+        "title": "Prove your progress",
+        "text": "Sit mock exams and track your results."
+      }
+    },
+    "why": {
+      "title": "Why ACCA USA",
+      "subtitle": "A calm, focused place to study.",
+      "r1": {
+        "title": "Structured syllabus",
+        "text": "Clear levels, subjects and topics with locked and unlocked states."
+      },
+      "r2": {
+        "title": "Three languages",
+        "text": "Interface in English, Russian and Uzbek."
+      },
+      "r3": {
+        "title": "Works everywhere",
+        "text": "Designed for desktop, tablet and phone."
+      },
+      "r4": {
+        "title": "Honest feedback",
+        "text": "Clear scores and explanations after every test."
+      }
+    },
+    "stats": {
+      "title": "ACCA USA in numbers",
+      "demoNote": "Demo statistics — placeholder values, not real results.",
+      "students": "Students",
+      "lessons": "Video lessons",
+      "questions": "Practice questions",
+      "access": "Access on any device"
+    },
+    "testimonials": {
+      "title": "What students say",
+      "demoNote": "Sample testimonials — demo content with fictional names.",
+      "t1": {
+        "quote": "The topic structure made it easy to know exactly what to study next.",
+        "name": "Sample Student A",
+        "role": "ACCA student"
+      },
+      "t2": {
+        "quote": "Explained answers after each test helped me fix my mistakes quickly.",
+        "name": "Sample Student B",
+        "role": "CIMA student"
+      },
+      "t3": {
+        "quote": "I can continue on my phone during the commute — it just works.",
+        "name": "Sample Student C",
+        "role": "FIA student"
+      }
+    },
+    "cta": {
+      "title": "Ready to start your journey?",
+      "text": "Create your account and begin with your first topic today.",
+      "primary": "Create account",
+      "secondary": "Sign in"
+    }
+  },
+  "platformPage": {
+    "levels": "Levels and subjects",
+    "levelsText": "Every subject is split into topics with video, notes and practice.",
+    "includes": "What is included",
+    "i1": "Video lessons and notes for every topic",
+    "i2": "Topic tests with explained answers",
+    "i3": "Timed mock exams",
+    "i4": "Progress tracking and certificates",
+    "ctaTitle": "Start learning {platform}",
+    "ctaText": "Create an account to unlock the full syllabus.",
+    "viewSubject": "Open subject",
+    "subjectsInLevel": "{count, plural, one {# subject} other {# subjects}}"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to continue learning.",
+      "submit": "Sign in",
+      "noAccount": "Don’t have an account?",
+      "registerLink": "Register"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Start learning with ACCA USA.",
+      "submit": "Create account",
+      "haveAccount": "Already registered?",
+      "loginLink": "Sign in"
+    },
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "passwordHint": "At least 8 characters, with a letter and a number.",
+      "terms": "I agree to the terms of use and privacy policy"
+    },
+    "errors": {
+      "required": "This field is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "passwordStrength": "Password needs at least one letter and one number.",
+      "nameMin": "Enter your full name (at least 2 characters).",
+      "passwordMismatch": "Passwords do not match.",
+      "termsRequired": "You must accept the terms to continue."
+    },
+    "notConnectedTitle": "Authentication is not connected yet",
+    "notConnectedText": "Your input is valid, but real sign-in and registration will be enabled with the backend block. Nothing was sent or stored.",
+    "continueDemo": "Continue to the demo dashboard"
+  },
+  "student": {
+    "demoSession": "Demo session",
+    "userMenu": "Account menu",
+    "greeting": "Hello, {name}",
+    "support": "Need help?"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}!",
+    "subtitle": "Continue your learning and achieve your goals.",
+    "stats": {
+      "courses": "Enrolled courses",
+      "topics": "Completed topics",
+      "hours": "Learning time",
+      "progress": "Overall progress",
+      "hoursValue": "{hours} h"
+    },
+    "myCourses": "My Courses",
+    "active": "Active",
+    "notEnrolled": "Not enrolled",
+    "continue": "Continue",
+    "explore": "Explore",
+    "continueLearning": "Continue learning",
+    "recentActivity": "Recent activity",
+    "noActivity": "No activity yet. Start your first topic.",
+    "yourProgress": "Your progress",
+    "completedTopics": "Completed",
+    "inProgressTopics": "In progress",
+    "notStartedTopics": "Not started",
+    "totalTopics": "Total",
+    "overall": "Overall",
+    "ranking": "Ranking",
+    "you": "You",
+    "points": "{points} pts",
+    "tests": "Tests and exams",
+    "upcoming": "Upcoming",
+    "recent": "Recent",
+    "certificates": "Certificates",
+    "earned": "Earned",
+    "inProgressCert": "In progress",
+    "notifications": "{count, plural, =0 {No new notifications} one {# new notification} other {# new notifications}}"
+  },
+  "courses": {
+    "title": "My Courses",
+    "description": "Your qualifications and subjects in one place.",
+    "subjects": "Subjects",
+    "level": "Level"
+  },
+  "subject": {
+    "tabs": {
+      "overview": "Overview",
+      "topics": "Topics",
+      "tests": "Tests",
+      "materials": "Materials",
+      "progress": "Progress"
+    },
+    "nav": "Subject sections",
+    "overallProgress": "Subject progress",
+    "completedOf": "{completed} of {total} topics completed",
+    "overviewTitle": "About this subject",
+    "overviewText": "Work through the topics in order. Each topic unlocks after you complete the previous one.",
+    "next": "Next up",
+    "startTopic": "Start topic",
+    "continueTopic": "Continue topic",
+    "reviewTopic": "Review topic",
+    "status": {
+      "completed": "Completed",
+      "in_progress": "In progress",
+      "unlocked": "Unlocked",
+      "locked": "Locked"
+    },
+    "lockedHint": "Complete the previous topic to unlock this one.",
+    "noTests": "No tests are available for this subject yet.",
+    "noMaterials": "No materials have been added yet.",
+    "startTest": "Start test",
+    "retakeTest": "Retake test",
+    "bestScore": "Best score: {score}%",
+    "questions": "{count, plural, one {# question} other {# questions}}",
+    "passMark": "Pass mark {mark}%",
+    "materialKinds": {
+      "video": "Video",
+      "pdf": "PDF",
+      "notes": "Notes",
+      "audio": "Audio",
+      "slides": "Slides",
+      "book": "Book"
+    },
+    "progressTitle": "Topic progress"
+  },
+  "topic": {
+    "tabs": {
+      "video": "Video",
+      "pdf": "PDF",
+      "notes": "Notes",
+      "audio": "Audio",
+      "slides": "Slides"
+    },
+    "contents": "Topic content",
+    "about": "About this topic",
+    "keyPoints": "Key points",
+    "resources": "Resources",
+    "noResources": "No downloadable resources for this topic yet.",
+    "markCompleted": "Mark as completed",
+    "completed": "Completed",
+    "completedToast": "Topic marked as completed.",
+    "previous": "Previous topic",
+    "next": "Next topic",
+    "takeTest": "Take the topic test",
+    "mediaPending": "Media is not connected yet",
+    "mediaPendingText": "File storage and streaming arrive with the backend block. This panel shows where the {kind} will appear.",
+    "notesTitle": "Study notes",
+    "notesText": "Summary of this topic. Full formatted notes will be loaded from the materials library.",
+    "lockedTitle": "This topic is locked",
+    "lockedText": "Complete the previous topic to unlock it.",
+    "backToSubject": "Back to subject",
+    "errorSaving": "Could not save. Please try again."
+  },
+  "test": {
+    "timeRemaining": "Time remaining",
+    "question": "Question {current} of {total}",
+    "progress": "Test progress",
+    "flag": "Flag question",
+    "unflag": "Remove flag",
+    "flagged": "Flagged",
+    "previous": "Previous",
+    "next": "Next",
+    "submit": "Submit test",
+    "exit": "Exit test",
+    "questionNavigator": "Question navigator",
+    "goToQuestion": "Go to question {n}",
+    "legend": {
+      "answered": "Answered",
+      "unanswered": "Not answered",
+      "flagged": "Flagged",
+      "current": "Current"
+    },
+    "answeredCount": "{answered} of {total} answered",
+    "selected": "Selected",
+    "chooseAnswer": "Choose one answer",
+    "leave": {
+      "title": "Leave this test?",
+      "text": "Your test is not submitted. Your answers are saved as a draft, so you can come back and continue.",
+      "stay": "Stay in test",
+      "leave": "Leave test"
+    },
+    "submitDialog": {
+      "title": "Submit your test?",
+      "text": "You will see your score and explained answers right after submitting. You cannot change answers afterwards.",
+      "unanswered": "{count, plural, one {You have # unanswered question.} other {You have # unanswered questions.}}",
+      "flagged": "{count, plural, one {# question is flagged for review.} other {# questions are flagged for review.}}",
+      "review": "Review answers",
+      "confirm": "Submit now"
+    },
+    "autosave": {
+      "saving": "Saving…",
+      "saved": "Draft saved",
+      "failed": "Autosave failed — retrying",
+      "idle": "Autosave on"
+    },
+    "timeUpTitle": "Time is up",
+    "timeUpText": "Your answers are being submitted.",
+    "submitting": "Submitting…",
+    "submitError": "Could not submit the test. Check your connection and try again.",
+    "resumed": "Draft restored — continue where you left off.",
+    "notFound": "This test could not be found."
+  },
+  "result": {
+    "title": "Test completed!",
+    "passedTitle": "Passed",
+    "failedTitle": "Not passed this time",
+    "yourScore": "Your score",
+    "scoreOf": "{correct} / {total}",
+    "passMark": "Pass mark: {mark}%",
+    "correct": "Correct answers",
+    "incorrect": "Incorrect answers",
+    "unanswered": "Unanswered",
+    "total": "Total questions",
+    "time": "Time taken",
+    "review": "Review answers",
+    "retake": "Retake test",
+    "backToSubject": "Back to subject",
+    "progressUpdate": "Progress update",
+    "progressText": "{subject} progress: {before}% → {after}%",
+    "progressPassHint": "Passing the topic test completes the topic.",
+    "demoNotice": "This is a sample result shown because no attempt was found. Take the test to see your own result.",
+    "reviewTitle": "Answer review",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "explanation": "Explanation",
+    "badge": {
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "unanswered": "Not answered"
+    },
+    "filter": {
+      "all": "All",
+      "incorrect": "Incorrect only",
+      "flagged": "Flagged"
+    },
+    "noItems": "No questions match this filter."
+  },
+  "exams": {
+    "title": "Mock Exams",
+    "description": "Scheduled mock exams and your results.",
+    "status": {
+      "scheduled": "Scheduled",
+      "open": "Open",
+      "completed": "Completed"
+    },
+    "duration": "{count} min",
+    "score": "Score",
+    "starts": "Starts",
+    "practiceTests": "Practice tests",
+    "practiceText": "Topic tests are available inside each subject.",
+    "empty": "No exams scheduled.",
+    "durationHeader": "Duration"
+  },
+  "progressPage": {
+    "title": "Progress",
+    "description": "How you are doing across your subjects.",
+    "bySubject": "By subject",
+    "empty": "Start a topic to see your progress here."
+  },
+  "ranking": {
+    "title": "Ranking",
+    "description": "Top learners by points earned.",
+    "rank": "Rank",
+    "student": "Student",
+    "points": "Points",
+    "demoNote": "Demo ranking with fictional learners."
+  },
+  "certificates": {
+    "title": "Certificates",
+    "description": "Your completion certificates.",
+    "earned": "Earned",
+    "inProgress": "In progress",
+    "issued": "Issued {date}",
+    "download": "Download",
+    "downloadSoon": "PDF download arrives with the backend block.",
+    "empty": "No certificates yet."
+  },
+  "payments": {
+    "title": "Payments",
+    "description": "Your invoices and payment history.",
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "refunded": "Refunded",
+      "failed": "Failed"
+    },
+    "notice": "Online payments are not enabled yet. The records below are demo data.",
+    "empty": "No payments yet."
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "description": "Updates about your courses, tests and exams.",
+    "markAllRead": "Mark all as read",
+    "unread": "Unread",
+    "empty": "You are all caught up.",
+    "open": "Open"
+  },
+  "profilePage": {
+    "title": "Profile",
+    "description": "Your personal details and preferences.",
+    "details": "Personal details",
+    "preferences": "Preferences",
+    "preferredLanguage": "Interface language",
+    "saved": "Profile saved (demo — not stored).",
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "language": "Language"
+    },
+    "errors": {
+      "nameMin": "Enter your full name (at least 2 characters).",
+      "emailInvalid": "Enter a valid email address."
+    }
+  },
+  "books": {
+    "title": "Books",
+    "description": "Revision kits and study books for your qualification.",
+    "empty": "Books will be published here soon.",
+    "emptyText": "Browse the courses in the meantime."
+  },
+  "forums": {
+    "title": "Forums",
+    "description": "Ask questions and learn from other students.",
+    "notice": "Forums open with the community block. The categories below preview the structure.",
+    "general": {
+      "title": "General discussion",
+      "text": "Study tips, motivation and everything else."
+    },
+    "acca": {
+      "title": "ACCA",
+      "text": "Questions about ACCA subjects and exams."
+    },
+    "cima": {
+      "title": "CIMA",
+      "text": "Questions about CIMA subjects and exams."
+    },
+    "fia": {
+      "title": "FIA",
+      "text": "Questions about FIA subjects and exams."
+    },
+    "tips": {
+      "title": "Exam tips",
+      "text": "Approach, time management and revision."
+    }
+  },
+  "searchPage": {
+    "title": "Search",
+    "description": "Find subjects, topics and materials.",
+    "placeholder": "Search by subject, topic or material",
+    "hint": "Type at least 2 characters.",
+    "results": "{count, plural, =0 {No results} one {# result} other {# results}} for “{query}”",
+    "kinds": {
+      "subject": "Subject",
+      "topic": "Topic",
+      "material": "Material"
+    },
+    "emptyTitle": "Nothing found",
+    "emptyText": "Try a different spelling or a shorter keyword."
+  },
+  "admin": {
+    "demoNotice": "Admin preview: role checks are not enforced until authentication is connected.",
+    "overview": {
+      "title": "Admin overview",
+      "description": "Platform at a glance. Figures are demo data.",
+      "students": "Students",
+      "subjects": "Subjects",
+      "topics": "Topics",
+      "tests": "Tests",
+      "quickLinks": "Manage"
+    },
+    "table": {
+      "search": "Search this list",
+      "empty": "Nothing here yet.",
+      "emptyText": "Create the first record to get started.",
+      "noMatch": "No records match your search.",
+      "rows": "{count, plural, one {# record} other {# records}}",
+      "confirmDeleteTitle": "Delete this record?",
+      "confirmDeleteText": "The record will be archived (soft delete) and can be restored by an administrator.",
+      "demoSave": "Saved in this preview only — nothing is stored until the backend is connected.",
+      "newRecord": "New record"
+    },
+    "roles": {
+      "STUDENT": "Student",
+      "TEACHER": "Teacher",
+      "ADMIN": "Admin"
+    },
+    "userStatus": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "resources": {
+      "platforms": {
+        "title": "Platforms",
+        "description": "Qualifications offered on ACCA USA.",
+        "add": "Add platform",
+        "columns": {
+          "name": "Name",
+          "fullName": "Full name",
+          "levels": "Levels",
+          "subjects": "Subjects"
+        },
+        "fields": {
+          "name": "Short name",
+          "fullName": "Full name"
+        }
+      },
+      "subjects": {
+        "title": "Subjects",
+        "description": "Papers and subjects within each platform.",
+        "add": "Add subject",
+        "columns": {
+          "code": "Code",
+          "name": "Name",
+          "platform": "Platform",
+          "topics": "Topics",
+          "tests": "Tests"
+        },
+        "fields": {
+          "code": "Code",
+          "name": "Subject name",
+          "platform": "Platform"
+        }
+      },
+      "topics": {
+        "title": "Topics",
+        "description": "Topics that make up each subject.",
+        "add": "Add topic",
+        "columns": {
+          "order": "#",
+          "title": "Title",
+          "subject": "Subject"
+        },
+        "fields": {
+          "title": "Topic title",
+          "subject": "Subject"
+        }
+      },
+      "materials": {
+        "title": "Materials",
+        "description": "Videos, PDFs, notes, audio and slides.",
+        "add": "Add material",
+        "columns": {
+          "title": "Title",
+          "kind": "Type",
+          "subject": "Subject",
+          "meta": "Details"
+        },
+        "fields": {
+          "title": "Material title",
+          "kind": "Type",
+          "subject": "Subject"
+        }
+      },
+      "question-bank": {
+        "title": "Question bank",
+        "description": "Questions that tests are built from.",
+        "add": "Add question",
+        "columns": {
+          "id": "ID",
+          "text": "Question",
+          "options": "Options"
+        },
+        "fields": {
+          "text": "Question text",
+          "explanation": "Explanation"
+        }
+      },
+      "tests": {
+        "title": "Tests",
+        "description": "Topic tests and practice tests.",
+        "add": "Add test",
+        "columns": {
+          "title": "Title",
+          "subject": "Subject",
+          "questions": "Questions",
+          "duration": "Duration",
+          "passMark": "Pass mark"
+        },
+        "fields": {
+          "title": "Test title",
+          "subject": "Subject",
+          "duration": "Duration (minutes)",
+          "passMark": "Pass mark (%)"
+        }
+      },
+      "exams": {
+        "title": "Exams",
+        "description": "Scheduled mock exams.",
+        "add": "Schedule exam",
+        "columns": {
+          "title": "Title",
+          "platform": "Platform",
+          "startsAt": "Starts",
+          "duration": "Duration",
+          "status": "Status"
+        },
+        "fields": {
+          "title": "Exam title",
+          "platform": "Platform",
+          "duration": "Duration (minutes)"
+        }
+      },
+      "students": {
+        "title": "Students",
+        "description": "Registered students and staff.",
+        "add": "Invite user",
+        "columns": {
+          "name": "Name",
+          "email": "Email",
+          "role": "Role",
+          "progress": "Progress",
+          "status": "Status"
+        },
+        "fields": {
+          "name": "Full name",
+          "email": "Email",
+          "role": "Role"
+        }
+      },
+      "payments": {
+        "title": "Payments",
+        "description": "Payment records. Processing is not enabled yet.",
+        "add": "Record payment",
+        "columns": {
+          "student": "Student",
+          "description": "Description",
+          "amount": "Amount",
+          "status": "Status",
+          "date": "Date"
+        },
+        "fields": {
+          "student": "Student",
+          "amount": "Amount (USD)"
+        }
+      }
+    },
+    "validation": {
+      "required": "This field is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "min": "Enter at least {min} characters.",
+      "number": "Enter a number between {min} and {max}."
+    },
+    "statistics": {
+      "title": "Statistics",
+      "description": "Demo charts showing how analytics will look.",
+      "signups": "New students per month",
+      "completion": "Topic completion by platform",
+      "avgScore": "Average test score",
+      "revenue": "Revenue (demo)"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Platform-wide preferences. Saved in this preview only.",
+      "general": "General",
+      "siteName": "Platform name",
+      "supportEmail": "Support email",
+      "defaultLanguage": "Default language",
+      "learning": "Learning",
+      "passMark": "Default pass mark (%)",
+      "sequential": "Unlock topics sequentially",
+      "sequentialHint": "Students must complete a topic before the next one opens.",
+      "reminders": "Send learning reminders",
+      "remindersHint": "Email students who have been inactive for 7 days.",
+      "saved": "Settings saved (demo — not stored)."
+    }
+  },
+  "states": {
+    "loading": "Loading…",
+    "errorTitle": "Something went wrong",
+    "errorText": "An unexpected error occurred. You can try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundText": "The page you are looking for does not exist or has moved.",
+    "goHome": "Go to home page",
+    "goDashboard": "Go to dashboard",
+    "emptyTitle": "Nothing here yet",
+    "forbiddenTitle": "You don’t have access",
+    "forbiddenText": "Your role does not allow viewing this page."
+  }
+}

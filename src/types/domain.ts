@@ -1,0 +1,239 @@
+/**
+ * Domain types shared by UI, services and (later) Prisma mappers.
+ * Dates are ISO-8601 UTC strings; format them at the edge with lib/format.ts.
+ */
+
+export type Role = "STUDENT" | "TEACHER" | "ADMIN";
+export type PlatformSlug = "acca" | "cima" | "fia";
+export type Locale = "en" | "ru" | "uz";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  locale: Locale;
+  createdAt: string;
+}
+
+export interface Level {
+  id: string;
+  platform: PlatformSlug;
+  name: string;
+  order: number;
+}
+
+export interface Platform {
+  slug: PlatformSlug;
+  name: string;
+  fullName: string;
+  levels: Level[];
+}
+
+export interface Subject {
+  /** URL slug, e.g. "ma". Unique across platforms in the mock catalogue. */
+  slug: string;
+  code: string;
+  name: string;
+  platform: PlatformSlug;
+  levelId: string;
+  topicCount: number;
+  testCount: number;
+}
+
+export type TopicStatus = "completed" | "in_progress" | "unlocked" | "locked";
+
+export interface Topic {
+  id: string;
+  subjectSlug: string;
+  order: number;
+  title: string;
+  lessonCount: number;
+  durationMinutes: number;
+  description: string;
+  keyPoints: string[];
+}
+
+export interface TopicWithStatus extends Topic {
+  status: TopicStatus;
+  /** 0–100 */
+  progress: number;
+}
+
+export type MaterialKind = "video" | "pdf" | "notes" | "audio" | "slides" | "book";
+
+export interface Material {
+  id: string;
+  subjectSlug: string;
+  topicId?: string;
+  kind: MaterialKind;
+  title: string;
+  /** Size / duration label as plain data, e.g. "12:40" or "2.4 MB". */
+  meta: string;
+}
+
+export interface TestSummary {
+  id: string;
+  subjectSlug: string;
+  topicId?: string;
+  title: string;
+  questionCount: number;
+  durationMinutes: number;
+  passMark: number;
+  /** Best score for the current user in %, if attempted. */
+  bestScore?: number;
+}
+
+export interface QuestionOption {
+  id: string;
+  text: string;
+}
+
+/** What the browser receives. Correct answers and explanations never leave the server before submission. */
+export interface PublicQuestion {
+  id: string;
+  text: string;
+  options: QuestionOption[];
+}
+
+export interface TestForAttempt extends TestSummary {
+  questions: PublicQuestion[];
+}
+
+/** questionId -> optionId */
+export type AnswerMap = Record<string, string>;
+
+export interface AttemptDraft {
+  testId: string;
+  answers: AnswerMap;
+  flagged: string[];
+  currentIndex: number;
+  /** Seconds elapsed on the server clock when the draft was saved. */
+  elapsedSeconds: number;
+}
+
+export interface ReviewItem {
+  questionId: string;
+  text: string;
+  options: QuestionOption[];
+  selectedOptionId: string | null;
+  correctOptionId: string;
+  explanation: string;
+  isCorrect: boolean;
+  flagged: boolean;
+}
+
+export interface TestResult {
+  attemptId: string;
+  testId: string;
+  testTitle: string;
+  subjectSlug: string;
+  subjectName: string;
+  total: number;
+  correct: number;
+  incorrect: number;
+  unanswered: number;
+  /** 0–100 */
+  scorePercent: number;
+  passMark: number;
+  passed: boolean;
+  timeSpentSeconds: number;
+  submittedAt: string;
+  review: ReviewItem[];
+  /** Subject progress before/after this attempt — drives the "progress update" block. */
+  progressBefore: number;
+  progressAfter: number;
+  isDemo: boolean;
+}
+
+export interface Enrollment {
+  platform: PlatformSlug;
+  status: "active" | "not_enrolled";
+  progress: number;
+  priceLabel?: string;
+}
+
+export interface ActivityItem {
+  id: string;
+  kind: "topic" | "test" | "material";
+  title: string;
+  context: string;
+  href: string;
+  occurredAt: string;
+  detail?: string;
+}
+
+export interface DashboardOverview {
+  user: User;
+  stats: { enrolledCourses: number; completedTopics: number; learningHours: number; overallProgress: number };
+  enrollments: Enrollment[];
+  continueLearning: { topicId: string; topicTitle: string; subjectName: string; progress: number }[];
+  recentActivity: ActivityItem[];
+  progressBreakdown: { completed: number; inProgress: number; notStarted: number; total: number };
+  ranking: RankingEntry[];
+  tests: { test: TestSummary; subjectName: string; status: "upcoming" | "recent"; score?: number; dateISO: string }[];
+  certificates: Certificate[];
+  unreadNotifications: number;
+}
+
+export interface RankingEntry {
+  rank: number;
+  userId: string;
+  name: string;
+  points: number;
+  isCurrentUser: boolean;
+}
+
+export interface Certificate {
+  id: string;
+  title: string;
+  platform: PlatformSlug;
+  status: "earned" | "in_progress";
+  issuedAt?: string;
+  progress: number;
+}
+
+export type NotificationTarget =
+  | { kind: "topic"; id: string }
+  | { kind: "test"; id: string }
+  | { kind: "result"; id: string; attemptId?: string }
+  | { kind: "exam"; id: string }
+  | { kind: "certificate" }
+  | { kind: "payment" }
+  | { kind: "none" };
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
+  target: NotificationTarget;
+}
+
+export interface Payment {
+  id: string;
+  description: string;
+  amountCents: number;
+  currency: "USD";
+  status: "paid" | "pending" | "refunded" | "failed";
+  createdAt: string;
+  studentName?: string;
+}
+
+export interface Exam {
+  id: string;
+  title: string;
+  platform: PlatformSlug;
+  subjectSlug: string;
+  startsAt: string;
+  durationMinutes: number;
+  status: "scheduled" | "open" | "completed";
+  score?: number;
+}
+
+export interface StudentRecord extends User {
+  platforms: PlatformSlug[];
+  progress: number;
+  status: "active" | "suspended";
+}
