@@ -25,6 +25,9 @@ export const routes = {
     `/subject/${encodeURIComponent(slug)}?tab=${tab}`,
   /** Canonical topic URL (protected). The subject page itself is public and lists only topic titles. */
   subjectTopic: (subjectSlug: string, topicId: string) => `/subject/${encodeURIComponent(subjectSlug)}/topic/${encodeURIComponent(topicId)}`,
+  /** Student material viewer (protected: session + enrolment + unlocked topic, enforced on the server). */
+  subjectMaterial: (subjectSlug: string, topicId: string, materialId: string) =>
+    `/subject/${encodeURIComponent(subjectSlug)}/topic/${encodeURIComponent(topicId)}/material/${encodeURIComponent(materialId)}`,
   /** Legacy topic URL (notifications, activity, search): redirects to the canonical subject/topic URL. */
   topic: (id: string) => `/topic/${encodeURIComponent(id)}`,
   test: (id: string) => `/test/${encodeURIComponent(id)}`,

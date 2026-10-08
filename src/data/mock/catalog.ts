@@ -142,11 +142,25 @@ const seedNotes = (t: Topic, suffix: string, title: string, body: string): Mater
   createdAt: "2026-01-10T10:00:00.000Z",
 });
 
+const bt1 = "bt-business-organisations-and-their-stakeholders";
+const seedFile = (suffix: string, kind: Material["kind"], title: string, fileId: string, fileMime: string): Material => ({
+  id: `${bt1}-${suffix}`, subjectSlug: "bt", topicId: bt1, kind, title, meta: kind, fileId, fileMime, createdAt: "2026-01-10T10:00:00.000Z",
+});
+/** One material of every viewer type in the first BT topic (demo storage seeds the files). Order = viewing order. */
+const btShowcase: Material[] = [
+  seedFile("video", "video", "Stakeholders in 4 minutes — lecture", "seed-bt-lecture", "video/mp4"),
+  seedFile("pdf", "pdf", "Stakeholders overview — PDF handout", "seed-bt-overview", "application/pdf"),
+  seedFile("audio", "audio", "Stakeholders — audio summary", "seed-bt-audio", "audio/mpeg"),
+  seedFile("diagram", "image", "Stakeholder map — diagram", "seed-bt-diagram", "image/png"),
+  seedFile("glossary", "file", "Glossary of key terms", "seed-bt-glossary", "text/plain; charset=utf-8"),
+];
+
 /** Every topic outside MA gets two short seed notes so the public outline shows materials everywhere. */
 const otherSubjectMaterials: Material[] = allTopics
   .filter((t) => t.subjectSlug !== "ma")
   .flatMap((t) => [
     seedNotes(t, "notes", `${t.title} — study notes`, `${t.description}\n\n${t.keyPoints.map((k) => `• ${k}`).join("\n")}`),
+    ...(t.id === bt1 ? btShowcase : []),
     seedNotes(t, "summary", `${t.title} — key points summary`, t.keyPoints.map((k) => `• ${k}`).join("\n")),
   ]);
 

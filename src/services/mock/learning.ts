@@ -34,6 +34,16 @@ export const progressService: ProgressService = {
       pushActivity(db, { userId, kind: "topic", title: topic.title, context: subject?.name ?? "", href: routes.topic(topicId), detail: "100%" });
     }
   },
+  async listCompletedMaterials(userId, materialIds) {
+    const wanted = new Set(materialIds);
+    return getDb().materialProgress.filter((m) => m.userId === userId && wanted.has(m.materialId)).map((m) => m.materialId);
+  },
+  async setMaterialCompleted(userId, materialId, completed) {
+    const db = getDb();
+    const rest = db.materialProgress.filter((m) => !(m.userId === userId && m.materialId === materialId));
+    if (completed) rest.push({ userId, materialId, completedAt: nowIso() });
+    db.materialProgress = rest;
+  },
   async getSubjectProgress(userId, subjectSlug) {
     return subjectProgress(getDb(), userId, subjectSlug);
   },

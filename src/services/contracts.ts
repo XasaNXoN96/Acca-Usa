@@ -167,6 +167,9 @@ export interface ProgressService {
   /** Raises a topic from 0 to "started" the first time it is opened. Idempotent. */
   touchTopic(userId: string, topicId: string): Promise<void>;
   markTopicCompleted(userId: string, topicId: string): Promise<void>;
+  /** Ids (out of the given ones) the user has marked as completed. Per Student + Material. */
+  listCompletedMaterials(userId: string, materialIds: string[]): Promise<string[]>;
+  setMaterialCompleted(userId: string, materialId: string, completed: boolean): Promise<void>;
   getSubjectProgress(userId: string, subjectSlug: string): Promise<{ percent: number; completed: number; total: number }>;
   getPlatformProgress(userId: string): Promise<Record<PlatformSlug, number>>;
   recentActivity(userId: string, limit?: number): Promise<ActivityItem[]>;

@@ -36,6 +36,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     const subject = material && (await services.subjects.getBySlug(material.subjectSlug));
     if (!material || !subject) return new Response("Not found", { status: 404 });
     if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return new Response("Forbidden", { status: 403 });
+    if (material.topicId) {
+      const tctx = await services.topics.getContext(material.topicId, session.user.id);
+      if (!tctx || tctx.topic.status === "locked") return new Response("Forbidden", { status: 403 });
+    }
   }
 
   const range = parseRange(req.headers.get("range"), meta.size);

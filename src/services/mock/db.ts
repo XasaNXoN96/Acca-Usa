@@ -83,6 +83,8 @@ export interface Db {
   tests: TestRec[];
   enrollments: { userId: string; platform: PlatformSlug; createdAt: string }[];
   progress: Map<string, Map<string, ProgressEntry>>;
+  /** Student + Material completion (PostgreSQL later: MaterialProgress(userId, materialId, completedAt)). */
+  materialProgress: { userId: string; materialId: string; completedAt: string }[];
   attempts: AttemptRec[];
   notifications: Map<string, AppNotification[]>;
   activity: ActivityRec[];
@@ -134,6 +136,7 @@ function seed(): Db {
       { userId: DEMO_STUDENT_ID, platform: "acca", createdAt: hoursAgo(900) },
     ],
     progress: new Map(),
+    materialProgress: [],
     attempts: [],
     notifications: new Map(),
     activity: [],

@@ -30,7 +30,7 @@ export async function MaterialList({ materials }: { materials: Material[] }) {
           </>
         );
         const cls = "flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card p-3";
-        const href = m.topicId ? routes.topic(m.topicId) : m.fileId ? `/api/files/${encodeURIComponent(m.fileId)}` : null;
+        const href = m.topicId ? routes.subjectMaterial(m.subjectSlug, m.topicId, m.id) : m.fileId ? `/api/files/${encodeURIComponent(m.fileId)}` : null;
         return (
           <li key={m.id}>
             {href ? (

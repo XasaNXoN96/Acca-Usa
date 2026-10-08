@@ -75,6 +75,7 @@ model User {
   sessions      Session[]
   enrollments   Enrollment[]
   progress      TopicProgress[]
+  materialProgress MaterialProgress[]
   attempts      TestAttempt[]
   payments      Payment[]
   certificates  Certificate[]
@@ -229,6 +230,7 @@ model Material {
 
   subject Subject @relation(fields: [subjectId], references: [id])
   topic   Topic?  @relation(fields: [topicId], references: [id])
+  progress MaterialProgress[]
 
   @@index([subjectId, topicId])
 }
@@ -245,6 +247,17 @@ model Enrollment {
   platform Platform @relation(fields: [platformId], references: [id])
 
   @@unique([userId, platformId])
+}
+
+model MaterialProgress {
+  userId      String
+  materialId  String
+  completedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@id([userId, materialId])
 }
 
 model TopicProgress {

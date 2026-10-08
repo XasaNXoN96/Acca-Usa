@@ -31,7 +31,7 @@ await step("NO materials, tests, answers or file URLs in the public HTML (BT and
   for (const slug of ["bt", "ma"]) {
     const html = await (await anon.request.get(`/subject/${slug}`)).text();
     // (UI strings such as "Take the topic test" legitimately ship in the message dictionary — only DATA is checked)
-    for (const leak of ["/api/files", "seed-ma-workbook", "Cost classification — topic test", "Introduction to management accounting — quiz", "q-fixed-cost", "Factory rent stays the same", "correctOptionId", "<video", "<audio", "<iframe"]) assert(!html.includes(leak), `/subject/${slug} leaks "${leak}"`);
+    for (const leak of ["/api/files", "seed-ma-workbook", "seed-bt-", "Cost classification — topic test", "Introduction to management accounting — quiz", "q-fixed-cost", "Factory rent stays the same", "correctOptionId", "<video", "<audio", "<iframe"]) assert(!html.includes(leak), `/subject/${slug} leaks "${leak}"`);
   }
   assert((await page.locator("video,audio,iframe,img[src*='/api/files']").count()) === 0, "media element on public page");
   for (const w of ["Materials", "Tests"]) assert((await page.getByRole("link", { name: w, exact: true }).count()) === 0, `"${w}" tab visible to the public`);

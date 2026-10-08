@@ -7,6 +7,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { OpenedFile, StorageProvider, StoredFileMeta } from "./contracts";
 import { sanitizeFileName } from "./validation";
+import { seedAudioBase64, seedImageBase64, seedVideoBase64 } from "./seed-assets";
 
 /**
  * Demo storage: files live in the OS temp directory. No external service, no credentials.
@@ -45,14 +46,34 @@ function buildSamplePdf(): Buffer {
   return Buffer.from(out, "latin1");
 }
 
+const GLOSSARY = [
+  "ACCA USA - glossary (demo file)",
+  "",
+  "Stakeholder: any person or group affected by, or able to affect, the organisation.",
+  "Shareholder: an owner of the company through shares.",
+  "Governance: the system by which organisations are directed and controlled.",
+  "",
+].join("\n");
+
+/** Demo files shipped with the demo provider: ids are fixed so seed materials can reference them. */
+const seeds: { id: string; name: string; mime: string; data: () => Buffer }[] = [
+  { id: "seed-ma-workbook", name: "cost-classification-workbook.pdf", mime: "application/pdf", data: buildSamplePdf },
+  { id: "seed-bt-lecture", name: "stakeholders-lecture.mp4", mime: "video/mp4", data: () => Buffer.from(seedVideoBase64, "base64") },
+  { id: "seed-bt-overview", name: "stakeholders-overview.pdf", mime: "application/pdf", data: buildSamplePdf },
+  { id: "seed-bt-audio", name: "stakeholders-podcast.mp3", mime: "audio/mpeg", data: () => Buffer.from(seedAudioBase64, "base64") },
+  { id: "seed-bt-diagram", name: "stakeholders-diagram.png", mime: "image/png", data: () => Buffer.from(seedImageBase64, "base64") },
+  { id: "seed-bt-glossary", name: "glossary.txt", mime: "text/plain; charset=utf-8", data: () => Buffer.from(GLOSSARY, "utf8") },
+];
+
 function ensureSeed() {
-  const id = "seed-ma-workbook";
-  if (existsSync(metaPath(id))) return;
-  ensureRoot();
-  const data = buildSamplePdf();
-  writeFileSync(bin(id), data);
-  const meta: StoredFileMeta = { id, name: "cost-classification-workbook.pdf", mime: "application/pdf", size: data.length, createdAt: new Date().toISOString(), ownerId: "system", attached: true };
-  writeFileSync(metaPath(id), JSON.stringify(meta));
+  for (const seed of seeds) {
+    if (existsSync(metaPath(seed.id))) continue;
+    ensureRoot();
+    const data = seed.data();
+    writeFileSync(bin(seed.id), data);
+    const meta: StoredFileMeta = { id: seed.id, name: seed.name, mime: seed.mime, size: data.length, createdAt: new Date().toISOString(), ownerId: "system", attached: true };
+    writeFileSync(metaPath(seed.id), JSON.stringify(meta));
+  }
 }
 
 function readMeta(id: string): StoredFileMeta | null {
@@ -118,7 +139,7 @@ export class DemoStorageProvider implements StorageProvider {
   }
 
   async delete(id: string): Promise<void> {
-    if (ID_RE.test(id) && id !== "seed-ma-workbook") removeFiles(id);
+    if (ID_RE.test(id) && !id.startsWith("seed-")) removeFiles(id);
   }
 
   async replace(id: string, input: { ownerId: string; file: File; mime: string }): Promise<StoredFileMeta> {

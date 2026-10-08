@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/states";
 import { TopicWorkspace } from "@/features/topic/topic-workspace";
 import { TopicFooter } from "@/features/topic/topic-footer";
 import { TopicTouch } from "@/features/topic/topic-touch";
+import { TopicMaterialList } from "@/features/topic/topic-material-list";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
 import { requireSession } from "@/lib/auth/guards";
@@ -39,15 +40,17 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
   const ctx = await services.topics.getContext(topicId, session.user.id);
   if (!ctx) notFound();
 
-  const [t, n, c, tests] = await Promise.all([
+  const [t, n, c, tests, completedMaterials] = await Promise.all([
     getTranslations("topic"),
     getTranslations("nav"),
     getTranslations("common"),
     services.tests.listForSubject(ctx.subject.slug, session.user.id),
+    services.progress.listCompletedMaterials(session.user.id, ctx.materials.map((m) => m.id)),
   ]);
   const { topic, subject, previous, next } = ctx;
   if (subject.slug !== subjectSlug) redirect(routes.subjectTopic(subject.slug, topic.id)); // wrong subject in the URL → canonical
-  if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) redirect(routes.coursePlatform(subject.platform));
+  const isAdmin = session.user.role === "ADMIN"; // admins may open any topic to review content
+  if (!isAdmin && !(await services.enrollments.isEnrolled(session.user.id, subject.platform))) redirect(routes.coursePlatform(subject.platform));
   const crumbs = [
     { label: n("courses"), href: routes.courses },
     { label: subject.platform.toUpperCase(), href: routes.coursePlatform(subject.platform) },
@@ -56,7 +59,7 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
   ];
 
   // Enforced on the server — hiding the UI is not access control.
-  if (topic.status === "locked") {
+  if (!isAdmin && topic.status === "locked") {
     return (
       <div className="space-y-6">
         <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
@@ -83,6 +86,7 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
       <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
       <h1 className="type-h1 text-balance">{topic.title}</h1>
       <TopicTouch topicId={topic.id} active={topic.status !== "completed"} />
+      <TopicMaterialList subjectSlug={subject.slug} topicId={topic.id} materials={ctx.materials} completedIds={completedMaterials} />
       <TopicWorkspace
         description={topic.description}
         keyPoints={topic.keyPoints}
