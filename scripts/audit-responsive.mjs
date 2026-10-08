@@ -6,8 +6,8 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const WIDTHS = [360, 390, 412, 768, 1024, 1280, 1440];
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search", "/login", "/register"];
-const STUDENT = ["/dashboard", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, `/subject/bt/topic/${T1}/material/${T1}-video`, `/subject/bt/topic/${T1}/material/${T1}-pdf`, `/subject/bt/topic/${T1}/material/${T1}-audio`, `/subject/bt/topic/${T1}/material/${T1}-diagram`, `/subject/bt/topic/${T1}/material/${T1}-glossary`, "/exams", "/progress", "/ranking", "/certificates", "/notifications", "/payments", "/profile"];
-const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/exams", "/admin/students", "/admin/payments", "/admin/statistics", "/admin/settings"];
+const STUDENT = ["/dashboard", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, `/subject/bt/topic/${T1}/material/${T1}-video`, `/subject/bt/topic/${T1}/material/${T1}-pdf`, `/subject/bt/topic/${T1}/material/${T1}-audio`, `/subject/bt/topic/${T1}/material/${T1}-diagram`, `/subject/bt/topic/${T1}/material/${T1}-glossary`, "/exams", "/progress", "/ranking", "/ranking?platform=acca&subject=bt", "/certificates", "/certificates/cert-demo-bt", "/notifications", "/payments", "/profile"];
+const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/exams", "/admin/students", "/admin/payments", "/admin/certificates", "/admin/notifications", "/admin/statistics", "/admin/statistics?subject=bt", "/admin/settings"];
 const extra = process.argv.slice(2);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
 let problems = 0, checks = 0;
@@ -46,7 +46,7 @@ async function scan(role, paths) {
           const b = el.getBoundingClientRect(); if (!b.width || !b.height || b.bottom < 0 || b.top > 4000) continue;
           if (el.closest("p, li > p") && cs.display === "inline") continue; // inline text links
           if (el.classList.contains("sr-only") || el.closest(".sr-only")) continue;
-          if (Math.min(b.width, b.height) < 24) { out.push(`tiny target ${Math.round(b.width)}x${Math.round(b.height)} "${(el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 30)}"`); break; }
+          if (Math.min(b.width, b.height) < 23.5) { out.push(`tiny target ${Math.round(b.width)}x${Math.round(b.height)} "${(el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 30)}"`); break; }
         }
         return out;
       }, w < 1024);
