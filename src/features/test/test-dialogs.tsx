@@ -71,7 +71,7 @@ export function SubmitTestDialog({
           <Button variant="outline" onClick={onReview} disabled={submitting}>
             {t("submitDialog.review")}
           </Button>
-          <Button onClick={onConfirm} loading={submitting}>
+          <Button onClick={onConfirm} loading={submitting} data-confirm-submit>
             {submitting ? t("submitting") : t("submitDialog.confirm")}
           </Button>
         </DialogFooter>

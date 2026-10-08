@@ -16,6 +16,7 @@ export function StartTestButton({ testId, resume }: { testId: string; resume: bo
     <div className="space-y-2">
       <Button
         size="lg"
+        data-start-test
         loading={pending}
         onClick={() =>
           start(async () => {

@@ -340,8 +340,7 @@
     }
   },
   "student": {
-    "userMenu": "Hisob menyusi",
-    "support": "Yordam kerakmi?"
+    "userMenu": "Hisob menyusi"
   },
   "dashboard": {
     "welcome": "Qaytganingiz bilan, {name}!",
@@ -1325,9 +1324,6 @@
     "locked": "Yopiq",
     "access": "Kirish",
     "topicNumber": "{number}-mavzu",
-    "signInToOpen": "Bu mavzuni ochish uchun tizimga kiring.",
-    "enrollToUnlock": "Bu mavzuni ochish uchun {platform} ga yoziling.",
-    "signInCta": "Kirish va ochish",
     "enrollCta": "{platform} ga yozilish",
     "noTopics": "Mavzular tez orada qo‘shiladi.",
     "notice": "Faqat mavzular ro‘yxati ommaga ochiq. Darslar, materiallar va testlar kirish va platformaga yozilgandan keyin ochiladi.",
@@ -1362,7 +1358,6 @@
     "audioUnsupported": "Brauzeringiz bu audioni ijro eta olmaydi.",
     "pdfHint": "Agar PDF qurilmangizda ko‘rinmasa, uni yangi oynada oching.",
     "enlarge": "Rasmni kattalashtirish",
-    "closeImage": "Ko‘rishni yopish",
     "noFile": "Bu materialga hali fayl biriktirilmagan.",
     "backToTopic": "Mavzuga qaytish",
     "takeTest": "Mavzu testini topshirish",

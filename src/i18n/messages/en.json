@@ -340,8 +340,7 @@
     }
   },
   "student": {
-    "userMenu": "Account menu",
-    "support": "Need help?"
+    "userMenu": "Account menu"
   },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
@@ -1325,9 +1324,6 @@
     "locked": "Locked",
     "access": "Access",
     "topicNumber": "Topic {number}",
-    "signInToOpen": "Sign in to open this topic.",
-    "enrollToUnlock": "Enroll in {platform} to unlock this topic.",
-    "signInCta": "Sign in to open",
     "enrollCta": "Enroll in {platform}",
     "noTopics": "Topics will be added soon.",
     "notice": "Only the topic list is public. Lessons, materials and tests are available after you sign in and enroll.",
@@ -1362,7 +1358,6 @@
     "audioUnsupported": "Your browser can’t play this audio.",
     "pdfHint": "If the PDF doesn’t display on your device, open it in a new tab.",
     "enlarge": "Enlarge image",
-    "closeImage": "Close preview",
     "noFile": "This material has no file attached yet.",
     "backToTopic": "Back to topic",
     "takeTest": "Take the topic test",

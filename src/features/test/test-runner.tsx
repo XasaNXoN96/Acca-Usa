@@ -133,7 +133,7 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
               <span className="hidden text-xs font-medium sm:inline">{t("timeRemaining")}</span>
               <span className="text-base font-bold tabular-nums">{formatClock(remaining)}</span>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setLeaveOpen(true)}>
+            <Button variant="outline" size="sm" data-exit-test onClick={() => setLeaveOpen(true)}>
               <LogOut aria-hidden />
               <span className="hidden sm:inline">{t("exit")}</span>
               <span className="sr-only sm:hidden">{t("exit")}</span>
@@ -173,7 +173,7 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
               {t("previous")}
             </Button>
             {isLast ? (
-              <Button size="lg" onClick={() => setSubmitOpen(true)}>
+              <Button size="lg" data-submit-test onClick={() => setSubmitOpen(true)}>
                 <Send aria-hidden />
                 {t("submit")}
               </Button>
@@ -192,7 +192,7 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
               setIndex(i);
             }} />
           {!isLast ? (
-            <Button variant="outline" className="w-full" onClick={() => setSubmitOpen(true)}>
+            <Button variant="outline" className="w-full" data-submit-test onClick={() => setSubmitOpen(true)}>
               <Send aria-hidden />
               {t("submit")}
             </Button>

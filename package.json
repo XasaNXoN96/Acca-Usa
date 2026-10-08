@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check:i18n": "node scripts/check-i18n.mjs && node scripts/check-admin-i18n.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs && node scripts/check-admin-i18n.mjs && node scripts/check-i18n-quality.mjs",
     "check:brand": "node scripts/check-brand.mjs",
     "check": "npm run lint && npm run typecheck && npm run check:i18n && npm run check:brand",
     "db:validate": "DATABASE_URL=postgresql://user:pass@localhost:5432/db prisma validate",
