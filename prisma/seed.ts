@@ -137,7 +137,7 @@ async function main() {
       },
     });
   }
-  console.log("Seed complete (development / demo data).");
+  process.stdout.write("Seed complete (development / demo data).\n");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
