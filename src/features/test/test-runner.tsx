@@ -101,7 +101,9 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
   const isLast = index === total - 1;
   const lowTime = remaining <= 300;
 
-  const leave = () => {
+  const leave = async () => {
+    // Flush the latest answers before leaving so "your progress is saved" is literally true.
+    await saveDraftAction({ testId: test.id, answers, flagged, currentIndex: index }).catch(() => undefined);
     guard.allow();
     router.push(exitHref);
   };

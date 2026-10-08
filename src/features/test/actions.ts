@@ -25,14 +25,14 @@ async function learnerFor(testId: string) {
   return session;
 }
 
-export async function startTestAction(raw: unknown): Promise<{ ok: boolean }> {
+export async function startTestAction(raw: unknown): Promise<{ ok: boolean; code?: string }> {
   const parsed = z.object({ testId: id }).safeParse(raw);
-  if (!parsed.success) return { ok: false };
+  if (!parsed.success) return { ok: false, code: "INVALID" };
   const session = await learnerFor(parsed.data.testId);
-  if (!session) return { ok: false };
+  if (!session) return { ok: false, code: "FORBIDDEN" };
   const res = await services.tests.startAttempt(session.user.id, parsed.data.testId);
   revalidatePath(routes.test(parsed.data.testId));
-  return { ok: res.ok };
+  return res.ok ? { ok: true } : { ok: false, code: res.code };
 }
 
 /** Autosave. The elapsed time is NOT accepted from the browser — the server clock owns the timer. */

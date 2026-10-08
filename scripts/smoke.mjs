@@ -299,7 +299,7 @@ await step("retake creates a new attempt; refresh keeps progress", async () => {
 });
 await step("leave-test confirmation dialog", async () => {
   await stu.getByRole("button", { name: "Exit test" }).click();
-  await stu.getByRole("heading", { name: "Leave this test?" }).waitFor();
+  await stu.getByRole("heading", { name: "Are you sure you want to leave?" }).waitFor();
   await stu.getByRole("button", { name: "Stay in test" }).click();
 });
 await step("dashboard reflects real progress/results/activity", async () => {

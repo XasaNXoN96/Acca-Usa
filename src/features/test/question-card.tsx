@@ -4,6 +4,7 @@ import { Check, Flag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { Button } from "@/components/ui/button";
+import { fileUrl } from "@/features/topic/material-viewers";
 import { cn } from "@/lib/utils";
 import type { PublicQuestion } from "@/types";
 
@@ -48,6 +49,11 @@ export function QuestionCard({
       <h2 id={labelId} className="type-h2 text-pretty !text-xl sm:!text-2xl">
         {question.text}
       </h2>
+
+      {question.imageId ? (
+        // eslint-disable-next-line @next/next/no-img-element -- access-controlled API URL (enrolled students only)
+        <img src={fileUrl(question.imageId)} alt={t("questionImage")} className="max-h-72 w-full rounded-lg border border-border object-contain" />
+      ) : null}
 
       <RadioGroup.Root
         value={selected ?? ""}

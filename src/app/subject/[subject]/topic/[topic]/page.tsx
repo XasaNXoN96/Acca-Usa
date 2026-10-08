@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/states";
 import { TopicWorkspace } from "@/features/topic/topic-workspace";
 import { TopicFooter } from "@/features/topic/topic-footer";
 import { TopicTouch } from "@/features/topic/topic-touch";
+import { TopicTestCard } from "@/features/topic/topic-test-card";
 import { TopicMaterialList } from "@/features/topic/topic-material-list";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
@@ -77,7 +78,8 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
     );
   }
 
-  const testId = tests.find((x) => x.topicId === topic.id)?.id ?? null;
+  const topicTest = tests.find((x) => x.topicId === topic.id) ?? null;
+  const testId = topicTest?.id ?? null;
   const completed = topic.status === "completed";
   const nextHref = next && (completed || next.status !== "locked") ? routes.subjectTopic(subject.slug, next.id) : null;
 
@@ -86,6 +88,7 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
       <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
       <h1 className="type-h1 text-balance">{topic.title}</h1>
       <TopicTouch topicId={topic.id} active={topic.status !== "completed"} />
+      {topicTest ? <TopicTestCard test={topicTest} /> : null}
       <TopicMaterialList subjectSlug={subject.slug} topicId={topic.id} materials={ctx.materials} completedIds={completedMaterials} />
       <TopicWorkspace
         description={topic.description}

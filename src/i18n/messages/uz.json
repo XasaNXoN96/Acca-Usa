@@ -471,7 +471,15 @@
     "download": "Yuklab olish",
     "notesEmpty": "Bu mavzuga hali konspektlar qo‘shilmagan.",
     "videoUnsupported": "Brauzeringiz bu videoni ijro eta olmaydi.",
-    "audioUnsupported": "Brauzeringiz bu audioni ijro eta olmaydi."
+    "audioUnsupported": "Brauzeringiz bu audioni ijro eta olmaydi.",
+    "testCard": {
+      "meta": "{questions} ta savol · {minutes} daqiqa · o‘tish bali {passMark}%",
+      "attempts": "urinishlar {used}/{allowed}",
+      "best": "Eng yaxshi natija: {score}%",
+      "start": "Testni boshlash",
+      "retake": "Testni ochish",
+      "result": "Natijani ko‘rish"
+    }
   },
   "test": {
     "timeRemaining": "Qolgan vaqt",
@@ -496,8 +504,8 @@
     "selected": "Tanlangan",
     "chooseAnswer": "Bitta javobni tanlang",
     "leave": {
-      "title": "Testdan chiqasizmi?",
-      "text": "Test yuborilmagan. Javoblaringiz qoralama sifatida saqlangan — qaytib kelib davom ettirishingiz mumkin.",
+      "title": "Haqiqatan ham chiqmoqchimisiz?",
+      "text": "Test topshirilmagan. Joriy progressingiz saqlanadi — qaytib davom ettirishingiz mumkin.",
       "stay": "Testda qolish",
       "leave": "Testdan chiqish"
     },
@@ -532,8 +540,15 @@
       "points": "Ballar",
       "previousBest": "Eng yaxshi natijangiz: {score}%",
       "backToSubject": "Fanga qaytish",
-      "startError": "Testni boshlab bo‘lmadi. Qayta urinib ko‘ring."
-    }
+      "startError": "Testni boshlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "attempts": "Urinishlar",
+      "unlimited": "Cheklanmagan",
+      "attemptsOf": "{allowed} tadan {used}",
+      "noAttempts": "Urinishlar qolmadi",
+      "noAttemptsText": "Bu test uchun barcha urinishlardan foydalandingiz. Natijani ko‘rishingiz mumkin.",
+      "viewResult": "Natijamni ko‘rish"
+    },
+    "questionImage": "Savol rasmi"
   },
   "result": {
     "title": "Test yakunlandi!",

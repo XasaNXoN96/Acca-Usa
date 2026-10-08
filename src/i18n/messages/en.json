@@ -471,7 +471,15 @@
     "download": "Download",
     "notesEmpty": "No notes have been added to this topic yet.",
     "videoUnsupported": "Your browser cannot play this video.",
-    "audioUnsupported": "Your browser cannot play this audio."
+    "audioUnsupported": "Your browser cannot play this audio.",
+    "testCard": {
+      "meta": "{questions} questions · {minutes} min · pass mark {passMark}%",
+      "attempts": "attempts {used}/{allowed}",
+      "best": "Best score: {score}%",
+      "start": "Start test",
+      "retake": "Open test",
+      "result": "View result"
+    }
   },
   "test": {
     "timeRemaining": "Time remaining",
@@ -496,8 +504,8 @@
     "selected": "Selected",
     "chooseAnswer": "Choose one answer",
     "leave": {
-      "title": "Leave this test?",
-      "text": "Your test is not submitted. Your answers are saved as a draft, so you can come back and continue.",
+      "title": "Are you sure you want to leave?",
+      "text": "Your test is not submitted. Your current progress will be saved, so you can come back and continue.",
       "stay": "Stay in test",
       "leave": "Leave test"
     },
@@ -532,8 +540,15 @@
       "points": "Points",
       "previousBest": "Your best score: {score}%",
       "backToSubject": "Back to subject",
-      "startError": "Could not start the test. Please try again."
-    }
+      "startError": "Could not start the test. Please try again.",
+      "attempts": "Attempts",
+      "unlimited": "Unlimited",
+      "attemptsOf": "{used} of {allowed}",
+      "noAttempts": "No attempts left",
+      "noAttemptsText": "You have used all attempts for this test. You can still review your result.",
+      "viewResult": "View my result"
+    },
+    "questionImage": "Question image"
   },
   "result": {
     "title": "Test completed!",

@@ -13,11 +13,12 @@ import type { TestSummary } from "@/types";
 export async function TestIntro({ test }: { test: TestSummary }) {
   const t = await getTranslations("test.intro");
   const c = await getTranslations("common");
+  const exhausted = test.attemptsAllowed > 0 && (test.attemptsUsed ?? 0) >= test.attemptsAllowed;
   const stats = [
     { label: t("questions"), value: test.questionCount },
     { label: t("duration"), value: c("minutes", { count: test.durationMinutes }) },
     { label: t("passMark"), value: `${test.passMark}%` },
-    { label: t("points"), value: test.totalPoints },
+    { label: t("attempts"), value: test.attemptsAllowed === 0 ? t("unlimited") : t("attemptsOf", { used: test.attemptsUsed ?? 0, allowed: test.attemptsAllowed }) },
   ];
   return (
     <>
@@ -33,6 +34,7 @@ export async function TestIntro({ test }: { test: TestSummary }) {
             <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-azure-soft text-azure"><ClipboardList className="size-6" aria-hidden /></span>
             <div className="min-w-0 space-y-1">
               <h1 className="type-h1 text-balance">{test.title}</h1>
+              {test.description ? <p className="text-pretty">{test.description}</p> : null}
               <p className="text-muted-foreground">{t("startText", { minutes: test.durationMinutes })}</p>
             </div>
           </div>
@@ -45,7 +47,15 @@ export async function TestIntro({ test }: { test: TestSummary }) {
             ))}
           </dl>
           {test.bestScore !== undefined ? <Badge variant={test.bestScore >= test.passMark ? "success" : "warning"}>{t("previousBest", { score: test.bestScore })}</Badge> : null}
-          <StartTestButton testId={test.id} resume={false} />
+          {exhausted ? (
+            <div className="space-y-3">
+              <p role="alert" className="type-small font-semibold text-destructive">{t("noAttempts")}</p>
+              <p className="type-small text-muted-foreground">{t("noAttemptsText")}</p>
+              <Button asChild variant="navy"><Link href={routes.testResult(test.id)}>{t("viewResult")}</Link></Button>
+            </div>
+          ) : (
+            <StartTestButton testId={test.id} resume={false} />
+          )}
         </Card>
       </main>
     </>

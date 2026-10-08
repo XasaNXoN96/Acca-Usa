@@ -11,7 +11,7 @@ export function StartTestButton({ testId, resume }: { testId: string; resume: bo
   const t = useTranslations("test.intro");
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   return (
     <div className="space-y-2">
       <Button
@@ -19,17 +19,17 @@ export function StartTestButton({ testId, resume }: { testId: string; resume: bo
         loading={pending}
         onClick={() =>
           start(async () => {
-            setError(false);
+            setError(null);
             const res = await startTestAction({ testId });
             if (res.ok) router.refresh();
-            else setError(true);
+            else setError(res.code ?? "FAILED");
           })
         }
       >
         <Play aria-hidden />
         {resume ? t("resume") : t("start")}
       </Button>
-      {error ? <p role="alert" className="type-small font-medium text-destructive">{t("startError")}</p> : null}
+      {error ? <p role="alert" className="type-small font-medium text-destructive">{error === "ATTEMPTS_EXHAUSTED" ? t("noAttemptsText") : t("startError")}</p> : null}
     </div>
   );
 }
