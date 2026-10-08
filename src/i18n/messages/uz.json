@@ -589,7 +589,11 @@
     "noResultText": "Siz bu testni hali tugatmagansiz.",
     "flaggedLabel": "Belgilangan",
     "startTest": "Testni boshlash",
-    "pointsLabel": "Ballar"
+    "pointsLabel": "Ballar",
+    "attemptsLeft": "{left} ta urinish qoldi",
+    "noAttemptsLeft": "Bu test uchun urinishlar qolmadi.",
+    "history": "Urinishlaringiz",
+    "attemptN": "{n}-urinish"
   },
   "exams": {
     "title": "Sinov imtihonlari",

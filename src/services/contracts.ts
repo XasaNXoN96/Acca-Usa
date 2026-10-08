@@ -228,7 +228,7 @@ export interface TestService {
   /** Student catalogue: published, non-archived tests only. */
   listForSubject(subjectSlug: string, userId: string): Promise<TestSummary[]>;
   listPublished(userId: string): Promise<TestSummary[]>;
-  getSummary(testId: string): Promise<TestSummary | null>;
+  getSummary(testId: string, userId?: string): Promise<TestSummary | null>;
   /** Questions WITHOUT answers/explanations. Null if unpublished/archived. */
   getForAttempt(testId: string, userId?: string): Promise<TestForAttempt | null>;
   getActiveAttempt(userId: string, testId: string): Promise<AttemptStart | null>;
@@ -247,6 +247,15 @@ export interface TestService {
   setPublished(id: string, published: boolean): Promise<ServiceResult>;
   /** Draft copy ("<title> (copy)") with the same settings and question order. */
   duplicate(id: string): Promise<ServiceResult<{ id: string }>>;
+}
+
+/** Test results of one learner (history, review). */
+export interface TestResultService {
+  /** Latest result of the test, or one specific attempt. Includes the review (answers, explanations). */
+  get(testId: string, userId: string, attemptId?: string): Promise<TestResult | null>;
+  list(userId: string, limit?: number): Promise<ResultListItem[]>;
+  /** All finished attempts of the learner for one test, newest first. */
+  attemptsForTest(userId: string, testId: string): Promise<ResultListItem[]>;
 }
 
 export interface ExamService {
@@ -298,6 +307,7 @@ export interface Services {
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;
+  testResults: TestResultService;
   exams: ExamService;
   payments: PaymentService;
   progress: ProgressService;

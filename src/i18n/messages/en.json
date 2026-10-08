@@ -589,7 +589,11 @@
     "noResultText": "You have not completed this test yet.",
     "flaggedLabel": "Flagged",
     "startTest": "Start test",
-    "pointsLabel": "Points"
+    "pointsLabel": "Points",
+    "attemptsLeft": "{left, plural, one {# attempt left} other {# attempts left}}",
+    "noAttemptsLeft": "No attempts left for this test.",
+    "history": "Your attempts",
+    "attemptN": "Attempt {n}"
   },
   "exams": {
     "title": "Mock Exams",

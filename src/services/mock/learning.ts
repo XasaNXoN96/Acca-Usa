@@ -4,12 +4,14 @@ import type { PlatformSlug } from "@/types";
 import { certificates, exams, ranking, DEMO_STUDENT_ID } from "@/data/mock/people";
 import { routes } from "@/lib/routes";
 import { getDb, nowIso, pushActivity, topicVisible, userProgress } from "./db";
-import { platformProgress, subjectProgress } from "./calc";
+import { platformProgress, subjectProgress, topicEarned, topicPercent } from "./calc";
 
 export const progressService: ProgressService = {
   async getTopicProgress(userId) {
+    const db = getDb();
     const out: Record<string, number> = {};
-    userProgress(getDb(), userId).forEach((v, k) => (out[k] = v.percent));
+    userProgress(db, userId).forEach((_v, k) => (out[k] = topicPercent(db, userId, k)));
+    for (const t of db.topics) if (topicVisible(db, t) && !(t.id in out)) { const p = topicPercent(db, userId, t.id); if (p > 0) out[t.id] = p; }
     return out;
   },
   async touchTopic(userId, topicId) {
@@ -43,6 +45,17 @@ export const progressService: ProgressService = {
     const rest = db.materialProgress.filter((m) => !(m.userId === userId && m.materialId === materialId));
     if (completed) rest.push({ userId, materialId, completedAt: nowIso() });
     db.materialProgress = rest;
+    // All materials done (and the topic's test passed, if it has one) completes the topic and unlocks the next one.
+    const topicId = db.materials.find((m) => m.id === materialId)?.topicId;
+    const topic = topicId ? db.topics.find((t) => t.id === topicId) : undefined;
+    if (completed && topic && topicVisible(db, topic) && topicEarned(db, userId, topic.id)) {
+      const p = userProgress(db, userId);
+      if ((p.get(topic.id)?.percent ?? 0) < 100) {
+        p.set(topic.id, { percent: 100, updatedAt: nowIso() });
+        const subject = db.subjects.find((s) => s.slug === topic.subjectSlug);
+        pushActivity(db, { userId, kind: "topic", title: topic.title, context: subject?.name ?? "", href: routes.topic(topic.id), detail: "100%" });
+      }
+    }
   },
   async getSubjectProgress(userId, subjectSlug) {
     return subjectProgress(getDb(), userId, subjectSlug);

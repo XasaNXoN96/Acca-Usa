@@ -1,5 +1,5 @@
 import "server-only";
-import type { AttemptStart, QuestionInput, QuestionService, ServiceResult, TestInput, TestService } from "../contracts";
+import type { AttemptStart, QuestionInput, QuestionService, ServiceResult, TestInput, TestResultService, TestService } from "../contracts";
 import type { BankQuestion, ResultListItem, ReviewItem, TestResult, TestSummary } from "@/types";
 import { routes } from "@/lib/routes";
 import { getStorage } from "../storage";
@@ -188,6 +188,7 @@ function complete(db: Db, a: AttemptRec, t: TestRec) {
   a.status = "SUBMITTED";
   a.submittedAt = result.submittedAt;
   a.result = result;
+  result.progressAfter = subjectProgress(db, a.userId, t.subjectSlug).percent; // now includes this attempt's score
   pushActivity(db, { userId: a.userId, kind: "test", title: t.title, context: result.subjectName, href: routes.testResult(t.id, a.id), detail: `${result.scorePercent}%` });
   pushNotification(db, a.userId, { code: "result_ready", params: { test: t.title }, target: { kind: "result", id: t.id, attemptId: a.id } });
 }
@@ -216,10 +217,10 @@ export const testService: TestService = {
     const db = getDb();
     return db.tests.filter((t) => studentVisible(db, t)).map((t) => summary(db, t, userId));
   },
-  async getSummary(testId) {
+  async getSummary(testId, userId) {
     const db = getDb();
     const t = db.tests.find((x) => x.id === testId);
-    return studentVisible(db, t) ? summary(db, t) : null;
+    return studentVisible(db, t) ? summary(db, t, userId) : null;
   },
   async getForAttempt(testId, userId) {
     const db = getDb();
@@ -366,3 +367,19 @@ function checkTest(db: Db, input: TestInput): Extract<ServiceResult, { ok: false
   input.questionIds = unique;
   return null;
 }
+
+/** Student-facing results: kept apart from TestService so a database-backed implementation can own them. */
+export const testResultService: TestResultService = {
+  async get(testId, userId, attemptId) {
+    return testService.getResult(testId, userId, attemptId);
+  },
+  async list(userId, limit) {
+    return testService.listResults(userId, limit);
+  },
+  async attemptsForTest(userId, testId) {
+    return getDb().attempts
+      .filter((a) => a.userId === userId && a.testId === testId && a.status === "SUBMITTED" && a.result)
+      .sort((x, y) => (y.submittedAt ?? "").localeCompare(x.submittedAt ?? ""))
+      .map((a) => ({ attemptId: a.id, testId: a.testId, testTitle: a.result!.testTitle, subjectName: a.result!.subjectName, scorePercent: a.result!.scorePercent, passed: a.result!.passed, submittedAt: a.submittedAt! }));
+  },
+};

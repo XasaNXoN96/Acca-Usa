@@ -8,6 +8,7 @@ import { Logo } from "@/components/layout/logo";
 import { ScoreSummary } from "@/features/result/score-summary";
 import { ProgressUpdate } from "@/features/result/progress-update";
 import { ReviewList } from "@/features/result/review-list";
+import { AttemptHistory } from "@/features/result/attempt-history";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
 import { requireSession } from "@/lib/auth/guards";
@@ -23,9 +24,13 @@ export default async function ResultPage({ params, searchParams }: { params: Par
   const [{ test: testId }, sp] = await Promise.all([params, searchParams]);
   const attemptId = Array.isArray(sp.attempt) ? sp.attempt[0] : sp.attempt;
   const session = await requireSession();
-  const [t, result] = await Promise.all([getTranslations("result"), services.tests.getResult(testId, session.user.id, attemptId)]);
+  const [t, result, summary, history] = await Promise.all([
+    getTranslations("result"),
+    services.testResults.get(testId, session.user.id, attemptId),
+    services.tests.getSummary(testId, session.user.id),
+    services.testResults.attemptsForTest(session.user.id, testId),
+  ]);
   if (!result) {
-    const summary = await services.tests.getSummary(testId);
     if (!summary) notFound();
     return (
       <main id="main" tabIndex={-1} className="container-page grid min-h-dvh place-items-center py-10 outline-none">
@@ -39,6 +44,8 @@ export default async function ResultPage({ params, searchParams }: { params: Par
       </main>
     );
   }
+
+  const canRetake = !summary || summary.attemptsAllowed === 0 || (summary.attemptsUsed ?? 0) < summary.attemptsAllowed;
 
   return (
     <>
@@ -58,10 +65,22 @@ export default async function ResultPage({ params, searchParams }: { params: Par
           <Button asChild size="lg" className="flex-1">
             <a href="#review">{t("review")}</a>
           </Button>
-          <Button asChild size="lg" variant="outline-primary" className="flex-1">
-            <Link href={routes.test(result.testId)}>{t("retake")}</Link>
-          </Button>
+          {canRetake ? (
+            <Button asChild size="lg" variant="outline-primary" className="flex-1">
+              <Link href={routes.test(result.testId)}>{t("retake")}</Link>
+            </Button>
+          ) : (
+            <Button asChild size="lg" variant="outline" className="flex-1">
+              <Link href={routes.subject(result.subjectSlug)}>{t("backToSubject")}</Link>
+            </Button>
+          )}
         </div>
+        {summary && summary.attemptsAllowed > 0 ? (
+          <p className="text-center text-sm text-muted-foreground" data-attempts-note>
+            {canRetake ? t("attemptsLeft", { left: summary.attemptsAllowed - (summary.attemptsUsed ?? 0) }) : t("noAttemptsLeft")}
+          </p>
+        ) : null}
+        {history.length > 1 ? <AttemptHistory items={history} current={result.attemptId} /> : null}
 
         <div className="pt-6">
           <ReviewList items={result.review} />

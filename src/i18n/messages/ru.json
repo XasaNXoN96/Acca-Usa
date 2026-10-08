@@ -589,7 +589,11 @@
     "noResultText": "Вы ещё не завершили этот тест.",
     "flaggedLabel": "Отмечен",
     "startTest": "Начать тест",
-    "pointsLabel": "Баллы"
+    "pointsLabel": "Баллы",
+    "attemptsLeft": "{left, plural, one {Осталась # попытка} few {Осталось # попытки} many {Осталось # попыток} other {Осталось # попытки}}",
+    "noAttemptsLeft": "Попыток для этого теста не осталось.",
+    "history": "Ваши попытки",
+    "attemptN": "Попытка {n}"
   },
   "exams": {
     "title": "Пробные экзамены",

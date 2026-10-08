@@ -4,7 +4,7 @@ import type { Services } from "./contracts";
 import { dashboardService, notificationService, paymentService } from "./mock/account";
 import { authService, userService } from "./mock/auth-users";
 import { enrollmentService, materialService, platformService, searchService, subjectService, topicService } from "./mock/catalog";
-import { questionService, testService } from "./mock/assessment";
+import { questionService, testResultService, testService } from "./mock/assessment";
 import { certificateService, examService, progressService, rankingService } from "./mock/learning";
 
 /**
@@ -26,6 +26,7 @@ export const services: Services = {
   enrollments: enrollmentService,
   questions: questionService,
   tests: testService,
+  testResults: testResultService,
   exams: examService,
   payments: paymentService,
   progress: progressService,
