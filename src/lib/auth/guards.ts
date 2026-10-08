@@ -5,8 +5,8 @@ import { routes } from "@/lib/routes";
 import { getSession } from "./session";
 import type { Session } from "@/services";
 
-export const ANY_ROLE: readonly Role[] = ["STUDENT", "TEACHER", "ADMIN"];
-export const STAFF_ROLES: readonly Role[] = ["TEACHER", "ADMIN"];
+export const ANY_ROLE: readonly Role[] = ["STUDENT", "ADMIN"];
+export const STAFF_ROLES: readonly Role[] = ["ADMIN"];
 
 /**
  * Server-side route guard — the authority (the proxy is only a fast pre-check).

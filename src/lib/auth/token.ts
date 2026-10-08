@@ -36,7 +36,7 @@ export function verifySession(token: string | undefined | null): SessionClaims |
   try {
     const c = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SessionClaims;
     if (typeof c.uid !== "string" || typeof c.exp !== "number" || c.exp < Date.now() / 1000) return null;
-    if (c.role !== "STUDENT" && c.role !== "TEACHER" && c.role !== "ADMIN") return null;
+    if (c.role !== "STUDENT" && c.role !== "ADMIN") return null;
     return c;
   } catch {
     return null;

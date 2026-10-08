@@ -32,7 +32,6 @@ no email provider, no payment provider. Production mode refuses to start until t
 | Role | Email | Password |
 |---|---|---|
 | Student | student@example.com | Student-Demo1 |
-| Teacher | teacher@example.com | Teacher-Demo1 |
 | Admin | admin@example.com | Admin-Demo1 |
 
   Only salted hashes of these passwords exist in the source.

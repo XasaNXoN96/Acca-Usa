@@ -17,7 +17,7 @@ export function proxy(req: NextRequest) {
     url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
-  if (pathname.startsWith("/admin") && claims.role === "STUDENT") {
+  if (pathname.startsWith("/admin") && claims.role !== "ADMIN") {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

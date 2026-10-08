@@ -157,7 +157,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
 
     case "students": {
       const students = await services.users.listStudents();
-      const roleOptions: Option[] = (["STUDENT", "TEACHER", "ADMIN"] as const).map((r) => ({ value: r, label: ts(`roles.${r}`) }));
+      const roleOptions: Option[] = (["STUDENT", "ADMIN"] as const).map((r) => ({ value: r, label: ts(`roles.${r}`) }));
       const statusOptions: Option[] = (["active", "suspended"] as const).map((s) => ({ value: s, label: ts(`userStatus.${s}`) }));
       return {
         filters: { role: roleOptions, status: statusOptions }, options: { role: roleOptions, status: statusOptions },

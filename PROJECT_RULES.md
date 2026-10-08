@@ -87,7 +87,7 @@ If a rule must be broken, record why in the pull request.
 - `notFound()` for unknown ids; permission failures render a clear "no access" state, not a blank page.
 
 ## 11. Permissions and roles
-- Roles: `STUDENT`, `TEACHER`, `ADMIN`; matrix in `lib/permissions.ts`.
+- Roles: `STUDENT`, `ADMIN` (no teacher role; public registration only creates STUDENT); matrix in `lib/permissions.ts`.
 - Check on the server at the service/action boundary; ownership checks (a student may only read **their own** attempts, payments, notifications) are part of every query.
 - Locked content (sequential topics) is enforced on the server — the topic page itself rejects locked ids.
 - Admin screens must not be reachable by guessing URLs once auth lands (route guard + per-action checks).
@@ -124,7 +124,7 @@ If a rule must be broken, record why in the pull request.
 - **Reminders**: scheduled by a job queue, idempotent, timezone-aware, respect user opt-out and quiet hours, and are logged. Never send from a request handler.
 - **Groups / classes**: membership is the only source of access to group content; removing a member revokes access immediately; group deletion is soft.
 - **Chat / messages**: server-persisted, paginated, rate-limited, sanitized (no raw HTML), with report/block; unread counts derive from read receipts, not client state.
-- **Preview (draft vs. published)**: teachers preview unpublished content through an authorised preview route; previews never write progress, attempts or analytics.
+- **Preview (draft vs. published)**: admins preview unpublished content through an authorised preview route; previews never write progress, attempts or analytics.
 
 ## 17. Quality gates
 Run before every commit: `npm run check` (lint + typecheck + i18n + brand) and `npm run build`.

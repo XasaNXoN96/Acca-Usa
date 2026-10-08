@@ -40,7 +40,7 @@ function useServerError() {
   };
 }
 
-export interface DemoAccount { role: "STUDENT" | "TEACHER" | "ADMIN"; email: string; password: string }
+export interface DemoAccount { role: "STUDENT" | "ADMIN"; email: string; password: string }
 
 export function LoginForm({ next, demoAccounts }: { next?: string; demoAccounts?: DemoAccount[] }) {
   const t = useTranslations("auth");

@@ -17,7 +17,6 @@ export type Permission =
 
 const matrix: Record<Role, readonly Permission[]> = {
   STUDENT: ["learn"],
-  TEACHER: ["learn", "manage_content", "manage_tests", "view_students", "view_statistics"],
   ADMIN: [
     "learn",
     "manage_content",
@@ -41,5 +40,5 @@ export function assertCan(role: Role | undefined, permission: Permission): void 
 }
 
 export function isStaff(role: Role | undefined) {
-  return role === "ADMIN" || role === "TEACHER";
+  return role === "ADMIN";
 }

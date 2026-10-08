@@ -30,17 +30,14 @@ export interface SeedUser {
 
 export const DEMO_STUDENT_ID = "u-demo-student";
 export const DEMO_ADMIN_ID = "u-demo-admin";
-export const DEMO_TEACHER_ID = "u-demo-teacher";
 
 export const demoCredentials = [
   { role: "STUDENT" as const, email: "student@example.com", password: "Student-Demo1" },
-  { role: "TEACHER" as const, email: "teacher@example.com", password: "Teacher-Demo1" },
   { role: "ADMIN" as const, email: "admin@example.com", password: "Admin-Demo1" },
 ];
 
 export const seedUsers: SeedUser[] = [
   { id: DEMO_STUDENT_ID, name: "Demo Student", email: "student@example.com", role: "STUDENT", status: "active", locale: "en", createdAt: "2026-01-15T09:00:00.000Z", passwordHash: "s1$cg06V5H7ikr2boLxwpc79A$kG-cqFIVBV-EEet6L9HA8EJauhlZK4b2A1RUUNQPp4HIV8i1X1VlPGgZcBa3AOOqZptwaklxKcqVzcF3bGnTLw" },
-  { id: DEMO_TEACHER_ID, name: "Demo Teacher", email: "teacher@example.com", role: "TEACHER", status: "active", locale: "en", createdAt: "2026-01-05T09:00:00.000Z", passwordHash: "s1$XYF3BRn1YEgtktXeJFkX3A$DZeIVArSZf00aebMR7JFrWdCflW1liisqSlExbHStN_KPgwimyjbPfJTIQQzijkxOjvBW8X8SntTaDKGyTt5NA" },
   { id: DEMO_ADMIN_ID, name: "Demo Admin", email: "admin@example.com", role: "ADMIN", status: "active", locale: "en", createdAt: "2026-01-02T09:00:00.000Z", passwordHash: "s1$9vWD23uRPc5ZLOFECRrxQQ$3k_ulf6Btq3aH9hFPYAHsKLuiMW2Yv99-5E-SR6kFrCuwTkIljI2c9p-LpX6ilNnaxxmmeu7XsyNbd8OKEht2A" },
   { id: "u-s2", name: "Aziza Karimova", email: "aziza@example.com", role: "STUDENT", status: "active", locale: "uz", createdAt: "2026-02-03T10:00:00.000Z", passwordHash: null },
   { id: "u-s3", name: "Daniil Sokolov", email: "daniil@example.com", role: "STUDENT", status: "active", locale: "ru", createdAt: "2026-02-18T10:00:00.000Z", passwordHash: null },

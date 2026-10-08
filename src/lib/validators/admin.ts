@@ -67,7 +67,7 @@ export const testSchema = z.object({
 });
 
 const email = z.string().trim().min(1, "required").email("emailInvalid").max(254, "emailInvalid");
-const roles = ["STUDENT", "TEACHER", "ADMIN"] as const;
+const roles = ["STUDENT", "ADMIN"] as const;
 const statuses = ["active", "suspended"] as const;
 
 /** Password is mandatory when creating a user and optional (temporary reset) when editing. */

@@ -4,7 +4,7 @@
  * Nothing here ever carries password material.
  */
 
-export type Role = "STUDENT" | "TEACHER" | "ADMIN";
+export type Role = "STUDENT" | "ADMIN";
 export type PlatformSlug = "acca" | "fia";
 export type Locale = "en" | "ru" | "uz";
 export type UserStatus = "active" | "suspended";

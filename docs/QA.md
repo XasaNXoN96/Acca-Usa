@@ -6,7 +6,7 @@ Automated gates: `npm run check && npm run build`.
 auth endpoints are rate limited): 47 steps covering anonymous protection, register/login/logout, duplicate email, wrong password,
 forgot + reset (single use), student flow (enrol → subject → topic → materials → test → autosave → submit → result → review → retake),
 platform separation (FIA gated), admin flow (platform edit, subject, topic, notes + PDF/PNG/MP3/MP4 uploads, invalid file rejection,
-question bank, test draft/publish/archive/restore), suspension, self-protection, teacher permissions, theme (persistence, no flash, system),
+question bank, test draft/publish/archive/restore), suspension, self-protection, theme (persistence, no flash, system),
 language (RU/UZ pages without raw keys, persistence).
 
 **Responsive audit**: every route (public, auth, student, admin) and admin dialog at 360 / 390 / 768 / 1024 / 1280 / 1440 px, in Russian,

@@ -336,13 +336,14 @@ await step("admin cannot demote/archive themselves", async () => {
   await admin.getByText(/cannot change your own role/).first().waitFor();
 });
 
-// =============== TEACHER permissions ===============
-await step("teacher: sees content tools, not payments/settings/student edits", async () => {
+// =============== ROLES: only STUDENT and ADMIN ===============
+await step("teacher account and button are gone; only Demo Student / Demo Admin; role selector = Student/Admin", async () => {
   const tc = await ctx(); const t = await tc.newPage();
-  await login(t, "teacher@example.com", "Teacher-Demo1"); await t.waitForURL(/\/admin$/);
-  await t.goto("/admin/payments"); await t.getByText("You don’t have access").waitFor();
-  await t.goto("/admin/students"); assert(await t.getByRole("button", { name: /Add user/ }).count() === 0, "teacher can add users");
-  await t.goto("/admin/subjects"); await t.getByRole("button", { name: "Add subject" }).waitFor();
+  await t.goto("/login");
+  assert(await t.getByRole("button", { name: "Teacher", exact: true }).count() === 0, "Teacher demo button present");
+  assert(await t.getByRole("button", { name: "Student", exact: true }).count() === 1 && await t.getByRole("button", { name: "Admin", exact: true }).count() === 1, "demo buttons");
+  assert(!/teacher/i.test(await t.content()), "teacher text on login");
+  await login(t, "teacher@example.com", "Teacher-Demo1"); await t.getByText("Incorrect email or password").first().waitFor();
   await tc.close();
 });
 
