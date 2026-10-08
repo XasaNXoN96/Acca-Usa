@@ -44,7 +44,7 @@ export function DataTable({ caption, columns, rows, rowActions, actionsHeader, c
                   {c.header}
                 </TableHead>
               ))}
-              {rowActions ? <TableHead className="w-px text-right">{actionsHeader}</TableHead> : null}
+              {rowActions ? <TableHead className="w-px whitespace-nowrap text-right">{actionsHeader}</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,7 +55,11 @@ export function DataTable({ caption, columns, rows, rowActions, actionsHeader, c
                     {r.cells[c.key]}
                   </TableCell>
                 ))}
-                {rowActions ? <TableCell className="text-right">{rowActions(r)}</TableCell> : null}
+                {rowActions ? (
+                  <TableCell className="w-px whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">{rowActions(r)}</div>
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))}
           </TableBody>

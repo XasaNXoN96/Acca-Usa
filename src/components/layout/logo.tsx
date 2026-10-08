@@ -26,7 +26,7 @@ export function Logo({
       )}
     >
       <span className={tone === "inverse" ? "text-white" : "text-navy"}>ACCA</span>
-      <span className={tone === "inverse" ? "text-white" : "text-primary"}>USA</span>
+      <span className={tone === "inverse" ? "text-primary-on-dark" : "text-primary"}>USA</span>
     </Link>
   );
 }

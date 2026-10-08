@@ -40,16 +40,15 @@ export async function Hero() {
 async function HeroVisual() {
   const t = await getTranslations("landing.hero");
   return (
-    <div aria-hidden className="relative mx-auto w-full max-w-lg">
-      <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-navy to-[#16396b] opacity-95" />
-      <div className="space-y-4 p-6 sm:p-8">
+    <div aria-hidden className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-[#16396b] shadow-lg">
+      <div className="space-y-4 p-5 sm:p-8">
         <div className="rounded-2xl bg-background p-5 shadow-lg">
           <div className="flex items-center gap-4">
             <ProgressRing value={65} size={84} stroke={9} label="65%">
               <span className="text-lg font-bold">65%</span>
             </ProgressRing>
             <div className="min-w-0 flex-1 space-y-2">
-              <p className="type-h3 truncate">{t("cardTitle")}</p>
+              <p className="type-h3">{t("cardTitle")}</p>
               <p className="type-small text-muted-foreground">{t("cardText")}</p>
             </div>
           </div>

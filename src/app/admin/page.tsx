@@ -40,13 +40,13 @@ export default async function AdminHome() {
       </div>
       <section aria-labelledby="manage" className="space-y-3">
         <h2 id="manage" className="type-h3">{t("quickLinks")}</h2>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
           {adminNav.filter((i) => i.icon !== "overview").map((item) => {
             const Icon = navIcons[item.icon];
             return (
               <li key={item.href}>
                 <Card interactive className="p-0">
-                  <Link href={item.href} className="flex min-h-16 items-center gap-3 rounded-xl p-4">
+                  <Link href={item.href} className="flex min-h-16 flex-col items-start gap-2 rounded-xl p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-4">
                     <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-navy-soft text-navy">
                       <Icon className="size-5" aria-hidden />
                     </span>

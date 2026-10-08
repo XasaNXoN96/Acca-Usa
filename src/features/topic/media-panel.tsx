@@ -42,7 +42,7 @@ export function MediaPanel({ kind, title, materials }: { kind: Exclude<MaterialK
         {t("mediaPendingText", { kind: k(kind) })}
       </Alert>
 
-      {list.length > 0 ? (
+      {list.length > 0 && !isVideo ? (
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">
           {list.map((m) => (
             <li key={m.id} className="flex min-h-14 items-center gap-3 px-4 py-2">

@@ -43,8 +43,8 @@ export async function SiteHeader() {
               id="header-search"
               name="q"
               type="search"
-              placeholder={t("searchPlaceholder")}
-              className="h-10 w-64 rounded-lg border border-border bg-muted/60 pl-9 pr-3 text-sm placeholder:text-subtle-foreground focus-visible:bg-background"
+              placeholder={t("search")}
+              className="h-10 w-56 rounded-lg border border-border bg-muted/60 pl-9 pr-3 text-sm placeholder:text-subtle-foreground focus-visible:bg-background"
             />
           </form>
 

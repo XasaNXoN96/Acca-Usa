@@ -26,6 +26,7 @@
   --primary-hover: #a80d26;
   --primary-foreground: #ffffff;
   --primary-soft: #fdeef1;
+  --primary-on-dark: #ff6b81; /* brand red tuned for navy backgrounds (≥6:1) */
 
   /* Navy = selected / structural */
   --navy: #0b1f3a;
@@ -86,6 +87,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-on-dark: var(--primary-on-dark);
   --color-navy: var(--navy);
   --color-navy-soft: var(--navy-soft);
   --color-navy-foreground: var(--navy-foreground);
