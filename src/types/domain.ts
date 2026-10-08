@@ -231,9 +231,36 @@ export interface ActivityItem {
   detail?: string;
 }
 
+export interface SubjectProgressItem {
+  subjectSlug: string;
+  code: string;
+  name: string;
+  platform: PlatformSlug;
+  percent: number;
+  completedTopics: number;
+  totalTopics: number;
+}
+
+/** The material the learner opened most recently (drives "Continue learning"). */
+export interface LastMaterial {
+  materialId: string;
+  materialTitle: string;
+  materialNumber: number;
+  materialTotal: number;
+  topicId: string;
+  topicNumber: number;
+  topicTitle: string;
+  subjectSlug: string;
+  subjectCode: string;
+  platform: PlatformSlug;
+  completed: boolean;
+}
+
 export interface DashboardOverview {
   user: User;
-  stats: { enrolledCourses: number; completedTopics: number; learningHours: number; overallProgress: number };
+  stats: { enrolledCourses: number; enrolledSubjects: number; completedTopics: number; learningHours: number; overallProgress: number };
+  lastMaterial: LastMaterial | null;
+  subjectProgress: SubjectProgressItem[];
   enrollments: Enrollment[];
   continueLearning: { topicId: string; topicTitle: string; subjectName: string; platform: PlatformSlug; progress: number }[];
   recentActivity: ActivityItem[];

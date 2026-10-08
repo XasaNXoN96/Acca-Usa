@@ -31,3 +31,18 @@ export async function setMaterialCompletedAction(raw: unknown): Promise<{ ok: bo
   revalidatePath(routes.subjectTopic(ctx.subject.slug, ctx.topic.id));
   return { ok: true };
 }
+
+/** Remembers the opened material for "Continue learning". Same access rules as completing it. */
+export async function touchMaterialAction(raw: unknown): Promise<void> {
+  const parsed = z.object({ materialId: z.string().min(1).max(200) }).safeParse(raw);
+  if (!parsed.success) return;
+  const session = await sessionOrNull();
+  if (!session || session.user.role !== "STUDENT") return;
+  const material = await services.materials.getById(parsed.data.materialId);
+  if (!material || material.archived || !material.topicId) return;
+  const ctx = await services.topics.getContext(material.topicId, session.user.id);
+  if (!ctx || ctx.topic.status === "locked" || !ctx.materials.some((m) => m.id === material.id)) return;
+  if (!(await services.enrollments.isEnrolled(session.user.id, ctx.subject.platform))) return;
+  await services.progress.touchMaterial(session.user.id, material.id);
+  revalidatePath(routes.dashboard);
+}

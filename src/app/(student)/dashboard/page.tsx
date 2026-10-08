@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { DemoBadge } from "@/components/ui/demo-badge";
 import { Card } from "@/components/ui/card";
+import { SubjectProgress } from "@/features/dashboard/subject-progress";
+import { MyLearningLinks } from "@/features/dashboard/my-learning-links";
 import { StatsRow } from "@/features/dashboard/stats-row";
 import { MyCourses } from "@/features/dashboard/my-courses";
 import { ContinueLearning } from "@/features/dashboard/continue-learning";
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
         actions={<DemoBadge />}
       />
       <StatsRow stats={data.stats} />
+      <MyLearningLinks availableTests={data.availableTests.length} results={data.recentResults.length} />
       {data.stats.enrolledCourses === 0 ? (
         <Card className="space-y-1 p-5">
           <h2 className="type-h3">{t("noEnrollmentsTitle")}</h2>
@@ -49,7 +52,7 @@ export default async function DashboardPage() {
               <MyCourses enrollments={data.enrollments} platforms={platforms} />
             </div>
             <div className="order-1 md:order-2">
-              <ContinueLearning items={data.continueLearning} />
+              <ContinueLearning items={data.continueLearning} last={data.lastMaterial} />
             </div>
           </div>
           <RecentActivity items={data.recentActivity} />
@@ -57,6 +60,7 @@ export default async function DashboardPage() {
         </div>
         <div className="space-y-6">
           <ProgressOverview data={data.progressBreakdown} overall={data.stats.overallProgress} />
+          <SubjectProgress items={data.subjectProgress} />
           <RankingPreview entries={data.ranking} />
           <CertificatesPreview items={data.certificates} />
         </div>

@@ -351,7 +351,8 @@
       "topics": "Tugallangan mavzular",
       "hours": "O‘qish vaqti",
       "progress": "Umumiy progress",
-      "hoursValue": "{hours} soat"
+      "hoursValue": "{hours} soat",
+      "subjects": "Fanlar"
     },
     "myCourses": "Mening platformalarim",
     "active": "Faol",
@@ -384,7 +385,21 @@
     "passed": "O‘tdi",
     "failed": "O‘tmadi",
     "startTest": "Testni boshlash",
-    "enrollTitle": "Platformaga yoziling"
+    "enrollTitle": "Platformaga yoziling",
+    "topicN": "{n}-mavzu",
+    "materialN": "{n}-material",
+    "subjectProgress": "Fanlar bo‘yicha progress",
+    "subjectProgressEmpty": "Fanlar bo‘yicha progressni ko‘rish uchun platformaga yoziling.",
+    "topicsDone": "{total} ta mavzudan {done} tasi tugatildi",
+    "mine": {
+      "title": "Mening o‘qishim",
+      "tests": "Mening testlarim",
+      "results": "Mening natijalarim",
+      "progress": "Mening progressim",
+      "testsHint": "{count, plural, =0 {Topshiriladigan test yo‘q} other {# ta test topshirish mumkin}}",
+      "resultsHint": "{count, plural, =0 {Hozircha natija yo‘q} other {# ta so‘nggi natija}}",
+      "progressHint": "Mavzular, fanlar va testlar"
+    }
   },
   "courses": {
     "title": "Mening platformalarim",

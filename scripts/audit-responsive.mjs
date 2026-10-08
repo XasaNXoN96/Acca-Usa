@@ -38,7 +38,8 @@ async function scan(role, paths) {
         for (const el of document.querySelectorAll("main *, header *, footer *")) {
           const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
           const b = el.getBoundingClientRect(); if (b.width === 0 || b.height === 0) continue;
-          if (b.right > innerWidth + 1 && !el.closest("[data-overflow-ok], .overflow-x-auto, table, pre, [role=tablist]")) { out.push(`outside viewport: <${el.tagName.toLowerCase()}> ${(el.className?.toString() || "").slice(0, 50)} right=${Math.round(b.right)}`); break; }
+          const clipped = (() => { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o !== "visible" && p.getBoundingClientRect().right <= innerWidth + 1) return true; } return false; })();
+          if (b.right > innerWidth + 1 && !clipped && !el.closest("[data-overflow-ok], .overflow-x-auto, table, pre, [role=tablist]")) { out.push(`outside viewport: <${el.tagName.toLowerCase()}> ${(el.className?.toString() || "").slice(0, 50)} right=${Math.round(b.right)}`); break; }
         }
         if (touch) for (const el of document.querySelectorAll("a[href], button:not([disabled])")) {
           const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;

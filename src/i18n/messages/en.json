@@ -351,7 +351,8 @@
       "topics": "Completed topics",
       "hours": "Learning time",
       "progress": "Overall progress",
-      "hoursValue": "{hours} h"
+      "hoursValue": "{hours} h",
+      "subjects": "Subjects"
     },
     "myCourses": "My Platforms",
     "active": "Active",
@@ -384,7 +385,21 @@
     "passed": "Passed",
     "failed": "Not passed",
     "startTest": "Start test",
-    "enrollTitle": "Enroll in a platform"
+    "enrollTitle": "Enroll in a platform",
+    "topicN": "Topic {n}",
+    "materialN": "Material {n}",
+    "subjectProgress": "Progress by subject",
+    "subjectProgressEmpty": "Enroll in a platform to see your progress by subject.",
+    "topicsDone": "{done} of {total} topics completed",
+    "mine": {
+      "title": "My learning",
+      "tests": "My tests",
+      "results": "My results",
+      "progress": "My progress",
+      "testsHint": "{count, plural, =0 {No tests to take} one {# test to take} other {# tests to take}}",
+      "resultsHint": "{count, plural, =0 {No results yet} one {# recent result} other {# recent results}}",
+      "progressHint": "Topics, subjects and tests"
+    }
   },
   "courses": {
     "title": "My Platforms",

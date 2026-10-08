@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/states";
 import { StudentShell } from "@/components/layout/student-shell";
 import { MaterialViewer, type ViewerFile } from "@/features/material/material-viewer";
 import { MaterialCompleteButton } from "@/features/material/complete-button";
+import { MaterialTouch } from "@/features/material/material-touch";
 import { services } from "@/services";
 import { getStorage } from "@/services/storage";
 import { routes } from "@/lib/routes";
@@ -97,6 +98,7 @@ async function MaterialContent({ params }: { params: Awaited<Params> }) {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
+      {isAdmin ? null : <MaterialTouch materialId={material.id} />}
       <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">

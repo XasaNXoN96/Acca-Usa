@@ -96,6 +96,8 @@ export interface Db {
   progress: Map<string, Map<string, ProgressEntry>>;
   /** Student + Material completion (PostgreSQL later: MaterialProgress(userId, materialId, completedAt)). */
   materialProgress: { userId: string; materialId: string; completedAt: string }[];
+  /** userId -> last opened material (PostgreSQL later: User.lastMaterialId + lastMaterialAt). */
+  lastMaterial: Map<string, { materialId: string; at: string }>;
   attempts: AttemptRec[];
   notifications: Map<string, AppNotification[]>;
   activity: ActivityRec[];
@@ -156,6 +158,7 @@ function seed(): Db {
     ],
     progress: new Map(),
     materialProgress: [],
+    lastMaterial: new Map(),
     attempts: [],
     notifications: new Map(),
     activity: [],

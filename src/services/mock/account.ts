@@ -2,8 +2,8 @@ import "server-only";
 import type { DashboardService, NotificationService, PaymentService } from "../contracts";
 import type { DashboardOverview, PlatformSlug } from "@/types";
 import { DEMO_STUDENT_ID, payments } from "@/data/mock/people";
-import { getDb, platformOfSubject, userNotifications, userProgress } from "./db";
-import { platformProgress, visibleSubjects, visibleTopicsOf } from "./calc";
+import { getDb, platformOfSubject, topicVisible, userNotifications, userProgress } from "./db";
+import { platformProgress, subjectProgress, topicPercent, visibleSubjects, visibleTopicsOf } from "./calc";
 import { authService, toUser, userService } from "./auth-users";
 import { certificateService, progressService, rankingService } from "./learning";
 import { testService } from "./assessment";
@@ -62,10 +62,12 @@ export const dashboardService: DashboardService = {
     const progress = userProgress(db, userId);
     const subjects = visibleSubjects(db).filter((s) => enrolledPlatforms.has(platformOfSubject(db, s)));
     const topics = subjects.flatMap((s) => visibleTopicsOf(db, s.slug).map((t) => ({ t, s })));
-    const pct = (id: string) => progress.get(id)?.percent ?? 0;
-    const completed = topics.filter(({ t }) => pct(t.id) >= 100);
-    const started = topics.filter(({ t }) => pct(t.id) > 0 && pct(t.id) < 100);
-    const minutes = completed.reduce((a, { t }) => a + t.durationMinutes, 0);
+    const stored = (id: string) => progress.get(id)?.percent ?? 0;
+    const pct = (id: string) => topicPercent(db, userId, id); // materials + tests, not just the stored value
+    const completed = topics.filter(({ t }) => stored(t.id) >= 100);
+    const started = topics.filter(({ t }) => stored(t.id) < 100 && pct(t.id) > 0);
+    const testSeconds = db.attempts.filter((a) => a.userId === userId && a.result).reduce((sum, a) => sum + a.result!.timeSpentSeconds, 0);
+    const minutes = completed.reduce((a, { t }) => a + t.durationMinutes, 0) + Math.round(testSeconds / 60);
 
     const continueLearning = started
       .sort((a, b) => (progress.get(b.t.id)?.updatedAt ?? "").localeCompare(progress.get(a.t.id)?.updatedAt ?? ""))
@@ -82,10 +84,35 @@ export const dashboardService: DashboardService = {
       .slice(0, 3)
       .map((test) => ({ test, subjectName: subjectName(test.subjectSlug) }));
 
+    const subjectProgressList = subjects
+      .map((s) => ({ s, p: subjectProgress(db, userId, s.slug) }))
+      .filter(({ p }) => p.total > 0)
+      .sort((a, b) => b.p.percent - a.p.percent || a.s.code.localeCompare(b.s.code))
+      .map(({ s, p }) => ({ subjectSlug: s.slug, code: s.code, name: s.name, platform: platformOfSubject(db, s), percent: p.percent, completedTopics: p.completed, totalTopics: p.total }));
+
+    // "Continue learning": the last material the learner opened — only if it is still visible and the topic is not locked.
+    let lastMaterial: DashboardOverview["lastMaterial"] = null;
+    const last = db.lastMaterial.get(userId);
+    const lm = last && db.materials.find((m) => m.id === last.materialId && !m.deletedAt);
+    const lt = lm?.topicId ? db.topics.find((t) => t.id === lm.topicId) : undefined;
+    const ls = lt && subjects.find((x) => x.slug === lt.subjectSlug);
+    if (lm && lt && ls && topicVisible(db, lt)) {
+      const siblings = db.materials.filter((m) => m.topicId === lt.id && !m.deletedAt);
+      const topicsOf = visibleTopicsOf(db, ls.slug);
+      lastMaterial = {
+        materialId: lm.id, materialTitle: lm.title, materialNumber: siblings.findIndex((m) => m.id === lm.id) + 1, materialTotal: siblings.length,
+        topicId: lt.id, topicNumber: topicsOf.findIndex((t) => t.id === lt.id) + 1, topicTitle: lt.title, subjectSlug: ls.slug, subjectCode: ls.code,
+        platform: platformOfSubject(db, ls), completed: db.materialProgress.some((p) => p.userId === userId && p.materialId === lm.id),
+      };
+    }
+
     return {
       user: toUser(rec),
+      lastMaterial,
+      subjectProgress: subjectProgressList,
       stats: {
         enrolledCourses: active.length,
+        enrolledSubjects: subjects.length,
         completedTopics: completed.length,
         learningHours: Math.round((minutes / 60) * 10) / 10,
         overallProgress: active.length ? Math.round(active.reduce((a, e) => a + e.progress, 0) / active.length) : 0,

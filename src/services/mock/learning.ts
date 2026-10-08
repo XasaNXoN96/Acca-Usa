@@ -36,6 +36,11 @@ export const progressService: ProgressService = {
       pushActivity(db, { userId, kind: "topic", title: topic.title, context: subject?.name ?? "", href: routes.topic(topicId), detail: "100%" });
     }
   },
+  async touchMaterial(userId, materialId) {
+    const db = getDb();
+    const m = db.materials.find((x) => x.id === materialId && !x.deletedAt);
+    if (m?.topicId) db.lastMaterial.set(userId, { materialId, at: nowIso() });
+  },
   async listCompletedMaterials(userId, materialIds) {
     const wanted = new Set(materialIds);
     return getDb().materialProgress.filter((m) => m.userId === userId && wanted.has(m.materialId)).map((m) => m.materialId);

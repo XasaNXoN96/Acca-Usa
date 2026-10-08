@@ -170,6 +170,8 @@ export interface ProgressService {
   /** Ids (out of the given ones) the user has marked as completed. Per Student + Material. */
   listCompletedMaterials(userId: string, materialIds: string[]): Promise<string[]>;
   setMaterialCompleted(userId: string, materialId: string, completed: boolean): Promise<void>;
+  /** Remembers the last material the user opened (for "Continue learning"). */
+  touchMaterial(userId: string, materialId: string): Promise<void>;
   getSubjectProgress(userId: string, subjectSlug: string): Promise<{ percent: number; completed: number; total: number }>;
   getPlatformProgress(userId: string): Promise<Record<PlatformSlug, number>>;
   recentActivity(userId: string, limit?: number): Promise<ActivityItem[]>;
