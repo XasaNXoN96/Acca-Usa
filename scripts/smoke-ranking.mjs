@@ -34,7 +34,7 @@ await step("scores come from real test results: better result ranks higher; ties
   await b.goto("/courses"); await b.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await b.getByText("Enrolled").first().waitFor();
   await takeTest(s, true); await takeTest(b, false);
   await s.goto("/ranking"); let r = await rows(s); const demoRow = r.find((x) => /Demo Student/.test(x)); const zed = r.find((x) => /Zed R\./.test(x));
-  assert(/#1\b/.test(demoRow) && /100/.test(demoRow), `demo row ${demoRow}`); assert(zed && /\b0\b/.test(zed), `zed row ${zed}`);
+  assert(/#1(?!\d)/.test(demoRow) && /100/.test(demoRow), `demo row ${demoRow}`); assert(zed && /\b0\b/.test(zed), `zed row ${zed}`);
   await b.goto("/ranking"); await b.getByText(/Your position: #\d+ of \d+/).waitFor(); r = await rows(b); assert(r.some((x) => /Zed Ranker/.test(x) && /You/.test(x)), "own full name shown to the owner");
   const ties = r.filter((x) => /#\d+/.test(x)).map((x) => /#(\d+)/.exec(x)[1]); assert(new Set(ties).size < ties.length || ties.length <= 2, "ties should share a rank");
 });

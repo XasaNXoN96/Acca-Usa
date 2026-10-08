@@ -66,7 +66,7 @@ for (const w of WIDTHS) {
   { const c = await ctxFor("admin", w); const p = await c.newPage();
     await p.goto("/admin/question-bank"); await p.getByRole("button", { name: "Add question" }).click(); await p.getByRole("dialog").waitFor(); await p.waitForTimeout(250); await audit(p, w, "admin · question form"); await esc(p);
     await p.getByRole("button", { name: /^Preview:/ }).first().click(); await p.getByRole("dialog").waitFor(); await audit(p, w, "admin · question preview"); await esc(p);
-    await p.goto("/admin/tests"); await p.getByRole("button", { name: "Add test" }).click(); await p.getByRole("dialog").waitFor(); await p.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await audit(p, w, "admin · test builder form");
+    await p.goto("/admin/tests"); await p.getByRole("button", { name: "Add test" }).click(); await p.getByRole("dialog").waitFor(); await p.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await p.waitForTimeout(400); await audit(p, w, "admin · test builder form");
     await p.getByRole("button", { name: "Add questions" }).click(); await p.waitForTimeout(250); await audit(p, w, "admin · question picker"); await esc(p);
     await p.getByRole("button", { name: /^Preview: Stakeholders/ }).first().click(); await p.getByRole("dialog").waitFor(); await p.getByRole("button", { name: "Start preview" }).click(); await p.waitForTimeout(250); await audit(p, w, "admin · test preview player"); await esc(p);
     await p.goto("/admin/certificates"); await p.getByRole("button", { name: /^Preview:/ }).first().click(); await p.getByRole("dialog").waitFor(); await p.waitForTimeout(250); await audit(p, w, "admin · certificate preview"); await esc(p);
