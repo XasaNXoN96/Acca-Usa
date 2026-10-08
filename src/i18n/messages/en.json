@@ -85,7 +85,9 @@
     "account": "Account",
     "qualifications": "Qualifications",
     "adminPanel": "Admin panel",
-    "studentArea": "Student area"
+    "studentArea": "Student area",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "mega": {
     "levels": "Levels and subjects",

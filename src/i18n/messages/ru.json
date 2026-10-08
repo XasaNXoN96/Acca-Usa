@@ -85,7 +85,9 @@
     "account": "Аккаунт",
     "qualifications": "Квалификации",
     "adminPanel": "Панель администратора",
-    "studentArea": "Кабинет студента"
+    "studentArea": "Кабинет студента",
+    "collapseSidebar": "Свернуть боковое меню",
+    "expandSidebar": "Развернуть боковое меню"
   },
   "mega": {
     "levels": "Уровни и предметы",

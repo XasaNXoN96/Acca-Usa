@@ -309,13 +309,75 @@
   }
 }
 
+
+/* ==========================================================================
+   Collapsible app sidebar (student + admin shells), ≥768px.
+   State lives in data-sidebar on .app-shell: "open" | "collapsed" | "auto".
+   Everything (width, labels, logo, chevron) is driven by two custom properties so the
+   server-rendered first paint is already correct and width changes animate smoothly.
+   ========================================================================== */
+.app-shell {
+  --sb-w: 15rem;
+  --sb-collapsed: 0;
+}
+.app-shell[data-sidebar="collapsed"] {
+  --sb-w: 4.5rem;
+  --sb-collapsed: 1;
+}
+@media (max-width: 63.999rem) {
+  .app-shell[data-sidebar="auto"] {
+    --sb-w: 4.5rem;
+    --sb-collapsed: 1;
+  }
+}
+.app-shell .sb-aside {
+  width: var(--sb-w);
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-shell .sb-content {
+  padding-left: 0;
+}
+@media (min-width: 48rem) {
+  .app-shell .sb-content {
+    padding-left: var(--sb-w);
+    transition: padding-left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+/* labels fade; icons never move (fixed padding inside the nav) */
+.app-shell .sb-label {
+  white-space: nowrap;
+  opacity: calc(1 - var(--sb-collapsed));
+  transition: opacity 0.15s ease;
+}
+.app-shell .sb-chevron {
+  transform: rotate(calc(var(--sb-collapsed) * 180deg));
+  transition: transform 0.22s ease;
+}
+.app-shell .sb-show-collapsed {
+  display: none;
+}
+.app-shell[data-sidebar="collapsed"] .sb-hide-collapsed {
+  display: none;
+}
+.app-shell[data-sidebar="collapsed"] .sb-show-collapsed {
+  display: flex;
+}
+@media (max-width: 63.999rem) {
+  .app-shell[data-sidebar="auto"] .sb-hide-collapsed {
+    display: none;
+  }
+  .app-shell[data-sidebar="auto"] .sb-show-collapsed {
+    display: flex;
+  }
+}
+
 /* Bottom navigation spacing on mobile app shells (safe area aware). */
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
 @utility pb-bottomnav {
   padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
-  @media (min-width: 64rem) {
+  @media (min-width: 48rem) {
     padding-bottom: 0;
   }
 }

@@ -10,6 +10,10 @@ import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { UserMenu } from "@/components/layout/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SidebarToggle } from "@/components/layout/sidebar-toggle";
+import { cookies } from "next/headers";
+import { GraduationCap } from "lucide-react";
+import { SIDEBAR_COOKIE, isSidebarPref } from "@/lib/sidebar";
 import { DemoBanner } from "@/components/layout/demo-banner";
 import type { NavItem } from "@/lib/navigation";
 import { routes } from "@/lib/routes";
@@ -27,39 +31,48 @@ interface AppShellProps {
 
 /**
  * Shared shell for the student and admin areas.
- *  - ≥lg (1024px): permanent navy sidebar with icons + labels
- *  - <lg          : top bar with a Menu button → full sidebar drawer over the content (overlay, X, closes on navigation);
- *                   students also get the bottom tab bar
+ *  - ≥768px : permanent navy sidebar that the user can collapse to icons (arrow on its edge, state kept in a cookie);
+ *             default is open from 1024px and collapsed on tablets; content reflows with a smooth transition
+ *  - <768px : the sidebar does not fit → top bar Menu button opens it as a drawer (students also get the bottom tab bar)
  */
 export async function AppShell({ variant, items, labels, bottomItems, user, unreadNotifications = 0, demoMessage, children }: AppShellProps) {
   const t = await getTranslations();
   const homeHref = variant === "admin" ? routes.admin : routes.dashboard;
   const navLabel = variant === "admin" ? t("nav.admin") : t("nav.student");
   const hasBottom = variant === "student" && !!bottomItems;
+  const saved = (await cookies()).get(SIDEBAR_COOKIE)?.value;
+  const pref = isSidebarPref(saved) ? saved : "auto";
 
   return (
-    <div className="min-h-dvh bg-app">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-surface-navy text-white lg:flex">
+    <div className="app-shell min-h-dvh bg-app" data-sidebar={pref}>
+      <aside className="sb-aside fixed inset-y-0 left-0 z-40 hidden flex-col bg-surface-navy text-white md:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
-          <Logo tone="inverse" href={homeHref} />
+          <div className="sb-hide-collapsed">
+            <Logo tone="inverse" href={homeHref} />
+          </div>
+          <div className="sb-show-collapsed w-full justify-center">
+            <Logo tone="inverse" href={homeHref} stacked />
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
           <SidebarNav items={items} labels={labels} ariaLabel={navLabel} />
         </div>
-        <div className="space-y-1 border-t border-white/10 p-3">
-          {variant === "admin" ? (
-            <Link href={routes.dashboard} className="flex min-h-10 items-center rounded-lg px-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white">
-              <span className="truncate">{t("nav.studentArea")}</span>
+        {variant === "admin" ? (
+          <div className="border-t border-white/10 p-3">
+            <Link href={routes.dashboard} className="flex min-h-10 items-center gap-3 overflow-hidden rounded-lg px-3 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-white">
+              <GraduationCap className="size-[1.125rem] shrink-0" aria-hidden />
+              <span className="sb-label truncate">{t("nav.studentArea")}</span>
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
+        <SidebarToggle />
       </aside>
 
-      <div className="lg:pl-60">
+      <div className="sb-content">
         <div className="sticky top-0 z-30">
           <DemoBanner message={demoMessage} />
           <header className="flex h-16 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur sm:px-5">
-            <div className="lg:hidden">
+            <div className="md:hidden">
               <MobileDrawer
                 items={items}
                 labels={labels}
@@ -76,7 +89,7 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
                 }
               />
             </div>
-            <Logo href={homeHref} className="lg:hidden" />
+            <Logo href={homeHref} className="md:hidden" />
 
             {variant === "student" ? (
               <form action={routes.search()} role="search" className="relative ml-2 hidden max-w-md flex-1 md:block">

@@ -12,7 +12,7 @@ export function BottomNav({ items, labels, ariaLabel }: { items: NavItem[]; labe
   return (
     <nav
       aria-label={ariaLabel}
-      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden"
+      className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden"
     >
       <ul className="grid grid-cols-5">
         {items.map((item) => {

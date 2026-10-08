@@ -38,7 +38,7 @@ export function MobileDrawer({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("openMenu")} className="lg:hidden">
+        <Button variant="ghost" size="icon" aria-label={t("openMenu")} className="md:hidden">
           <Menu className="size-5" aria-hidden />
         </Button>
       </SheetTrigger>

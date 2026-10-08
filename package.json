@@ -2,7 +2,7 @@
   "name": "acca-usa",
   "version": "0.1.0",
   "private": true,
-  "description": "ACCA USA \u2014 online learning platform for ACCA, CIMA and FIA students.",
+  "description": "ACCA USA — online learning platform for ACCA, CIMA and FIA students.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -31,6 +31,7 @@
     "@radix-ui/react-separator": "^1.1.16",
     "@radix-ui/react-slot": "^1.4.0",
     "@radix-ui/react-tabs": "^1.1.22",
+    "@radix-ui/react-tooltip": "^1.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.53.0",

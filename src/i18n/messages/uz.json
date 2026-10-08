@@ -85,7 +85,9 @@
     "account": "Hisob",
     "qualifications": "Malakalar",
     "adminPanel": "Administrator paneli",
-    "studentArea": "Talaba kabineti"
+    "studentArea": "Talaba kabineti",
+    "collapseSidebar": "Yon menyuni yig‘ish",
+    "expandSidebar": "Yon menyuni ochish"
   },
   "mega": {
     "levels": "Darajalar va fanlar",
