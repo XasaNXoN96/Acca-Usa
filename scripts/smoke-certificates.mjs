@@ -49,14 +49,17 @@ await step("auto-issue: finishing every topic of a subject issues exactly one ce
   await a.goto("/admin/topics"); await a.getByRole("button", { name: "Add topic" }).click(); await a.locator("#f-title").fill(`Only topic ${TAG}`); await a.locator("#f-subject").selectOption({ label: `${CODE} — ${SUB}` }); await a.locator("#f-durationMinutes").fill("10"); await a.locator("#f-lessonCount").fill("1"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   await a.goto("/admin/materials"); await a.getByRole("button", { name: "Add material" }).click(); await a.locator("#f-title").fill(`Only notes ${TAG}`); await a.locator("#f-kind").selectOption("notes"); await a.locator("#f-subject").selectOption({ label: `${CODE} — ${SUB}` }); await a.locator("#f-topic").selectOption({ label: `Only topic ${TAG}` }); await a.locator("#f-body").fill("Notes for the certificate smoke test subject."); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   // a fresh student enrolls and completes it
-  const fc = await ctx(); const f = await fc.newPage(); await f.goto("/register"); await f.locator("#reg-name").fill("Auto Cert"); await f.locator("#reg-email").fill(`auto.${Date.now()}@example.com`); await f.locator("#reg-password").fill("Auto-pass12345"); await f.locator("#reg-confirm").fill("Auto-pass12345"); await f.locator("#reg-terms").click(); await f.getByRole("button", { name: "Create account" }).click(); await f.waitForURL(/dashboard$/);
+  const fc = await ctx(); const f = await fc.newPage(); f.on("pageerror", (e) => console.log("      PAGEERROR", String(e).slice(0, 200))); await f.goto("/register"); await f.locator("#reg-name").fill("Auto Cert"); await f.locator("#reg-email").fill(`auto.${Date.now()}@example.com`); await f.locator("#reg-password").fill("Auto-pass12345"); await f.locator("#reg-confirm").fill("Auto-pass12345"); await f.locator("#reg-terms").click(); await f.getByRole("button", { name: "Create account" }).click(); await f.waitForURL(/dashboard$/);
   await f.goto("/courses"); await f.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await f.getByText("Enrolled").first().waitFor();
+  try {
   await f.goto(`/subject/${CODE.toLowerCase()}`); await f.getByRole("link", { name: new RegExp(`Only topic ${TAG}`) }).click(); await f.getByRole("link", { name: new RegExp(`Only notes ${TAG}`) }).first().click();
   await f.getByRole("button", { name: "Mark as completed" }).click(); await f.getByRole("button", { name: "Completed" }).waitFor();
-  await f.goto("/certificates"); const card = f.locator("[data-certificate-card=earned]"); await card.getByText(new RegExp(`${CODE} — ${SUB}`)).waitFor(); assert((await card.count()) === 1, "exactly one certificate");
+  await f.goto("/certificates"); const card = f.locator("[data-certificate-card=earned]");
+  await card.getByText(new RegExp(`${CODE} — ${SUB}`)).waitFor(); assert((await card.count()) === 1, "exactly one certificate");
   await f.goto(`/subject/${CODE.toLowerCase()}`); await f.goto(`/subject/${CODE.toLowerCase()}/topic/${await f.evaluate(() => "")}`).catch(() => {});
   await f.goto("/notifications"); await f.getByText(/certificate/i).first().waitFor();
   await f.goto("/certificates"); assert((await f.locator("[data-certificate-card=earned]").count()) === 1, "duplicate after revisit");
+  } catch (e) { console.log("      DEBUG url:", f.url()); for (const path of ["/certificates", `/subject/${CODE.toLowerCase()}`, "/notifications"]) { await f.goto(path); console.log("      DEBUG", path, (await f.locator("main").innerText()).replace(/\n+/g, " | ").slice(0, 400)); } throw e; }
   await fc.close();
 });
 await step("admin: list, search, filters, preview; issue (demo), duplicate refused, not-enrolled refused", async () => {
