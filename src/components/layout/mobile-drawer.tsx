@@ -38,7 +38,7 @@ export function MobileDrawer({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("openMenu")} className="lg:hidden md:hidden">
+        <Button variant="ghost" size="icon" aria-label={t("openMenu")} className="lg:hidden">
           <Menu className="size-5" aria-hidden />
         </Button>
       </SheetTrigger>
@@ -54,12 +54,12 @@ export function MobileDrawer({
           </SheetDescription>
         </div>
         <div className="flex-1 space-y-5 overflow-y-auto p-3">
-          <SidebarNav items={items} labels={labels} ariaLabel={ariaLabel} tone="light" />
+          <SidebarNav items={items} labels={labels} ariaLabel={ariaLabel} tone="light" onNavigate={() => setOpen(false)} />
           {extraLinks?.length ? (
             <ul className="space-y-1 border-t border-border pt-3">
               {extraLinks.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
+                  <Link href={l.href} onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted">
                     {l.label}
                   </Link>
                 </li>

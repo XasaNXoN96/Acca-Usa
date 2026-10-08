@@ -27,9 +27,9 @@ interface AppShellProps {
 
 /**
  * Shared shell for the student and admin areas.
- *  - ≥lg  : full navy sidebar (labels)
- *  - md   : compact icon rail
- *  - <md  : top bar + drawer + (student) bottom tab bar
+ *  - ≥lg (1024px): permanent navy sidebar with icons + labels
+ *  - <lg          : top bar with a Menu button → full sidebar drawer over the content (overlay, X, closes on navigation);
+ *                   students also get the bottom tab bar
  */
 export async function AppShell({ variant, items, labels, bottomItems, user, unreadNotifications = 0, demoMessage, children }: AppShellProps) {
   const t = await getTranslations();
@@ -39,28 +39,27 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
 
   return (
     <div className="min-h-dvh bg-app">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[4.5rem] flex-col bg-surface-navy text-white md:flex lg:w-60">
-        <div className="flex h-16 shrink-0 items-center justify-center border-b border-white/10 px-3 lg:justify-start lg:px-5">
-          <Logo tone="inverse" href={homeHref} stacked className="lg:hidden" />
-          <Logo tone="inverse" href={homeHref} className="hidden lg:inline-flex" />
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-surface-navy text-white lg:flex">
+        <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
+          <Logo tone="inverse" href={homeHref} />
         </div>
-        <div className="flex-1 overflow-y-auto px-2.5 py-4 lg:px-3">
-          <SidebarNav items={items} labels={labels} ariaLabel={navLabel} collapsible />
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <SidebarNav items={items} labels={labels} ariaLabel={navLabel} />
         </div>
-        <div className="space-y-1 border-t border-white/10 p-2.5 lg:p-3">
+        <div className="space-y-1 border-t border-white/10 p-3">
           {variant === "admin" ? (
-            <Link href={routes.dashboard} className="flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white lg:justify-start lg:text-sm">
+            <Link href={routes.dashboard} className="flex min-h-10 items-center rounded-lg px-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white">
               <span className="truncate">{t("nav.studentArea")}</span>
             </Link>
           ) : null}
         </div>
       </aside>
 
-      <div className="md:pl-[4.5rem] lg:pl-60">
+      <div className="lg:pl-60">
         <div className="sticky top-0 z-30">
           <DemoBanner message={demoMessage} />
           <header className="flex h-16 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur sm:px-5">
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <MobileDrawer
                 items={items}
                 labels={labels}
@@ -77,7 +76,7 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
                 }
               />
             </div>
-            <Logo href={homeHref} className="md:hidden" />
+            <Logo href={homeHref} className="lg:hidden" />
 
             {variant === "student" ? (
               <form action={routes.search()} role="search" className="relative ml-2 hidden max-w-md flex-1 md:block">

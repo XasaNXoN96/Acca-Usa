@@ -14,10 +14,11 @@ interface Props {
   /** dark = navy desktop sidebar; light = inside mobile drawer. */
   tone?: "dark" | "light";
   /** Icon-only on tablet (md) and full labels from lg. Ignored for the drawer. */
-  collapsible?: boolean;
+  /** called when a link is activated (the mobile drawer closes itself with it) */
+  onNavigate?: () => void;
 }
 
-export function SidebarNav({ items, labels, ariaLabel, tone = "dark", collapsible = false }: Props) {
+export function SidebarNav({ items, labels, ariaLabel, tone = "dark", onNavigate }: Props) {
   const pathname = usePathname();
   return (
     <nav aria-label={ariaLabel}>
@@ -31,10 +32,10 @@ export function SidebarNav({ items, labels, ariaLabel, tone = "dark", collapsibl
               <Link
                 href={item.href}
                 title={label}
+                onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors pointer-coarse:min-h-11",
-                  collapsible && "justify-center lg:justify-start",
                   tone === "dark"
                     ? active
                       ? "bg-white/15 text-white"
@@ -47,7 +48,7 @@ export function SidebarNav({ items, labels, ariaLabel, tone = "dark", collapsibl
               >
                 {active ? <span aria-hidden className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary" /> : null}
                 <Icon className="size-[1.125rem] shrink-0" aria-hidden />
-                <span className={cn("truncate", collapsible && "sr-only lg:not-sr-only")}>{label}</span>
+                <span className="truncate">{label}</span>
               </Link>
             </li>
           );
