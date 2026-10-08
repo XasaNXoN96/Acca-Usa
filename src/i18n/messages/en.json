@@ -731,8 +731,41 @@
       "enrolled": {
         "title": "Enrolled",
         "body": "You are now enrolled in {platform}."
+      },
+      "certificate_revoked": {
+        "title": "Certificate revoked",
+        "body": "Your {title} certificate was revoked by an administrator."
+      },
+      "material_added": {
+        "title": "New material",
+        "body": "“{material}” was added to {subject}."
+      },
+      "test_published": {
+        "title": "New test available",
+        "body": "“{test}” ({subject}) is now available."
+      },
+      "course_updated": {
+        "title": "Course updated",
+        "body": "A new topic “{topic}” was added to {subject}."
+      },
+      "user_registered": {
+        "title": "New registration",
+        "body": "{name} created a student account."
+      },
+      "test_submitted": {
+        "title": "Test submitted",
+        "body": "{student} submitted “{test}” — {score}%."
+      },
+      "certificate_auto_issued": {
+        "title": "Certificate issued",
+        "body": "{student} completed the course and received the {title} certificate."
+      },
+      "system_event": {
+        "title": "System event",
+        "body": "A test attempt on “{detail}” was closed automatically when the time ran out."
       }
-    }
+    },
+    "unreadCount": "{count, plural, =0 {No unread notifications} one {# unread notification} other {# unread notifications}}"
   },
   "profilePage": {
     "title": "Profile",

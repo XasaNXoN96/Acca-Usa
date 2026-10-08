@@ -18,4 +18,6 @@ export async function markReadAction(raw: unknown): Promise<void> {
   const session = await requireSession();
   await services.notifications.markRead(session.user.id, id.data);
   revalidatePath(routes.notifications);
+  revalidatePath(routes.adminNotifications);
+  revalidatePath("/", "layout"); // the bell badge lives in the layout
 }

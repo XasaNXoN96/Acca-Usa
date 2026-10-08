@@ -227,6 +227,17 @@ export function pushActivity(db: Db, a: Omit<ActivityRec, "id" | "at">) {
   if (db.activity.length > 500) db.activity.length = 500;
 }
 
+/** Notify every ACTIVE student enrolled in the platform (e.g. new material / test / topic). */
+export function notifyEnrolled(db: Db, platform: PlatformSlug, n: Omit<AppNotification, "id" | "createdAt" | "read">) {
+  const ids = new Set(db.enrollments.filter((e) => e.platform === platform).map((e) => e.userId));
+  for (const u of db.users) if (ids.has(u.id) && u.role === "STUDENT" && u.status === "active" && !u.deletedAt) pushNotification(db, u.id, n);
+}
+
+/** Notify every active administrator. */
+export function notifyAdmins(db: Db, n: Omit<AppNotification, "id" | "createdAt" | "read">) {
+  for (const u of db.users) if (u.role === "ADMIN" && u.status === "active" && !u.deletedAt) pushNotification(db, u.id, n);
+}
+
 export function userNotifications(db: Db, userId: string): AppNotification[] {
   let list = db.notifications.get(userId);
   if (!list) {

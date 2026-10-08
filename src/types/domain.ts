@@ -363,6 +363,10 @@ export type NotificationTarget =
   | { kind: "result"; id: string; attemptId?: string }
   | { kind: "exam"; id: string }
   | { kind: "certificate"; id?: string }
+  | { kind: "material"; subjectSlug: string; topicId: string; id: string }
+  | { kind: "subject"; slug: string }
+  /** Admin-only destinations; `path` must start with /admin/ (checked when the link is resolved). */
+  | { kind: "admin"; path: string }
   | { kind: "payment" }
   | { kind: "none" };
 
@@ -372,8 +376,18 @@ export type NotificationCode =
   | "result_ready"
   | "exam_scheduled"
   | "certificate_issued"
+  | "certificate_revoked"
   | "payment_received"
-  | "enrolled";
+  | "enrolled"
+  // student: content updates
+  | "material_added"
+  | "test_published"
+  | "course_updated"
+  // admin
+  | "user_registered"
+  | "test_submitted"
+  | "certificate_auto_issued"
+  | "system_event";
 
 /** Notifications store a CODE + params, never prose — text is translated at render time (RU/EN/UZ). */
 export interface AppNotification {

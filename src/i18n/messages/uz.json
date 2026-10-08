@@ -731,8 +731,41 @@
       "enrolled": {
         "title": "Yozildingiz",
         "body": "Siz {platform} platformasiga yozildingiz."
+      },
+      "certificate_revoked": {
+        "title": "Sertifikat bekor qilindi",
+        "body": "{title} sertifikatingiz administrator tomonidan bekor qilindi."
+      },
+      "material_added": {
+        "title": "Yangi material",
+        "body": "“{material}” {subject} fanga qo‘shildi."
+      },
+      "test_published": {
+        "title": "Yangi test mavjud",
+        "body": "“{test}” ({subject}) testi endi mavjud."
+      },
+      "course_updated": {
+        "title": "Kurs yangilandi",
+        "body": "{subject} fanga yangi “{topic}” mavzusi qo‘shildi."
+      },
+      "user_registered": {
+        "title": "Yangi ro‘yxatdan o‘tish",
+        "body": "{name} talaba hisobini yaratdi."
+      },
+      "test_submitted": {
+        "title": "Test topshirildi",
+        "body": "{student} “{test}” testini topshirdi — {score}%."
+      },
+      "certificate_auto_issued": {
+        "title": "Sertifikat berildi",
+        "body": "{student} kursni tugatdi va {title} sertifikatini oldi."
+      },
+      "system_event": {
+        "title": "Tizim hodisasi",
+        "body": "“{detail}” testidagi urinish vaqt tugagani uchun avtomatik yopildi."
       }
-    }
+    },
+    "unreadCount": "{count, plural, =0 {O‘qilmagan bildirishnomalar yo‘q} other {# ta o‘qilmagan bildirishnoma}}"
   },
   "profilePage": {
     "title": "Profil",

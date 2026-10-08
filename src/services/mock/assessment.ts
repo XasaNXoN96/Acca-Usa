@@ -5,7 +5,7 @@ import { routes } from "@/lib/routes";
 import { getStorage } from "../storage";
 import { issueIfEarned } from "./certs-core";
 import {
-  getDb, newId, nowIso, pushActivity, pushNotification, subjectVisible, topicVisible, userProgress,
+  getDb, newId, notifyAdmins, notifyEnrolled, nowIso, platformOfSubject, pushActivity, pushNotification, subjectVisible, topicVisible, userProgress,
   type AttemptRec, type Db, type QuestionRec, type TestRec,
 } from "./db";
 import { subjectProgress } from "./calc";
@@ -193,6 +193,8 @@ function complete(db: Db, a: AttemptRec, t: TestRec) {
   result.progressAfter = subjectProgress(db, a.userId, t.subjectSlug).percent; // now includes this attempt's score
   pushActivity(db, { userId: a.userId, kind: "test", title: t.title, context: result.subjectName, href: routes.testResult(t.id, a.id), detail: `${result.scorePercent}%` });
   pushNotification(db, a.userId, { code: "result_ready", params: { test: t.title }, target: { kind: "result", id: t.id, attemptId: a.id } });
+  const student = db.users.find((u) => u.id === a.userId);
+  notifyAdmins(db, { code: "test_submitted", params: { student: student?.name ?? "—", test: t.title, score: String(result.scorePercent) }, target: { kind: "admin", path: "/admin/statistics" } });
 }
 
 /** An attempt whose deadline (+grace) has passed is closed automatically with the answers saved so far. */
@@ -200,7 +202,10 @@ function expireIfNeeded(db: Db, a: AttemptRec | undefined): AttemptRec | undefin
   if (!a || a.status !== "IN_PROGRESS") return a;
   if (Date.now() > new Date(a.deadlineAt).getTime() + GRACE_MS) {
     const t = db.tests.find((x) => x.id === a.testId);
-    if (t) complete(db, a, t);
+    if (t) {
+      complete(db, a, t);
+      notifyAdmins(db, { code: "system_event", params: { event: "attempt_expired", detail: t.title }, target: { kind: "admin", path: "/admin/statistics" } });
+    }
   }
   return a;
 }
@@ -315,6 +320,7 @@ export const testService: TestService = {
       published: input.published, publishedAt: input.published ? now : undefined, createdAt: now,
     };
     db.tests.push(rec);
+    if (rec.published) announceTest(db, rec);
     return { ok: true, data: { id: rec.id } };
   },
   async update(id, input) {
@@ -323,12 +329,14 @@ export const testService: TestService = {
     if (!rec) return { ok: false, code: "NOT_FOUND" };
     const bad = checkTest(db, input);
     if (bad) return bad;
+    const wasPublished = rec.published;
     Object.assign(rec, {
       title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined,
       durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
       randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers, questionIds: input.questionIds,
       published: input.published, publishedAt: input.published ? (rec.publishedAt ?? nowIso()) : rec.publishedAt,
     });
+    if (rec.published && !wasPublished) announceTest(db, rec);
     return { ok: true, data: undefined };
   },
   async setArchived(id, archived) {
@@ -342,8 +350,10 @@ export const testService: TestService = {
     const rec = db.tests.find((t) => t.id === id && !t.deletedAt);
     if (!rec) return { ok: false, code: "NOT_FOUND" };
     if (published && activeQuestions(db, rec).length === 0) return { ok: false, code: "QUESTIONS_REQUIRED", field: "questionIds" };
+    const was = rec.published;
     rec.published = published;
     if (published) rec.publishedAt = nowIso();
+    if (published && !was) announceTest(db, rec);
     return { ok: true, data: undefined };
   },
   async duplicate(id) {
@@ -355,6 +365,12 @@ export const testService: TestService = {
     return { ok: true, data: { id: copy.id } };
   },
 };
+
+/** Tell the enrolled students that a new test is available (only on the draft → published transition). */
+function announceTest(db: Db, t: TestRec) {
+  const subject = db.subjects.find((s) => s.slug === t.subjectSlug);
+  if (subject) notifyEnrolled(db, platformOfSubject(db, subject), { code: "test_published", params: { test: t.title, subject: subject.code }, target: { kind: "test", id: t.id } });
+}
 
 function checkTest(db: Db, input: TestInput): Extract<ServiceResult, { ok: false }> | null {
   if (!db.subjects.some((s) => s.slug === input.subjectSlug && !s.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "subject" };

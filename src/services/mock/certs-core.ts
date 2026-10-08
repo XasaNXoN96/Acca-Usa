@@ -1,6 +1,6 @@
 import "server-only";
 import type { IssuedCertificate } from "@/types";
-import { certificateNumber, newId, nowIso, pushActivity, pushNotification, type Db } from "./db";
+import { certificateNumber, newId, notifyAdmins, nowIso, pushActivity, pushNotification, type Db } from "./db";
 import { subjectProgress } from "./calc";
 import { routes } from "@/lib/routes";
 
@@ -24,6 +24,7 @@ export function createCertificate(db: Db, userId: string, subjectSlug: string, s
   db.certificates.push(cert);
   pushActivity(db, { userId, kind: "topic", title: cert.title, context: subject.name, href: routes.certificate(cert.id), detail: cert.number });
   pushNotification(db, userId, { code: "certificate_issued", params: { title: cert.title }, target: { kind: "certificate", id: cert.id } });
+  if (source === "auto") notifyAdmins(db, { code: "certificate_auto_issued", params: { student: user.name, title: cert.title }, target: { kind: "admin", path: "/admin/certificates" } });
   return cert;
 }
 

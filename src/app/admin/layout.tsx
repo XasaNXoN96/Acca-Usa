@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
 import { adminNav } from "@/lib/navigation";
 import { can } from "@/lib/permissions";
+import { services } from "@/services";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s | Admin | ACCA USA" } };
@@ -13,6 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     getTranslations("admin"),
     requireSession(STAFF_ROLES),
   ]);
+  const unread = await services.notifications.unreadCount(session.user.id);
   const labels: Record<string, string> = {
     overview: ts("overview.title"),
     platforms: r("platforms.title"),
@@ -29,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     settings: ts("settings.title"),
   };
   return (
-    <AppShell variant="admin" items={adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>
+    <AppShell variant="admin" items={adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} unreadNotifications={unread} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>
       {children}
     </AppShell>
   );

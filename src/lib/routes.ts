@@ -40,6 +40,7 @@ export const routes = {
   certificates: "/certificates",
   payments: "/payments",
   notifications: "/notifications",
+  adminNotifications: "/admin/notifications",
   profile: "/profile",
 
   admin: "/admin",
@@ -74,6 +75,12 @@ export function notificationHref(n: Pick<AppNotification, "target">): string | n
       return routes.exams;
     case "certificate":
       return t.id ? routes.certificate(t.id) : routes.certificates;
+    case "material":
+      return routes.subjectMaterial(t.subjectSlug, t.topicId, t.id);
+    case "subject":
+      return routes.subject(t.slug);
+    case "admin":
+      return t.path.startsWith("/admin/") ? t.path : null; // never follow anything outside the admin area
     case "payment":
       return routes.payments;
     case "none":

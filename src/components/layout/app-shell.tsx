@@ -110,9 +110,9 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
             <div className="ml-auto flex items-center gap-1">
               <ThemeToggle className="hidden sm:inline-flex" />
               <LanguageSwitcher className="hidden sm:inline-flex" />
-              {variant === "student" ? (
-                <Button asChild variant="ghost" size="icon" className="relative">
-                  <Link href={routes.notifications} aria-label={t("dashboard.notifications", { count: unreadNotifications })}>
+              {variant === "student" || variant === "admin" ? (
+                <Button asChild variant="ghost" size="icon" className="relative" data-bell>
+                  <Link href={variant === "admin" ? routes.adminNotifications : routes.notifications} aria-label={t("dashboard.notifications", { count: unreadNotifications })}>
                     <Bell className="size-5" aria-hidden />
                     {unreadNotifications > 0 ? (
                       <span aria-hidden className="absolute right-1.5 top-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[0.625rem] font-bold leading-4 text-primary-foreground">

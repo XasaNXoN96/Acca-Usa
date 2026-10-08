@@ -731,8 +731,41 @@
       "enrolled": {
         "title": "Вы записаны",
         "body": "Вы записаны на платформу {platform}."
+      },
+      "certificate_revoked": {
+        "title": "Сертификат отозван",
+        "body": "Ваш сертификат {title} отозван администратором."
+      },
+      "material_added": {
+        "title": "Новый материал",
+        "body": "Материал «{material}» добавлен в {subject}."
+      },
+      "test_published": {
+        "title": "Доступен новый тест",
+        "body": "Тест «{test}» ({subject}) теперь доступен."
+      },
+      "course_updated": {
+        "title": "Курс обновлён",
+        "body": "В {subject} добавлена новая тема «{topic}»."
+      },
+      "user_registered": {
+        "title": "Новая регистрация",
+        "body": "{name} создал(а) аккаунт студента."
+      },
+      "test_submitted": {
+        "title": "Тест отправлен",
+        "body": "{student} отправил(а) «{test}» — {score}%."
+      },
+      "certificate_auto_issued": {
+        "title": "Выдан сертификат",
+        "body": "{student} прошёл(-ла) курс и получил(а) сертификат {title}."
+      },
+      "system_event": {
+        "title": "Системное событие",
+        "body": "Попытка теста «{detail}» закрыта автоматически по истечении времени."
       }
-    }
+    },
+    "unreadCount": "{count, plural, =0 {Нет непрочитанных уведомлений} one {# непрочитанное уведомление} few {# непрочитанных уведомления} many {# непрочитанных уведомлений} other {# непрочитанных уведомления}}"
   },
   "profilePage": {
     "title": "Профиль",

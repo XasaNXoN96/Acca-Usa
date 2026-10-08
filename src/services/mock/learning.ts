@@ -4,7 +4,7 @@ import type { Certificate, RankingEntry } from "@/types";
 import type { PlatformSlug } from "@/types";
 import { exams } from "@/data/mock/people";
 import { routes } from "@/lib/routes";
-import { getDb, nowIso, platformOfSubject, pushActivity, topicVisible, userProgress } from "./db";
+import { getDb, nowIso, platformOfSubject, pushActivity, pushNotification, topicVisible, userProgress } from "./db";
 import { activeCertificate, createCertificate, issueIfEarned } from "./certs-core";
 import { isEnrolled, platformProgress, subjectProgress, topicEarned, topicPercent, visibleSubjects } from "./calc";
 
@@ -183,6 +183,7 @@ export const certificateService: CertificateService = {
     if (!revoked && activeCertificate(db, c.userId, c.subjectSlug) && c.status === "revoked") return { ok: false, code: "CERT_EXISTS" };
     c.status = revoked ? "revoked" : "issued";
     c.revokedAt = revoked ? nowIso() : undefined;
+    if (revoked) pushNotification(db, c.userId, { code: "certificate_revoked", params: { title: c.title }, target: { kind: "certificate", id: c.id } });
     return { ok: true, data: undefined };
   },
 };

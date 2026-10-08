@@ -4,7 +4,7 @@ import type { AuthService, ServiceResult, UserInput, UserService } from "../cont
 import type { PlatformSlug, StudentRecord, User } from "@/types";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { seedStudentSummary } from "@/data/mock/people";
-import { getDb, newId, nowIso, pushNotification, type UserRec } from "./db";
+import { getDb, newId, notifyAdmins, nowIso, pushNotification, type UserRec } from "./db";
 import { platformProgress } from "./calc";
 
 export const toUser = (r: UserRec): User => ({
@@ -26,6 +26,7 @@ export const authService: AuthService = {
     };
     db.users.push(rec);
     pushNotification(db, rec.id, { code: "welcome", target: { kind: "none" } });
+    notifyAdmins(db, { code: "user_registered", params: { name: rec.name }, target: { kind: "admin", path: "/admin/students" } });
     return { ok: true, data: toUser(rec) };
   },
 

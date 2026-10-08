@@ -7,7 +7,7 @@ import { routes } from "@/lib/routes";
 import { getStorage } from "../storage";
 import { uploadKindFor, uploadRules } from "../storage/validation";
 import {
-  getDb, newId, nowIso, platformOfSubject, pushActivity, slugify, subjectVisible, topicVisible,
+  getDb, newId, notifyEnrolled, nowIso, platformOfSubject, pushActivity, slugify, subjectVisible, topicVisible,
   type Db, type MaterialRec, type SubjectRec,
 } from "./db";
 import { platformProgress, subjectProgress, topicsWithStatus, visibleSubjects, visibleTopicsOf } from "./calc";
@@ -178,6 +178,13 @@ export const materialService: MaterialService = {
     };
     db.materials.push(rec);
     if (rec.fileId) await getStorage().markAttached(rec.fileId, true);
+    const subject = db.subjects.find((s) => s.slug === rec.subjectSlug);
+    if (subject) {
+      notifyEnrolled(db, platformOfSubject(db, subject), {
+        code: "material_added", params: { material: rec.title, subject: subject.code },
+        target: rec.topicId ? { kind: "material", subjectSlug: rec.subjectSlug, topicId: rec.topicId, id: rec.id } : { kind: "subject", slug: rec.subjectSlug },
+      });
+    }
     return { ok: true, data: await toMaterial(rec) };
   },
   async update(id, input) {
@@ -249,6 +256,8 @@ export const topicService: TopicService = {
       id, subjectSlug: input.subjectSlug, order, title: input.title.trim(), lessonCount: input.lessonCount,
       durationMinutes: input.durationMinutes, description: input.description.trim(), keyPoints: [], createdAt: nowIso(),
     });
+    const subject = db.subjects.find((s) => s.slug === input.subjectSlug);
+    if (subject) notifyEnrolled(db, platformOfSubject(db, subject), { code: "course_updated", params: { subject: subject.code, topic: input.title.trim() }, target: { kind: "subject", slug: subject.slug } });
     return { ok: true, data: { id } };
   },
   async update(id, input) {
