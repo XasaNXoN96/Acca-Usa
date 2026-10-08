@@ -1,6 +1,7 @@
 import type {
   ActivityItem,
   AdminStats,
+  IssuedCertificate,
   StatsFilter,
   AnswerMap,
   AppNotification,
@@ -276,7 +277,15 @@ export interface RankingService {
 }
 
 export interface CertificateService {
+  /** Earned + revoked certificates and the learner's progress towards the next ones. */
   listForUser(userId: string): Promise<Certificate[]>;
+  /** One certificate record, only if it belongs to `userId` (admins pass `asAdmin`). */
+  getForUser(userId: string, id: string, asAdmin?: boolean): Promise<IssuedCertificate | null>;
+  /* admin */
+  listAll(): Promise<IssuedCertificate[]>;
+  /** Manual (demo) issue for an enrolled student. Fails if an active certificate for the subject already exists. */
+  issue(input: { userId: string; subjectSlug: string }): Promise<ServiceResult<{ id: string }>>;
+  setRevoked(id: string, revoked: boolean): Promise<ServiceResult>;
 }
 
 export interface NotificationService {

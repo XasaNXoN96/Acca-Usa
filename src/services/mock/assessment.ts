@@ -3,6 +3,7 @@ import type { AttemptStart, QuestionInput, QuestionService, ServiceResult, TestI
 import type { BankQuestion, ResultListItem, ReviewItem, TestResult, TestSummary } from "@/types";
 import { routes } from "@/lib/routes";
 import { getStorage } from "../storage";
+import { issueIfEarned } from "./certs-core";
 import {
   getDb, newId, nowIso, pushActivity, pushNotification, subjectVisible, topicVisible, userProgress,
   type AttemptRec, type Db, type QuestionRec, type TestRec,
@@ -171,6 +172,7 @@ function finalize(db: Db, a: AttemptRec, t: TestRec): TestResult {
 
   if (passed && t.topicId && topicVisible(db, db.topics.find((x) => x.id === t.topicId))) {
     userProgress(db, a.userId).set(t.topicId, { percent: 100, updatedAt: submittedAt });
+    issueIfEarned(db, a.userId, t.subjectSlug);
   }
   const after = subjectProgress(db, a.userId, t.subjectSlug).percent;
 

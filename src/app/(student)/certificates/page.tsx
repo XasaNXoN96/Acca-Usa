@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Award, Download } from "lucide-react";
+import Link from "next/link";
+import { Award, Eye } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Progress } from "@/components/ui/progress";
 import { services } from "@/services";
 import { formatDate } from "@/lib/format";
+import { routes } from "@/lib/routes";
 import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,7 +29,7 @@ export default async function CertificatesPage() {
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {certs.map((c) => (
-            <li key={c.id}>
+            <li key={c.id} data-certificate-card={c.status}>
               <Card className="flex h-full flex-col gap-4 p-5">
                 <div className="flex items-start gap-3">
                   <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-warning-soft text-warning">
@@ -37,12 +39,12 @@ export default async function CertificatesPage() {
                     <h2 className="font-semibold leading-snug">{c.title}</h2>
                     {c.issuedAt ? <p className="type-caption mt-1 text-muted-foreground">{t("issued", { date: formatDate(c.issuedAt, locale) })}</p> : null}
                   </div>
-                  <Badge variant={c.status === "earned" ? "success" : "info"}>{c.status === "earned" ? t("earned") : t("inProgress")}</Badge>
+                  <Badge variant={c.status === "earned" ? "success" : c.status === "revoked" ? "destructive" : "info"}>{c.status === "earned" ? t("earned") : c.status === "revoked" ? t("revoked") : t("inProgress")}</Badge>
                 </div>
-                {c.status === "earned" ? (
+                {c.status !== "in_progress" ? (
                   <div className="mt-auto space-y-1.5">
-                    <Button variant="outline" size="sm" disabled><Download aria-hidden />{t("download")}</Button>
-                    <p className="type-caption text-muted-foreground">{t("downloadSoon")}</p>
+                    {c.number ? <p className="type-caption font-mono text-muted-foreground">{c.number}</p> : null}
+                    <Button asChild variant="outline" size="sm"><Link href={routes.certificate(c.id)}><Eye aria-hidden />{t("view")}</Link></Button>
                   </div>
                 ) : (
                   <div className="mt-auto flex items-center gap-2">

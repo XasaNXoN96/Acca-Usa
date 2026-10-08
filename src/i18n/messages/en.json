@@ -399,7 +399,8 @@
       "testsHint": "{count, plural, =0 {No tests to take} one {# test to take} other {# tests to take}}",
       "resultsHint": "{count, plural, =0 {No results yet} one {# recent result} other {# recent results}}",
       "progressHint": "Topics, subjects and tests"
-    }
+    },
+    "revoked": "Revoked"
   },
   "courses": {
     "title": "My Platforms",
@@ -649,9 +650,25 @@
     "earned": "Earned",
     "inProgress": "In progress",
     "issued": "Issued {date}",
-    "download": "Download",
-    "downloadSoon": "PDF download arrives with the backend block.",
-    "empty": "No certificates yet."
+    "empty": "No certificates yet.",
+    "back": "All certificates",
+    "revoked": "Revoked",
+    "revokedNotice": "This certificate has been revoked by an administrator and is no longer valid.",
+    "printHint": "Use Print to print the certificate or save it as a PDF from the print dialog.",
+    "view": "View certificate",
+    "print": "Print / Save as PDF",
+    "document": {
+      "aria": "Certificate of completion: {name}, {course}",
+      "title": "Certificate of Completion",
+      "certifies": "This certifies that",
+      "completed": "has successfully completed the online course",
+      "issued": "Date of issue",
+      "number": "Certificate number",
+      "signature": "ACCA USA Learning Platform",
+      "disclaimer": "Issued by ACCA USA, an independent learning platform, to confirm completion of an online course. It is not an ACCA or other awarding-body qualification and grants no professional status.",
+      "demo": "Demo build — sample certificate.",
+      "revoked": "Revoked"
+    }
   },
   "payments": {
     "title": "Payments",
@@ -1029,6 +1046,37 @@
           "student": "Student",
           "amount": "Amount (USD)"
         }
+      },
+      "certificates": {
+        "title": "Certificates",
+        "description": "Course-completion certificates. They are issued automatically when a student completes every topic of a subject; you can also issue one manually (demo), revoke or restore it.",
+        "add": "Issue certificate",
+        "columns": {
+          "number": "Number",
+          "student": "Student",
+          "platform": "Platform",
+          "subject": "Subject",
+          "issued": "Issued",
+          "status": "Status"
+        },
+        "fields": {
+          "student": "Student",
+          "subject": "Subject"
+        },
+        "filters": {
+          "platform": "Platform",
+          "subject": "Subject",
+          "status": "Status"
+        },
+        "labels": {
+          "archive": "Revoke",
+          "restore": "Restore",
+          "confirmTitle": "Revoke this certificate?",
+          "confirmText": "The certificate stays on record but is marked as revoked and can no longer be used. You can restore it later.",
+          "archivedBadge": "Revoked",
+          "archivedDone": "Certificate revoked.",
+          "restoredDone": "Certificate restored."
+        }
       }
     },
     "validation": {
@@ -1053,7 +1101,9 @@
       "notFound": "The record was not found.",
       "generic": "Could not save. Please check the form.",
       "forbidden": "You do not have permission for this action.",
-      "tagsInvalid": "Use up to 10 tags, each at most 30 characters."
+      "tagsInvalid": "Use up to 10 tags, each at most 30 characters.",
+      "notEnrolled": "The student is not enrolled in this subject’s platform.",
+      "certExists": "This student already has an active certificate for this subject."
     },
     "statistics": {
       "title": "Statistics",
@@ -1176,6 +1226,14 @@
       "attempts": "Attempts",
       "unlimited": "Unlimited",
       "start": "Start preview"
+    },
+    "certStatus": {
+      "issued": "Issued",
+      "revoked": "Revoked"
+    },
+    "certSource": {
+      "auto": "Earned automatically",
+      "admin": "Issued by an administrator (demo)"
     }
   },
   "states": {

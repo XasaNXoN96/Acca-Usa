@@ -110,6 +110,8 @@ export const studentSchemaFor = (isNew: boolean) =>
       else if (!/[A-Za-z]/.test(p) || !/\d/.test(p)) ctx.addIssue({ code: "custom", path: ["password"], message: "passwordStrength" });
     });
 
+export const certificateSchema = z.object({ student: id, subject: id });
+
 export type PlatformForm = z.infer<typeof platformSchema>;
 export type SubjectForm = z.infer<typeof subjectSchema>;
 export type TopicForm = z.infer<typeof topicSchema>;
@@ -118,7 +120,7 @@ export type QuestionForm = z.infer<typeof questionSchema>;
 export type TestForm = z.infer<typeof testSchema>;
 export type StudentForm = z.infer<ReturnType<typeof studentSchemaFor>>;
 
-export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "students"] as const;
+export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "students", "certificates"] as const;
 export type EditableResource = (typeof editableResources)[number];
 
 export function schemaFor(resource: EditableResource, isNew: boolean) {
@@ -130,5 +132,6 @@ export function schemaFor(resource: EditableResource, isNew: boolean) {
     case "question-bank": return questionSchema;
     case "tests": return testSchema;
     case "students": return studentSchemaFor(isNew);
+    case "certificates": return certificateSchema;
   }
 }

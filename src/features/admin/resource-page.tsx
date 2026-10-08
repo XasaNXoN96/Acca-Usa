@@ -60,6 +60,7 @@ export async function AdminResourcePage({ resource }: { resource: ResourceKey })
         addLabel={cfg.canCreate ? label(`${resource}.add`) : null}
         tableCaption={title}
         canEdit={canEdit}
+        labels={cfg.customArchiveLabels ? (Object.fromEntries((['archive', 'restore', 'confirmTitle', 'confirmText', 'archivedBadge', 'archivedDone', 'restoredDone'] as const).map((k) => [k, label(`${resource}.labels.${k}`)])) as never) : undefined}
       />
     </>
   );

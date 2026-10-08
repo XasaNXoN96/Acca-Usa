@@ -101,6 +101,11 @@ export async function saveResourceAction(resource: string, id: string | null, ra
       res = id ? await services.tests.update(id, input) : await services.tests.create(input);
       break;
     }
+    case "certificates": {
+      if (id) return { ok: false, code: "FORBIDDEN" }; // certificates are issued / revoked, never edited
+      res = await services.certificates.issue({ userId: String(d.student), subjectSlug: String(d.subject) });
+      break;
+    }
     case "students": {
       const input = { name: String(d.name), email: String(d.email), role: d.role as never, status: d.status as never, password: d.password ? String(d.password) : undefined };
       if (id) {
@@ -134,6 +139,7 @@ export async function setArchivedAction(resource: string, id: string, archived: 
     case "question-bank": res = await services.questions.setArchived(id, archived); break;
     case "tests": res = await services.tests.setArchived(id, archived); break;
     case "students": res = await services.users.setArchived(id, archived); break;
+    case "certificates": res = await services.certificates.setRevoked(id, archived); break;
   }
   if (!res.ok) return fail(res);
   refresh(resource);

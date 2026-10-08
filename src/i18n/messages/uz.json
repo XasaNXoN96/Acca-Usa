@@ -399,7 +399,8 @@
       "testsHint": "{count, plural, =0 {Topshiriladigan test yo‘q} other {# ta test topshirish mumkin}}",
       "resultsHint": "{count, plural, =0 {Hozircha natija yo‘q} other {# ta so‘nggi natija}}",
       "progressHint": "Mavzular, fanlar va testlar"
-    }
+    },
+    "revoked": "Bekor qilingan"
   },
   "courses": {
     "title": "Mening platformalarim",
@@ -649,9 +650,25 @@
     "earned": "Olingan",
     "inProgress": "Jarayonda",
     "issued": "{date} da berilgan",
-    "download": "Yuklab olish",
-    "downloadSoon": "PDF yuklab olish backend bloki bilan keladi.",
-    "empty": "Hozircha sertifikatlar yo‘q."
+    "empty": "Hozircha sertifikatlar yo‘q.",
+    "back": "Barcha sertifikatlar",
+    "revoked": "Bekor qilingan",
+    "revokedNotice": "Bu sertifikat administrator tomonidan bekor qilingan va endi amal qilmaydi.",
+    "printHint": "Sertifikatni chop etish yoki chop etish oynasidan PDF sifatida saqlash uchun «Chop etish» tugmasini bosing.",
+    "view": "Sertifikatni ochish",
+    "print": "Chop etish / PDF sifatida saqlash",
+    "document": {
+      "aria": "Kursni tugatganlik sertifikati: {name}, {course}",
+      "title": "Kursni tugatganlik sertifikati",
+      "certifies": "Ushbu hujjat quyidagini tasdiqlaydi:",
+      "completed": "onlayn kursni muvaffaqiyatli tugatdi",
+      "issued": "Berilgan sana",
+      "number": "Sertifikat raqami",
+      "signature": "ACCA USA o‘quv platformasi",
+      "disclaimer": "Mustaqil o‘quv platformasi ACCA USA tomonidan onlayn kursni tugatganlikni tasdiqlash uchun berilgan. Bu ACCA yoki boshqa attestatsiya tashkiloti malakasi emas va kasbiy maqom bermaydi.",
+      "demo": "Demo versiya — namunaviy sertifikat.",
+      "revoked": "Bekor qilingan"
+    }
   },
   "payments": {
     "title": "To‘lovlar",
@@ -1029,6 +1046,37 @@
           "student": "Talaba",
           "amount": "Summa (USD)"
         }
+      },
+      "certificates": {
+        "title": "Sertifikatlar",
+        "description": "Kursni tugatganlik sertifikatlari. Talaba fanning barcha mavzularini tugatganda avtomatik beriladi; qo‘lda ham berish (demo), bekor qilish yoki tiklash mumkin.",
+        "add": "Sertifikat berish",
+        "columns": {
+          "number": "Raqam",
+          "student": "Talaba",
+          "platform": "Platforma",
+          "subject": "Fan",
+          "issued": "Berilgan",
+          "status": "Holati"
+        },
+        "fields": {
+          "student": "Talaba",
+          "subject": "Fan"
+        },
+        "filters": {
+          "platform": "Platforma",
+          "subject": "Fan",
+          "status": "Holati"
+        },
+        "labels": {
+          "archive": "Bekor qilish",
+          "restore": "Tiklash",
+          "confirmTitle": "Sertifikat bekor qilinsinmi?",
+          "confirmText": "Sertifikat yozuvda qoladi, lekin bekor qilingan deb belgilanadi va amal qilmaydi. Keyinroq uni tiklash mumkin.",
+          "archivedBadge": "Bekor qilingan",
+          "archivedDone": "Sertifikat bekor qilindi.",
+          "restoredDone": "Sertifikat tiklandi."
+        }
       }
     },
     "validation": {
@@ -1053,7 +1101,9 @@
       "notFound": "Yozuv topilmadi.",
       "generic": "Saqlab bo‘lmadi. Formani tekshiring.",
       "forbidden": "Bu amal uchun ruxsatingiz yo‘q.",
-      "tagsInvalid": "Ko‘pi bilan 10 ta teg, har biri 30 belgigacha."
+      "tagsInvalid": "Ko‘pi bilan 10 ta teg, har biri 30 belgigacha.",
+      "notEnrolled": "Talaba bu fan platformasiga yozilmagan.",
+      "certExists": "Bu talabaning shu fan bo‘yicha amaldagi sertifikati allaqachon bor."
     },
     "statistics": {
       "title": "Statistika",
@@ -1176,6 +1226,14 @@
       "attempts": "Urinishlar",
       "unlimited": "Cheklanmagan",
       "start": "Ko‘rib chiqishni boshlash"
+    },
+    "certStatus": {
+      "issued": "Berilgan",
+      "revoked": "Bekor qilingan"
+    },
+    "certSource": {
+      "auto": "Avtomatik olingan",
+      "admin": "Administrator tomonidan berilgan (demo)"
     }
   },
   "states": {

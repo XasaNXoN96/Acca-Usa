@@ -10,6 +10,7 @@ import { materialKinds, type PlatformSlug } from "@/types";
 import type { FilterDef, ResourceRow } from "./resource-table";
 import { QuestionPreview } from "./question-preview";
 import { TestPreview } from "./test-preview";
+import { CertificateDocument } from "@/features/certificates/certificate-document";
 import type { Option } from "./record-form";
 import type { ResourceKey } from "./resources";
 
@@ -205,6 +206,24 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
             status: <Badge variant={u.status === "active" ? "success" : "destructive"}>{ts(`userStatus.${u.status}`)}</Badge>,
           }, { name: u.name, email: u.email, role: u.role, status: u.status, password: "" }, [u.name, u.email, u.role], u.name, !!u.archived, { role: u.role, status: u.status }),
         ),
+      };
+    }
+
+    case "certificates": {
+      const [certs, students] = await Promise.all([services.certificates.listAll(), services.users.listStudents()]);
+      const statusFilter: Option[] = (["issued", "revoked"] as const).map((x) => ({ value: x, label: ts(`certStatus.${x}`) }));
+      const studentOptions: Option[] = students.filter((u) => u.role === "STUDENT" && !u.archived).map((u) => ({ value: u.id, label: `${u.name} (${u.email})` }));
+      return {
+        options: { student: studentOptions, subject: subjectOptions },
+        filters: { platform: platformOptions, subject: subjectOptions, status: statusFilter },
+        rows: certs.map((x) => ({
+          ...mk(x.id, {
+            number: <span className="font-mono font-semibold">{x.number}</span>, student: x.studentName, platform: platformBadge(x.platform), subject: `${x.subjectCode} — ${x.subjectName}`,
+            issued: formatDate(x.issuedAt, locale), status: <Badge variant={x.status === "issued" ? "success" : "destructive"}>{ts(`certStatus.${x.status}`)}</Badge>,
+          }, {}, [x.number, x.studentName, x.subjectCode, x.subjectName, x.platform], x.number, x.status === "revoked",
+          { platform: x.platform, subject: x.subjectSlug, status: x.status }, undefined, <div className="space-y-3"><p className="type-caption text-muted-foreground">{ts(`certSource.${x.source}`)}</p><CertificateDocument cert={x} /></div>),
+          noEdit: true,
+        })),
       };
     }
 

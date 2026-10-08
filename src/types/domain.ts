@@ -311,13 +311,36 @@ export interface RankingEntry {
   isCurrentUser: boolean;
 }
 
+/** Student-facing certificate row: earned, revoked, or the learner's progress towards one. */
 export interface Certificate {
   id: string;
   title: string;
   platform: PlatformSlug;
-  status: "earned" | "in_progress";
+  status: "earned" | "in_progress" | "revoked";
   issuedAt?: string;
   progress: number;
+  number?: string;
+  subjectSlug?: string;
+}
+
+/** A course-completion certificate record (PostgreSQL later: one row per student + subject). */
+export interface IssuedCertificate {
+  id: string;
+  /** Human readable, e.g. AU-2026-000012 */
+  number: string;
+  userId: string;
+  /** Snapshots taken at issue time, so renaming a student or subject never rewrites a certificate. */
+  studentName: string;
+  platform: PlatformSlug;
+  subjectSlug: string;
+  subjectCode: string;
+  subjectName: string;
+  title: string;
+  issuedAt: string;
+  status: "issued" | "revoked";
+  revokedAt?: string;
+  /** "auto" = earned by completing every topic of the subject; "admin" = issued manually (demo). */
+  source: "auto" | "admin";
 }
 
 export type NotificationTarget =
@@ -325,7 +348,7 @@ export type NotificationTarget =
   | { kind: "test"; id: string }
   | { kind: "result"; id: string; attemptId?: string }
   | { kind: "exam"; id: string }
-  | { kind: "certificate" }
+  | { kind: "certificate"; id?: string }
   | { kind: "payment" }
   | { kind: "none" };
 

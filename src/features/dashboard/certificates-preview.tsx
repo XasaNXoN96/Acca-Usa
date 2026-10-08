@@ -24,7 +24,9 @@ export async function CertificatesPreview({ items }: { items: Certificate[] }) {
               <span className="min-w-0 flex-1 space-y-1.5">
                 <span className="line-clamp-2 block text-sm font-semibold">{cert.title}</span>
                 {cert.status === "earned" ? (
-                  <Badge variant="success">{t("earned")}</Badge>
+                  <Link href={routes.certificate(cert.id)} className="inline-flex min-h-8 items-center"><Badge variant="success">{t("earned")}</Badge></Link>
+                ) : cert.status === "revoked" ? (
+                  <Badge variant="destructive">{t("revoked")}</Badge>
                 ) : (
                   <span className="flex items-center gap-2">
                     <Progress value={cert.progress} tone="navy" label={`${cert.title} ${cert.progress}%`} className="h-1.5 flex-1" />

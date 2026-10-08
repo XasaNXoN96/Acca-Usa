@@ -34,6 +34,7 @@ export const routes = {
   testResult: (id: string, attemptId?: string) =>
     `/test/${encodeURIComponent(id)}/result${attemptId ? `?attempt=${encodeURIComponent(attemptId)}` : ""}`,
   exams: "/exams",
+  certificate: (id: string) => `/certificates/${encodeURIComponent(id)}`,
   progress: "/progress",
   ranking: "/ranking",
   certificates: "/certificates",
@@ -52,6 +53,7 @@ export const routes = {
       | "tests"
       | "exams"
       | "students"
+      | "certificates"
       | "payments"
       | "statistics"
       | "settings",
@@ -71,7 +73,7 @@ export function notificationHref(n: Pick<AppNotification, "target">): string | n
     case "exam":
       return routes.exams;
     case "certificate":
-      return routes.certificates;
+      return t.id ? routes.certificate(t.id) : routes.certificates;
     case "payment":
       return routes.payments;
     case "none":

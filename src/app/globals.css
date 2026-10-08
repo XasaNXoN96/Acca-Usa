@@ -381,3 +381,25 @@
     padding-bottom: 0;
   }
 }
+
+/* ---------- Certificate paper: always light (it is a printed document), independent of the dark theme ---------- */
+.certificate-paper {
+  --paper: #ffffff;
+  --paper-ink: #0f1d3a;
+  --paper-muted: #4b5a78;
+  --paper-line: #d8deea;
+  background: var(--paper);
+  color: var(--paper-ink);
+}
+.certificate-paper .paper-muted { color: var(--paper-muted); }
+.certificate-paper .paper-accent { color: #c8102e; }
+.certificate-paper .paper-line { border-color: var(--paper-line); }
+
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  #certificate-print, #certificate-print * { visibility: visible !important; }
+  #certificate-print { position: absolute; inset: 0; width: 100%; box-shadow: none !important; border-radius: 0 !important; }
+  .no-print { display: none !important; }
+}

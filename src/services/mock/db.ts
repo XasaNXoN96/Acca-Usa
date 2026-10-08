@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import type { AppNotification, Difficulty, Material, MaterialKind, PlatformSlug, Role, TestResult, Topic, UserStatus, Locale } from "@/types";
+import type { AppNotification, Difficulty, IssuedCertificate, Material, MaterialKind, PlatformSlug, Role, TestResult, Topic, UserStatus, Locale } from "@/types";
 import { platforms as seedPlatforms, subjects as seedSubjects, allTopics as seedTopics, materials as seedMaterials } from "@/data/mock/catalog";
 import { btQuestions, questionBank, testRecords } from "@/data/mock/assessments";
 import { DEMO_STUDENT_ID, notifications as seedNotifications, seedUsers } from "@/data/mock/people";
@@ -98,6 +98,8 @@ export interface Db {
   materialProgress: { userId: string; materialId: string; completedAt: string }[];
   /** userId -> last opened material (PostgreSQL later: User.lastMaterialId + lastMaterialAt). */
   lastMaterial: Map<string, { materialId: string; at: string }>;
+  certificates: IssuedCertificate[];
+  certificateSeq: number;
   attempts: AttemptRec[];
   notifications: Map<string, AppNotification[]>;
   activity: ActivityRec[];
@@ -105,6 +107,9 @@ export interface Db {
 }
 
 const g = globalThis as unknown as { __accaDb?: Db };
+
+/** AU-<year>-<6 digits> */
+export const certificateNumber = (d: Date, seq: number) => `AU-${d.getUTCFullYear()}-${String(seq).padStart(6, "0")}`;
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
 const ts = () => new Date().toISOString();
@@ -159,6 +164,8 @@ function seed(): Db {
     progress: new Map(),
     materialProgress: [],
     lastMaterial: new Map(),
+    certificates: [],
+    certificateSeq: 0,
     attempts: [],
     notifications: new Map(),
     activity: [],
@@ -176,6 +183,14 @@ function seed(): Db {
   set("fa-the-context-and-purpose-of-financial-reporting", 100, 300);
   set("fa-double-entry-bookkeeping", 30, 80);
   db.progress.set(DEMO_STUDENT_ID, p);
+
+  // One demo certificate issued by the administrator (the student has not completed BT, so it is NOT auto-earned).
+  db.certificateSeq = 1;
+  db.certificates.push({
+    id: "cert-demo-bt", number: certificateNumber(new Date(Date.now() - 90 * 86_400_000), 1), userId: DEMO_STUDENT_ID, studentName: "Demo Student",
+    platform: "acca", subjectSlug: "bt", subjectCode: "BT", subjectName: "Business and Technology", title: "ACCA BT — Business and Technology",
+    issuedAt: new Date(Date.now() - 90 * 86_400_000).toISOString(), status: "issued", source: "admin",
+  });
 
   db.notifications.set(DEMO_STUDENT_ID, seedNotifications.map((n) => ({ ...n })));
   db.activity.push(

@@ -1,7 +1,7 @@
 import type { Permission } from "@/lib/permissions";
 import type { EditableResource } from "@/lib/validators/admin";
 
-export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "payments"] as const;
+export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "certificates", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
 export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file";
@@ -30,6 +30,8 @@ export interface ResourceConfig {
   /** filter names (options are supplied by the server builder) */
   filters: string[];
   canCreate: boolean;
+  /** the "archive" action means something else here (certificates: revoke) — labels come from <resource>.labels.* */
+  customArchiveLabels?: boolean;
 }
 
 export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
@@ -96,6 +98,11 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
       { name: "role", kind: "select", required: true }, { name: "status", kind: "select", required: true },
       { name: "password", kind: "password" },
     ],
+  },
+  certificates: {
+    permission: "view_students", editPermission: "manage_students", canCreate: true, filters: ["platform", "subject", "status"], customArchiveLabels: true,
+    columns: ["number", "student", "platform", "subject", "issued", "status"],
+    fields: [{ name: "student", kind: "select", required: true }, { name: "subject", kind: "select", required: true }],
   },
   payments: { permission: "manage_payments", canCreate: false, filters: [], columns: ["student", "description", "amount", "status", "date"], fields: [] },
 };

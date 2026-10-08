@@ -26,6 +26,8 @@ export interface ResourceRow extends DataRow {
   /** filter name → value (matched against the selected filter option) */
   filter: Record<string, string>;
   file?: UploadedFile;
+  /** rows that can only be created / revoked, never edited (certificates) */
+  noEdit?: boolean;
   /** quick row actions (tests): duplicate, publish / unpublish */
   quick?: { duplicate?: boolean; publish?: "publish" | "unpublish" };
   /** optional read-only preview (server-rendered) shown in a dialog */
@@ -44,10 +46,16 @@ interface Props {
   addLabel: string | null;
   tableCaption: string;
   canEdit: boolean;
+  /** overrides for the archive / restore wording (certificates: revoke) */
+  labels?: { archive: string; restore: string; confirmTitle: string; confirmText: string; archivedBadge: string; archivedDone: string; restoredDone: string };
 }
 
-export function AdminResourceTable({ resource, columns, rows, fields, filters, addLabel, tableCaption, canEdit }: Props) {
-  const t = useTranslations("admin.table");
+export function AdminResourceTable({ resource, columns, rows, fields, filters, addLabel, tableCaption, canEdit, labels }: Props) {
+  const tBase = useTranslations("admin.table");
+  const overrides: Record<string, string | undefined> = labels
+    ? { archive: labels.archive, restore: labels.restore, confirmDeleteTitle: labels.confirmTitle, confirmDeleteText: labels.confirmText, archivedBadge: labels.archivedBadge, archivedDone: labels.archivedDone, restoredDone: labels.restoredDone }
+    : {};
+  const t = ((key: string, values?: Record<string, string | number>) => overrides[key] ?? (tBase as unknown as (k: string, v?: Record<string, string | number>) => string)(key, values)) as typeof tBase;
   const c = useTranslations("common");
   const v = useTranslations("admin.validation");
   const router = useRouter();
@@ -64,7 +72,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
     const q = query.trim().toLowerCase();
     return rows.filter(
       (r) =>
-        (showArchived || !r.archived || filterValues.status === "archived") &&
+        (showArchived || !r.archived || filterValues.status === "archived" || filterValues.status === "revoked") &&
         (q === "" || r.search.includes(q)) &&
         filters.every((f) => !filterValues[f.name] || r.filter[f.name] === filterValues[f.name]),
     );
@@ -126,7 +134,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
           <>
             {quickButtons(r)}
             {previewButton(r)}
-            <Button variant="ghost" size="icon" aria-label={`${c("edit")}: ${r.label}`} onClick={() => setEditing({ row: r })}><Pencil className="size-4" aria-hidden /></Button>
+            {r.noEdit ? null : <Button variant="ghost" size="icon" aria-label={`${c("edit")}: ${r.label}`} onClick={() => setEditing({ row: r })}><Pencil className="size-4" aria-hidden /></Button>}
             <Button variant="ghost" size="icon" aria-label={`${t("archive")}: ${r.label}`} onClick={() => setArchiving(r)}><Archive className="size-4 text-destructive" aria-hidden /></Button>
           </>
         );

@@ -1,7 +1,7 @@
 /**
  * DEMO DATA — fictional people, payments, notifications. None of this is real.
  */
-import type { AppNotification, Certificate, Exam, Locale, Payment, PlatformSlug, RankingEntry, Role, UserStatus } from "@/types";
+import type { AppNotification, Exam, Locale, Payment, PlatformSlug, RankingEntry, Role, UserStatus } from "@/types";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
 const daysFromNow = (d: number, hour = 9) => {
@@ -65,16 +65,12 @@ export const ranking: Omit<RankingEntry, "isCurrentUser">[] = [
   { rank: 8, userId: "u-s5", name: "Jasur Rahimov", points: 1210 },
 ];
 
-export const certificates: Certificate[] = [
-  { id: "c1", title: "ACCA Business and Technology (BT) — course completion", platform: "acca", status: "earned", issuedAt: "2026-06-12T00:00:00.000Z", progress: 100 },
-  { id: "c2", title: "ACCA Management Accounting (MA) — course completion", platform: "acca", status: "in_progress", progress: 42 },
-];
 
 export const notifications: AppNotification[] = [
   { id: "n1", code: "topic_unlocked", params: { topic: "Cost classification" }, createdAt: hoursAgo(2), read: false, target: { kind: "topic", id: "ma-cost-classification" } },
   { id: "n2", code: "result_ready", params: { test: "Introduction to management accounting — quiz" }, createdAt: hoursAgo(26), read: false, target: { kind: "result", id: "ma-introduction" } },
   { id: "n3", code: "exam_scheduled", params: { exam: "ACCA MA — Mock Exam 1" }, createdAt: hoursAgo(50), read: true, target: { kind: "exam", id: "ex-ma-1" } },
-  { id: "n4", code: "certificate_issued", params: { title: "BT" }, createdAt: hoursAgo(120), read: true, target: { kind: "certificate" } },
+  { id: "n4", code: "certificate_issued", params: { title: "BT" }, createdAt: hoursAgo(120), read: true, target: { kind: "certificate", id: "cert-demo-bt" } },
   { id: "n5", code: "payment_received", createdAt: hoursAgo(300), read: true, target: { kind: "payment" } },
   { id: "n6", code: "welcome", createdAt: hoursAgo(700), read: true, target: { kind: "none" } },
 ];

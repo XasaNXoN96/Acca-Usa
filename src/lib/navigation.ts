@@ -51,6 +51,7 @@ export const adminNav: NavItem[] = [
   { labelKey: "tests", href: routes.adminSection("tests"), icon: "tests", permission: "manage_tests" },
   { labelKey: "exams", href: routes.adminSection("exams"), icon: "exams", permission: "manage_tests" },
   { labelKey: "students", href: routes.adminSection("students"), icon: "students", permission: "view_students" },
+  { labelKey: "certificates", href: routes.adminSection("certificates"), icon: "certificates", permission: "view_students" },
   { labelKey: "payments", href: routes.adminSection("payments"), icon: "payments", permission: "manage_payments" },
   { labelKey: "statistics", href: routes.adminSection("statistics"), icon: "statistics", permission: "view_statistics" },
   { labelKey: "settings", href: routes.adminSection("settings"), icon: "settings", permission: "manage_settings" },
