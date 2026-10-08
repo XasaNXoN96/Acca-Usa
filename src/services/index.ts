@@ -6,6 +6,7 @@ import { authService, userService } from "./mock/auth-users";
 import { enrollmentService, materialService, platformService, searchService, subjectService, topicService } from "./mock/catalog";
 import { questionService, testResultService, testService } from "./mock/assessment";
 import { certificateService, examService, progressService, rankingService } from "./mock/learning";
+import { statsService } from "./mock/stats";
 
 /**
  * Composition root. Demo mode wires the in-memory demo data provider. Production mode will
@@ -34,6 +35,7 @@ export const services: Services = {
   certificates: certificateService,
   notifications: notificationService,
   dashboard: dashboardService,
+  stats: statsService,
   search: searchService,
 };
 

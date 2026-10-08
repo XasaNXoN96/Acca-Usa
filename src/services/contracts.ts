@@ -1,5 +1,7 @@
 import type {
   ActivityItem,
+  AdminStats,
+  StatsFilter,
   AnswerMap,
   AppNotification,
   AttemptDraft,
@@ -284,6 +286,11 @@ export interface NotificationService {
   markAllRead(userId: string): Promise<void>;
 }
 
+export interface StatsService {
+  /** Aggregates over the real service data (no invented numbers). Admin only — callers must authorise. */
+  getAdminStats(filter: StatsFilter): Promise<AdminStats>;
+}
+
 export interface DashboardService {
   getOverview(userId: string): Promise<DashboardOverview>;
 }
@@ -317,5 +324,6 @@ export interface Services {
   certificates: CertificateService;
   notifications: NotificationService;
   dashboard: DashboardService;
+  stats: StatsService;
   search: SearchService;
 }

@@ -272,6 +272,37 @@ export interface DashboardOverview {
   unreadNotifications: number;
 }
 
+/** Filters of the admin statistics page. `from` / `to` are ISO dates (YYYY-MM-DD), inclusive. */
+export interface StatsFilter {
+  platform?: PlatformSlug;
+  subjectSlug?: string;
+  from: string;
+  to: string;
+}
+
+export interface AdminStats {
+  filter: StatsFilter;
+  totals: {
+    students: number;
+    activeStudents: number;
+    subjects: number;
+    topics: number;
+    materials: number;
+    tests: number;
+    attempts: number;
+    /** null = no attempts in the selected range (nothing to average) */
+    passRate: number | null;
+    avgScore: number | null;
+    completedMaterials: number;
+  };
+  /** One bucket per day (short ranges) or month (long ranges), oldest first. */
+  activity: { key: string; label: string; activeStudents: number; attempts: number; completedMaterials: number }[];
+  activityBucket: "day" | "month";
+  testPerformance: { testId: string; title: string; subjectCode: string; attempts: number; avgScore: number; passRate: number }[];
+  subjectProgress: { subjectSlug: string; code: string; name: string; platform: PlatformSlug; students: number; avgProgress: number }[];
+  passFail: { passed: number; failed: number };
+}
+
 export interface RankingEntry {
   rank: number;
   userId: string;

@@ -1057,11 +1057,54 @@
     },
     "statistics": {
       "title": "Statistika",
-      "description": "Kelajakdagi analitikani ko‘rsatuvchi demo grafiklar.",
-      "signups": "Oylar bo‘yicha yangi talabalar",
-      "completion": "Platformalar bo‘yicha mavzularni tugatish",
-      "avgScore": "Testlarning o‘rtacha bali",
-      "revenue": "Daromad (demo)"
+      "description": "Ushbu demodagi ma’lumotlar (talabalar, yozilishlar, tugatilgan materiallar va test urinishlari) asosida hisoblangan o‘quv statistikasi. Bo‘sh davrlar uchun nol ko‘rsatiladi.",
+      "period": "Davr: {from} – {to}",
+      "filters": {
+        "title": "Statistika filtrlari",
+        "platform": "Platforma",
+        "subject": "Fan",
+        "range": "Davr",
+        "custom": "O‘z sanalarim",
+        "from": "Dan",
+        "to": "Gacha",
+        "apply": "Qo‘llash",
+        "all": "Hammasi",
+        "days": {
+          "7": "So‘nggi 7 kun",
+          "30": "So‘nggi 30 kun",
+          "90": "So‘nggi 90 kun",
+          "365": "So‘nggi 12 oy"
+        }
+      },
+      "cards": {
+        "students": "Talabalar",
+        "activeStudents": "Faol talabalar",
+        "subjects": "Fanlar",
+        "topics": "Mavzular",
+        "materials": "Materiallar",
+        "tests": "Testlar",
+        "attempts": "Test urinishlari",
+        "passRate": "O‘tganlar ulushi",
+        "avgScore": "O‘rtacha ball",
+        "completedMaterials": "Tugatilgan materiallar"
+      },
+      "charts": {
+        "activity": "Talabalar faolligi",
+        "activeStudentsN": "{count} ta faol talaba",
+        "activityCaption": "Davrlar bo‘yicha faol talabalar (eng ko‘pi: {max}). Jami o‘quv hodisalari: {events}.",
+        "passFail": "O‘tdi / o‘tmadi",
+        "passed": "O‘tdi",
+        "failed": "O‘tmadi",
+        "testPerformance": "Test natijalari",
+        "testRow": "{attempts} ta urinish · {pass}% o‘tdi",
+        "subjectProgress": "Fanlar bo‘yicha progress",
+        "studentsN": "{count} ta talaba"
+      },
+      "empty": {
+        "activity": "Bu davrda talabalar faolligi yo‘q.",
+        "attempts": "Bu davrda test urinishlari yo‘q.",
+        "subjects": "Bu tanlov uchun yozilgan talabalar yo‘q."
+      }
     },
     "settings": {
       "title": "Sozlamalar",

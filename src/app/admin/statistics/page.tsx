@@ -1,85 +1,98 @@
 import type { Metadata } from "next";
-import { getFormatter, getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Activity, BookOpen, CheckCircle2, ClipboardCheck, FileText, GraduationCap, Library, Percent, Target, Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { DemoBadge } from "@/components/ui/demo-badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { Progress, ProgressRing } from "@/components/ui/progress";
+import { StatCard } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/ui/states";
+import { ActivityChart, PassFailCard, SubjectProgressCard, TestPerformanceCard } from "@/features/admin/stats/stats-charts";
+import { StatsFilters, rangePresets } from "@/features/admin/stats/stats-filters";
+import { services } from "@/services";
 import { can } from "@/lib/permissions";
-import { platformTheme } from "@/lib/platform-theme";
+import { isPlatformSlug } from "@/lib/platform-theme";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
+import type { StatsFilter } from "@/types";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("admin.statistics"))("title") };
 }
 
-// DEMO numbers only — replaced by aggregate queries in the backend block.
-const signups = [18, 26, 31, 29, 44, 52];
-const months = [0, 1, 2, 3, 4, 5].map((m) => new Date(Date.UTC(2026, 4 + m, 1)));
-const completion = [
-  { slug: "acca", value: 62 },
-  { slug: "fia", value: 18 },
-] as const;
+type Search = Promise<Record<string, string | string[] | undefined>>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-export default async function StatisticsPage() {
-  const [t, s, f, session] = await Promise.all([
+/** Query → validated filter. Anything unexpected falls back to the default (last 30 days, everything). */
+function parseFilter(sp: Record<string, string | string[] | undefined>, platforms: string[], subjects: string[]): { filter: StatsFilter; preset: string } {
+  const today = new Date();
+  const platform = one(sp.platform);
+  const subject = one(sp.subject);
+  let preset = one(sp.range) ?? "30";
+  let from = one(sp.from);
+  let to = one(sp.to);
+  if (preset !== "custom" || !from || !ISO.test(from) || !to || !ISO.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)) || from > to) {
+    if (!(rangePresets as readonly string[]).includes(preset)) preset = "30";
+    const days = Number(preset);
+    to = iso(today);
+    from = iso(new Date(today.getTime() - (days - 1) * 86_400_000));
+    if (preset === "custom") preset = "30";
+  }
+  return {
+    preset,
+    filter: {
+      platform: platform && isPlatformSlug(platform) && platforms.includes(platform) ? platform : undefined,
+      subjectSlug: subject && subjects.includes(subject) ? subject : undefined,
+      from: from!,
+      to: to!,
+    },
+  };
+}
+
+export default async function StatisticsPage({ searchParams }: { searchParams: Search }) {
+  const [t, s, session, sp, platforms, subjects] = await Promise.all([
     getTranslations("admin.statistics"),
     getTranslations("states"),
-    getFormatter(),
     requireSession(STAFF_ROLES),
+    searchParams,
+    services.platforms.list(),
+    services.subjects.list(),
   ]);
   if (!can(session.user.role, "view_statistics")) return <ErrorState title={s("forbiddenTitle")} description={s("forbiddenText")} />;
-  const max = Math.max(...signups);
+
+  const { filter, preset } = parseFilter(sp, platforms.map((p) => p.slug), subjects.map((x) => x.slug));
+  const stats = await services.stats.getAdminStats(filter);
+  const c = stats.totals;
+  const pct = (v: number | null) => (v === null ? "—" : `${v}%`);
 
   return (
     <>
       <PageHeader title={t("title")} description={t("description")} actions={<DemoBadge />} />
+      <StatsFilters
+        filter={filter}
+        preset={preset}
+        platforms={platforms.map((p) => ({ value: p.slug, label: p.name }))}
+        subjects={subjects.map((x) => ({ value: x.slug, label: `${x.code} — ${x.name}`, platform: x.platform }))}
+      />
+      <p className="type-caption text-muted-foreground" data-stats-range>{t("period", { from: filter.from, to: filter.to })}</p>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5" data-stats-cards>
+        <StatCard tone="primary" icon={<Users aria-hidden />} value={c.students} label={t("cards.students")} />
+        <StatCard tone="fia" icon={<Activity aria-hidden />} value={c.activeStudents} label={t("cards.activeStudents")} />
+        <StatCard tone="azure" icon={<Library aria-hidden />} value={c.subjects} label={t("cards.subjects")} />
+        <StatCard tone="navy" icon={<GraduationCap aria-hidden />} value={c.topics} label={t("cards.topics")} />
+        <StatCard tone="warning" icon={<FileText aria-hidden />} value={c.materials} label={t("cards.materials")} />
+        <StatCard tone="primary" icon={<ClipboardCheck aria-hidden />} value={c.tests} label={t("cards.tests")} />
+        <StatCard tone="azure" icon={<BookOpen aria-hidden />} value={c.attempts} label={t("cards.attempts")} />
+        <StatCard tone="fia" icon={<Percent aria-hidden />} value={pct(c.passRate)} label={t("cards.passRate")} />
+        <StatCard tone="warning" icon={<Target aria-hidden />} value={pct(c.avgScore)} label={t("cards.avgScore")} />
+        <StatCard tone="navy" icon={<CheckCircle2 aria-hidden />} value={c.completedMaterials} label={t("cards.completedMaterials")} />
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle as="h2">{t("signups")}</CardTitle></CardHeader>
-          <CardContent>
-            <figure>
-              <div role="img" aria-label={t("signups") + ": " + signups.join(", ")} className="flex h-56 items-end gap-3 border-b border-border px-2 pb-0 sm:gap-5">
-                {signups.map((v, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1" style={{ height: "100%" }}>
-                    <span className="type-caption font-semibold tabular-nums">{v}</span>
-                    <div className="w-full max-w-12 rounded-t-md bg-navy" style={{ height: `${(v / max) * 80}%` }} />
-                  </div>
-                ))}
-              </div>
-              <ul className="type-caption mt-2 grid grid-cols-6 gap-3 text-center text-muted-foreground sm:gap-5" aria-hidden>
-                {months.map((m) => (
-                  <li key={m.toISOString()}>{f.dateTime(m, { month: "short", timeZone: "UTC" })}</li>
-                ))}
-              </ul>
-              <figcaption className="sr-only">{t("signups")}</figcaption>
-            </figure>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle as="h2">{t("avgScore")}</CardTitle></CardHeader>
-          <CardContent className="grid place-items-center py-4">
-            <ProgressRing value={74} size={150} stroke={14} label={`${t("avgScore")} 74%`}>
-              <span className="text-3xl font-extrabold">74%</span>
-            </ProgressRing>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader><CardTitle as="h2">{t("completion")}</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {completion.map((c) => (
-              <div key={c.slug} className="space-y-1.5">
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold uppercase">{c.slug}</span>
-                  <span className="tabular-nums">{c.value}%</span>
-                </div>
-                <Progress value={c.value} tone={platformTheme[c.slug].tone} label={`${c.slug.toUpperCase()} ${c.value}%`} className="h-2.5" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <ActivityChart stats={stats} />
+        <PassFailCard stats={stats} />
+        <TestPerformanceCard stats={stats} />
+        <SubjectProgressCard stats={stats} />
       </div>
     </>
   );

@@ -1057,11 +1057,54 @@
     },
     "statistics": {
       "title": "Statistics",
-      "description": "Demo charts showing how analytics will look.",
-      "signups": "New students per month",
-      "completion": "Topic completion by platform",
-      "avgScore": "Average test score",
-      "revenue": "Revenue (demo)"
+      "description": "Learning statistics calculated from the data in this demo (students, enrolments, material completions and test attempts). Empty periods show zero.",
+      "period": "Period: {from} – {to}",
+      "filters": {
+        "title": "Statistics filters",
+        "platform": "Platform",
+        "subject": "Subject",
+        "range": "Period",
+        "custom": "Custom dates",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply",
+        "all": "All",
+        "days": {
+          "7": "Last 7 days",
+          "30": "Last 30 days",
+          "90": "Last 90 days",
+          "365": "Last 12 months"
+        }
+      },
+      "cards": {
+        "students": "Students",
+        "activeStudents": "Active students",
+        "subjects": "Subjects",
+        "topics": "Topics",
+        "materials": "Materials",
+        "tests": "Tests",
+        "attempts": "Test attempts",
+        "passRate": "Pass rate",
+        "avgScore": "Average score",
+        "completedMaterials": "Completed materials"
+      },
+      "charts": {
+        "activity": "Student activity",
+        "activeStudentsN": "{count, plural, one {# active student} other {# active students}}",
+        "activityCaption": "Active students per period (highest: {max}). {events} learning events in total.",
+        "passFail": "Pass / fail",
+        "passed": "Passed",
+        "failed": "Not passed",
+        "testPerformance": "Test performance",
+        "testRow": "{attempts, plural, one {# attempt} other {# attempts}} · {pass}% passed",
+        "subjectProgress": "Subject progress",
+        "studentsN": "{count, plural, one {# student} other {# students}}"
+      },
+      "empty": {
+        "activity": "No student activity in this period.",
+        "attempts": "No test attempts in this period.",
+        "subjects": "No enrolled students for this selection."
+      }
     },
     "settings": {
       "title": "Settings",
