@@ -36,22 +36,18 @@ await step("NO materials, tests, answers or file URLs in the public HTML (BT and
   assert((await page.locator("video,audio,iframe,img[src*='/api/files']").count()) === 0, "media element on public page");
   for (const w of ["Materials", "Tests"]) assert((await page.getByRole("link", { name: w, exact: true }).count()) === 0, `"${w}" tab visible to the public`);
 });
-await step("accordion expands/collapses (mouse + keyboard) and shows only number/title/access", async () => {
-  const t = rows(page).first().locator("button").first();
-  assert((await t.getAttribute("aria-expanded")) === "false", "should start collapsed");
-  await t.click(); await page.waitForTimeout(350); assert((await t.getAttribute("aria-expanded")) === "true", "did not expand");
-  const panel = page.locator("[role=region][data-state=open]").first();
-  await panel.getByText("Sign in to open this topic.").waitFor();
-  firstTopicHref = await panel.getByRole("link").first().getAttribute("href");
-  assert((await panel.getByRole("link").count()) === 1, "panel should contain only the call-to-action");
-  await t.click(); await page.waitForTimeout(350); assert((await t.getAttribute("aria-expanded")) === "false", "did not collapse");
-  await t.focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(300); assert((await t.getAttribute("aria-expanded")) === "true", "Enter did not expand");
-  await t.click();
-});
-await step("clicking the CTA of a locked topic → /login?next=<topic url>", async () => {
-  assert(/^\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/.test(firstTopicHref), `href ${firstTopicHref}`);
+await step("locked topic click opens dialog (Sign in / Cancel); Cancel closes it", async () => {
   const t = rows(page).first().locator("button").first(); await t.click();
-  await page.locator("[role=region][data-state=open]").first().getByRole("link").first().click();
+  const d = page.getByRole("dialog"); await d.getByText("To study the materials, sign in to your account.").waitFor();
+  assert((await d.getByRole("link", { name: "Sign in" }).count()) === 1, "no Sign in link");
+  firstTopicHref = await d.getByRole("link", { name: "Sign in" }).getAttribute("href");
+  await d.getByRole("button", { name: "Cancel" }).click(); await d.waitFor({ state: "detached" });
+  assert(page.url().includes("/subject/bt"), "Cancel navigated away");
+});
+await step("Sign in in the dialog → /login?next=<topic url>", async () => {
+  assert(/^\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/.test(firstTopicHref), `href ${firstTopicHref}`);
+  await rows(page).first().locator("button").first().click();
+  await page.getByRole("dialog").getByRole("link", { name: "Sign in" }).click();
   await page.waitForURL(/\/login\?next=%2Fsubject%2Fbt%2Ftopic%2F/);
 });
 await step("anonymous direct topic URL and legacy /topic/<id> also go to login with next", async () => {
@@ -112,8 +108,8 @@ await step("signed-in user WITHOUT access sees locked outline with an Enroll CTA
   await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard/);
   await p.goto("/subject/bt"); await p.getByRole("heading", { name: "Course Topics" }).waitFor();
   await rows(p).first().locator("button").first().click();
-  await p.locator("[role=region][data-state=open]").first().getByText("Enroll in ACCA to unlock this topic.").waitFor();
-  await p.locator("[role=region][data-state=open]").first().getByRole("link").first().click(); await p.waitForURL(/\/platform\/acca/);
+  await p.getByRole("dialog").getByText("To study the materials, enroll in ACCA.").waitFor();
+  await p.getByRole("dialog").getByRole("link").first().click(); await p.waitForURL(/\/platform\/acca/);
   await p.goto("/subject/bt/topic/bt-business-environment"); await p.waitForURL(/\/platform\/acca/); await c.close();
 });
 await step("register keeps ?next (new account returns to the chosen topic route)", async () => {
@@ -131,10 +127,11 @@ await step("responsive: public subject page + open accordion at 360/390/768/1024
     await p.goto("/subject/ma"); await p.getByRole("heading", { name: "Course Topics" }).waitFor();
     const over = () => p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert((await over()) <= 0, `${w}: overflow`);
-    const t = rows(p).nth(1).locator("button").first(); await t.click(); await p.waitForTimeout(350);
-    assert((await over()) <= 0, `${w}: overflow with item open`);
+    const t = rows(p).nth(1).locator("button").first();
     const box = await t.boundingBox(); assert(box.height >= 44, `${w}: row too small (${box.height})`);
-    const vis = await p.locator("[role=region][data-state=open]").first().getByRole("link").first().boundingBox(); assert(vis && vis.x >= 0 && vis.x + vis.width <= w, `${w}: CTA outside viewport`);
+    await t.click(); await p.waitForTimeout(350);
+    assert((await over()) <= 0, `${w}: overflow with dialog open`);
+    const vis = await p.getByRole("dialog").getByRole("link").first().boundingBox(); assert(vis && vis.x >= 0 && vis.x + vis.width <= w, `${w}: CTA outside viewport`);
     await c.close();
   }
 });

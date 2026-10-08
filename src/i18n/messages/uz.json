@@ -1092,6 +1092,9 @@
     "enrollCta": "{platform} ga yozilish",
     "noTopics": "Mavzular tez orada qo‘shiladi.",
     "notice": "Faqat mavzular ro‘yxati ommaga ochiq. Darslar, materiallar va testlar kirish va platformaga yozilgandan keyin ochiladi.",
-    "topicsBadge": "{count} ta mavzu"
+    "topicsBadge": "{count} ta mavzu",
+    "dialogTitle": "Mavzu yopiq",
+    "dialogLogin": "Materiallarni o‘rganish uchun hisobingizga kiring.",
+    "dialogEnroll": "Materiallarni o‘rganish uchun {platform} ga yoziling."
   }
 }

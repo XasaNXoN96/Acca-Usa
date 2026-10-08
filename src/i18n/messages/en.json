@@ -1092,6 +1092,9 @@
     "enrollCta": "Enroll in {platform}",
     "noTopics": "Topics will be added soon.",
     "notice": "Only the topic list is public. Lessons, materials and tests are available after you sign in and enroll.",
-    "topicsBadge": "{count, plural, one {# Topic} other {# Topics}}"
+    "topicsBadge": "{count, plural, one {# Topic} other {# Topics}}",
+    "dialogTitle": "This topic is locked",
+    "dialogLogin": "To study the materials, sign in to your account.",
+    "dialogEnroll": "To study the materials, enroll in {platform}."
   }
 }
