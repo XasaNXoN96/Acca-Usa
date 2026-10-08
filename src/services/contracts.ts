@@ -204,10 +204,16 @@ export interface QuestionService {
 
 export interface TestInput {
   title: string;
+  description: string;
   subjectSlug: string;
   topicId?: string;
   durationMinutes: number;
   passMark: number;
+  /** 0 = unlimited */
+  attemptsAllowed: number;
+  randomizeQuestions: boolean;
+  randomizeAnswers: boolean;
+  /** Order = order of the test (unless randomised per attempt). */
   questionIds: string[];
   published: boolean;
 }
@@ -224,7 +230,7 @@ export interface TestService {
   listPublished(userId: string): Promise<TestSummary[]>;
   getSummary(testId: string): Promise<TestSummary | null>;
   /** Questions WITHOUT answers/explanations. Null if unpublished/archived. */
-  getForAttempt(testId: string): Promise<TestForAttempt | null>;
+  getForAttempt(testId: string, userId?: string): Promise<TestForAttempt | null>;
   getActiveAttempt(userId: string, testId: string): Promise<AttemptStart | null>;
   startAttempt(userId: string, testId: string): Promise<ServiceResult<AttemptStart>>;
   saveDraft(userId: string, draft: AttemptDraft): Promise<ServiceResult<{ savedAt: string }>>;
@@ -237,6 +243,10 @@ export interface TestService {
   create(input: TestInput): Promise<ServiceResult<{ id: string }>>;
   update(id: string, input: TestInput): Promise<ServiceResult>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
+  /** Publish needs at least one published question; unpublish returns the test to draft. */
+  setPublished(id: string, published: boolean): Promise<ServiceResult>;
+  /** Draft copy ("<title> (copy)") with the same settings and question order. */
+  duplicate(id: string): Promise<ServiceResult<{ id: string }>>;
 }
 
 export interface ExamService {

@@ -6,11 +6,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { PasswordField, SelectField, TextField, TextareaField } from "@/components/ui/form-fields";
 import { FileField } from "@/features/storage/file-field";
+import { QuestionPicker } from "./question-picker";
 import type { UploadedFile } from "@/features/storage/upload-client";
 import { cn } from "@/lib/utils";
 import type { FieldDef } from "./resources";
 
-export interface Option { value: string; label: string; group?: string }
+export interface Option {
+  value: string;
+  label: string;
+  group?: string;
+  /** extra data for the test-builder question picker */
+  meta?: { text: string; points: number; difficulty: string; topic?: string; tags?: string };
+  id?: string;
+}
 export interface ResolvedField extends FieldDef { label: string; hint?: string; options?: Option[] }
 
 interface Props {
@@ -30,7 +38,7 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
   const childrenOf = (name: string) => fields.filter((f) => f.dependsOn === name);
   const parentRegistration = (f: ResolvedField) =>
     form.register(f.name, {
-      onChange: () => childrenOf(f.name).forEach((c) => form.setValue(c.name, c.kind === "multiselect" ? [] : "", { shouldDirty: true })),
+      onChange: () => childrenOf(f.name).forEach((c) => form.setValue(c.name, c.kind === "multiselect" || c.kind === "questionPicker" ? [] : "", { shouldDirty: true })),
     });
 
   return (
@@ -76,6 +84,11 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
             return (
               <Controller key={f.name} control={form.control} name={f.name}
                 render={({ field }) => <MultiSelect {...common} options={options} value={(field.value as string[]) ?? []} onChange={field.onChange} />} />
+            );
+          case "questionPicker":
+            return (
+              <Controller key={f.name} control={form.control} name={f.name}
+                render={({ field }) => <QuestionPicker {...common} options={options} value={(field.value as string[]) ?? []} onChange={field.onChange} />} />
             );
           case "file":
             return (

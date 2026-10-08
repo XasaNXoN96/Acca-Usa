@@ -43,8 +43,8 @@ await step("search by text and by tag; filters platform / subject / topic / diff
   const pick = async (id, label) => { await a.locator(id).selectOption({ label }); };
   await pick("#flt-platform", "ACCA"); await rowFor(TEXT).waitFor();
   await pick("#flt-subject", "BT — Business and Technology"); await rowFor(TEXT).waitFor();
-  await pick("#flt-difficulty", "Hard"); await a.getByText("No records match your search.").waitFor(); await pick("#flt-difficulty", "Medium"); await rowFor(TEXT).waitFor();
-  await pick("#flt-status", "Draft"); await a.getByText("No records match your search.").waitFor(); await pick("#flt-status", "Published"); await rowFor(TEXT).waitFor();
+  await pick("#flt-difficulty", "Hard"); await rowFor(TEXT).waitFor({ state: "detached" }); await pick("#flt-difficulty", "Medium"); await rowFor(TEXT).waitFor();
+  await pick("#flt-status", "Draft"); await rowFor(TEXT).waitFor({ state: "detached" }); await pick("#flt-status", "Published"); await rowFor(TEXT).waitFor();
   await a.locator("#flt-topic").selectOption({ index: 1 }); // some topic filter value works without error
   await a.locator("#flt-topic").selectOption({ label: "BT · Business organisations and their stakeholders" }); await rowFor(TEXT).waitFor();
 });

@@ -68,6 +68,26 @@ export interface TestRecord {
   questionIds: string[];
 }
 
+/** BT topic-1 questions (ACCA → BT → Business organisations and their stakeholders). */
+export const btQuestions: (QuestionRecord & { topicId: string; difficulty: "easy" | "medium" | "hard"; tags: string[] })[] = [
+  { ...q("q-bt-stakeholder", "Which best describes a stakeholder of an organisation?", ["Only the owners of the company", "Any individual or group affected by, or able to affect, the organisation", "Only the employees", "Only customers who pay invoices"], "b",
+    "A stakeholder is anyone with an interest in, or influence over, the organisation — not only its owners."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "easy", tags: ["stakeholders"] },
+  { ...q("q-bt-shareholder", "A shareholder is a stakeholder who:", ["Lends money under a loan agreement", "Owns shares in the company", "Supplies goods on credit", "Regulates the industry"], "b",
+    "Shareholders own part of the company through the shares they hold."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "easy", tags: ["stakeholders", "ownership"] },
+  { ...q("q-bt-internal", "Which of these is an INTERNAL stakeholder?", ["Employees", "Competitors", "Government", "Local community"], "a",
+    "Employees and managers work inside the organisation; the others are external."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "easy", tags: ["stakeholders"] },
+  { ...q("q-bt-profit", "The main objective of a typical for-profit business is to:", ["Maximise long-term shareholder wealth", "Avoid paying tax", "Employ as many people as possible", "Minimise sales"], "a",
+    "For-profit organisations are usually run to generate returns for their owners over the long term."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "medium", tags: ["objectives"] },
+  { ...q("q-bt-nfp", "Which statement about a not-for-profit organisation is correct?", ["It must never make a surplus", "Its surplus is reinvested in its mission rather than distributed to owners", "It has no stakeholders", "It cannot employ staff"], "b",
+    "Not-for-profit bodies may generate surpluses but reinvest them in their purpose."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "medium", tags: ["organisation types"] },
+  { ...q("q-bt-mendelow", "In Mendelow's matrix, a stakeholder with HIGH power and HIGH interest should be:", ["Monitored only", "Kept informed", "Kept satisfied", "Managed closely"], "d",
+    "High power + high interest = key players who must be managed closely."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "medium", tags: ["Mendelow"] },
+  { ...q("q-bt-conflict", "Shareholders want higher dividends while employees want higher pay. This is an example of:", ["Stakeholder conflict", "Market failure", "Economies of scale", "Vertical integration"], "a",
+    "Different stakeholders often have objectives that cannot all be met at once."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "hard", tags: ["stakeholders", "conflict"] },
+  { ...q("q-bt-csr", "Corporate social responsibility mainly recognises that organisations:", ["Only owe duties to shareholders", "Have wider responsibilities to society and the environment", "Should avoid reporting", "Must be charities"], "b",
+    "CSR is the idea that organisations should consider their wider impact on society."), topicId: "bt-business-organisations-and-their-stakeholders", difficulty: "hard", tags: ["CSR"] },
+];
+
 export const testRecords: TestRecord[] = [
   {
     id: "ma-cost-classification",
@@ -86,5 +106,14 @@ export const testRecords: TestRecord[] = [
     durationMinutes: 10,
     passMark: 60,
     questionIds: questionBank.slice(10).map((x) => x.id),
+  },
+  {
+    id: "bt-stakeholders-test",
+    subjectSlug: "bt",
+    topicId: "bt-business-organisations-and-their-stakeholders",
+    title: "Stakeholders — topic test",
+    durationMinutes: 10,
+    passMark: 60,
+    questionIds: btQuestions.map((x) => x.id),
   },
 ];

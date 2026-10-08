@@ -4,7 +4,7 @@ import type { EditableResource } from "@/lib/validators/admin";
 export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
-export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "checkbox" | "password" | "file";
+export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file";
 
 export interface FieldDef {
   name: string;
@@ -75,13 +75,15 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
     ],
   },
   tests: {
-    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["subject", "status"],
-    columns: ["title", "subject", "questions", "duration", "passMark", "status"],
+    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["platform", "subject", "status"],
+    columns: ["title", "subject", "questions", "points", "duration", "passMark", "attempts", "status"],
     fields: [
-      { name: "title", kind: "text", required: true }, { name: "subject", kind: "select", required: true },
-      { name: "topic", kind: "select", dependsOn: "subject" },
+      { name: "title", kind: "text", required: true }, { name: "description", kind: "textarea" },
+      { name: "subject", kind: "select", required: true }, { name: "topic", kind: "select", dependsOn: "subject" },
       { name: "durationMinutes", kind: "number", required: true }, { name: "passMark", kind: "number", required: true },
-      { name: "questionIds", kind: "multiselect", required: true, dependsOn: "subject" },
+      { name: "attemptsAllowed", kind: "number", required: true, default: "0" },
+      { name: "randomizeQuestions", kind: "checkbox" }, { name: "randomizeAnswers", kind: "checkbox" },
+      { name: "questionIds", kind: "questionPicker", required: true, dependsOn: "subject" },
       { name: "published", kind: "checkbox" },
     ],
   },

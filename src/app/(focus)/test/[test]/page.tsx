@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function TestPage({ params }: { params: Params }) {
   const { test: testId } = await params;
   const session = await requireSession();
-  const test = await services.tests.getForAttempt(testId);
+  const test = await services.tests.getForAttempt(testId, session.user.id);
   if (!test) notFound();
 
   const subject = await services.subjects.getBySlug(test.subjectSlug);

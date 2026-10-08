@@ -93,8 +93,10 @@ export async function saveResourceAction(resource: string, id: string | null, ra
     }
     case "tests": {
       const input = {
-        title: String(d.title), subjectSlug: String(d.subject), topicId: d.topic ? String(d.topic) : undefined,
-        durationMinutes: Number(d.durationMinutes), passMark: Number(d.passMark), questionIds: d.questionIds as string[], published: Boolean(d.published),
+        title: String(d.title), description: String(d.description ?? ""), subjectSlug: String(d.subject), topicId: d.topic ? String(d.topic) : undefined,
+        durationMinutes: Number(d.durationMinutes), passMark: Number(d.passMark), attemptsAllowed: Number(d.attemptsAllowed),
+        randomizeQuestions: Boolean(d.randomizeQuestions), randomizeAnswers: Boolean(d.randomizeAnswers),
+        questionIds: d.questionIds as string[], published: Boolean(d.published),
       };
       res = id ? await services.tests.update(id, input) : await services.tests.create(input);
       break;
@@ -135,5 +137,24 @@ export async function setArchivedAction(resource: string, id: string, archived: 
   }
   if (!res.ok) return fail(res);
   refresh(resource);
+  return { ok: true };
+}
+
+/** Quick actions on tests: publish / unpublish and duplicate. Same authorisation as editing a test. */
+export async function setTestPublishedAction(id: string, published: boolean): Promise<AdminActionResult> {
+  const session = await authorize("tests");
+  if (!session || typeof id !== "string" || id.length > 160) return { ok: false, code: "FORBIDDEN" };
+  const res = await services.tests.setPublished(id, published === true);
+  if (!res.ok) return fail(res);
+  refresh("tests");
+  return { ok: true };
+}
+
+export async function duplicateTestAction(id: string): Promise<AdminActionResult> {
+  const session = await authorize("tests");
+  if (!session || typeof id !== "string" || id.length > 160) return { ok: false, code: "FORBIDDEN" };
+  const res = await services.tests.duplicate(id);
+  if (!res.ok) return fail(res);
+  refresh("tests");
   return { ok: true };
 }

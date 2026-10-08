@@ -221,8 +221,10 @@ await step("admin: create test with questions, DRAFT (invisible to students)", a
   await admin.locator("#f-title").fill(testTitle);
   await admin.locator("#f-subject").selectOption({ label: `${subj.code} — ${subj.name}` });
   await admin.locator("#f-durationMinutes").fill("10"); await admin.locator("#f-passMark").fill("50");
-  await admin.getByRole("group", { name: "Questions" }).getByText(/smoke test\?/).click();
-  await admin.getByRole("group", { name: "Questions" }).getByText(/smoke question two/).click();
+  await admin.getByRole("button", { name: "Add questions" }).click();
+  const picker = admin.getByRole("dialog").filter({ hasText: "Published questions of the selected subject" });
+  await picker.getByText(/smoke test\?/).click(); await picker.getByText(/smoke question two/).click();
+  await picker.getByRole("button", { name: /Add selected/ }).click();
   await admin.getByRole("button", { name: "Save", exact: true }).click();
   await admin.getByText("Saved.").waitFor();
 });

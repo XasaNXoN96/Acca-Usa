@@ -92,15 +92,38 @@ const activeQuestions = (db: Db, t: TestRec): QuestionRec[] =>
 function summary(db: Db, t: TestRec, userId?: string): TestSummary {
   const qs = activeQuestions(db, t);
   let bestScore: number | undefined;
+  let attemptsUsed: number | undefined;
   if (userId) {
-    const scores = db.attempts.filter((a) => a.userId === userId && a.testId === t.id && a.result).map((a) => a.result!.scorePercent);
-    if (scores.length) bestScore = Math.max(...scores);
+    const done = db.attempts.filter((a) => a.userId === userId && a.testId === t.id && a.result);
+    attemptsUsed = done.length;
+    if (done.length) bestScore = Math.max(...done.map((a) => a.result!.scorePercent));
   }
   return {
-    id: t.id, subjectSlug: t.subjectSlug, topicId: t.topicId, title: t.title, questionCount: qs.length,
+    id: t.id, subjectSlug: t.subjectSlug, topicId: t.topicId, title: t.title, description: t.description, questionCount: qs.length,
     totalPoints: qs.reduce((a, q) => a + q.points, 0), durationMinutes: t.durationMinutes, passMark: t.passMark,
-    published: t.published, bestScore, archived: !!t.deletedAt,
+    attemptsAllowed: t.attemptsAllowed, attemptsUsed, randomizeQuestions: t.randomizeQuestions, randomizeAnswers: t.randomizeAnswers,
+    published: t.published, publishedAt: t.publishedAt, bestScore, archived: !!t.deletedAt,
   };
+}
+
+/** Deterministic per-attempt shuffle (mulberry32 seeded from the attempt id) so a page reload never reorders the test. */
+function seededShuffle<T>(items: T[], seed: string): T[] {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) { h = Math.imul(h ^ seed.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0;
+  const rand = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [out[i], out[j]] = [out[j]!, out[i]!]; }
+  return out;
+}
+
+/** Questions in the order this attempt shows them (test order, or shuffled when randomisation is on); options likewise. */
+function questionsFor(db: Db, t: TestRec, attemptId?: string): QuestionRec[] {
+  let qs = activeQuestions(db, t);
+  if (!attemptId) return qs;
+  if (t.randomizeQuestions) qs = seededShuffle(qs, `${attemptId}:q`);
+  if (t.randomizeAnswers) qs = qs.map((q) => ({ ...q, options: seededShuffle(q.options, `${attemptId}:${q.id}`) }));
+  return qs;
 }
 
 function studentVisible(db: Db, t: TestRec | undefined): t is TestRec {
@@ -128,7 +151,7 @@ function cleanAnswers(db: Db, t: TestRec, answers: Record<string, string>): Reco
 
 /** Scores an attempt and freezes a snapshot (questions, answers, explanations) so later edits never rewrite history. */
 function finalize(db: Db, a: AttemptRec, t: TestRec): TestResult {
-  const qs = activeQuestions(db, t);
+  const qs = questionsFor(db, t, a.id);
   const subject = db.subjects.find((s) => s.slug === t.subjectSlug);
   const before = subjectProgress(db, a.userId, t.subjectSlug).percent;
   const review: ReviewItem[] = qs.map((q) => {
@@ -198,14 +221,15 @@ export const testService: TestService = {
     const t = db.tests.find((x) => x.id === testId);
     return studentVisible(db, t) ? summary(db, t) : null;
   },
-  async getForAttempt(testId) {
+  async getForAttempt(testId, userId) {
     const db = getDb();
     const t = db.tests.find((x) => x.id === testId);
     if (!studentVisible(db, t)) return null;
+    const active = userId ? inProgress(db, userId, testId) : undefined;
     return {
-      ...summary(db, t),
+      ...summary(db, t, userId),
       // Correct answers and explanations are deliberately omitted here.
-      questions: activeQuestions(db, t).map((q) => ({ id: q.id, text: q.text, options: q.options, points: q.points })),
+      questions: questionsFor(db, t, active?.id).map((q) => ({ id: q.id, text: q.text, options: q.options, points: q.points, imageId: q.imageId })),
     };
   },
   async getActiveAttempt(userId, testId) {
@@ -219,6 +243,9 @@ export const testService: TestService = {
     if (!studentVisible(db, t)) return { ok: false, code: "NOT_FOUND" };
     const existing = expireIfNeeded(db, inProgress(db, userId, testId));
     if (existing && existing.status === "IN_PROGRESS") return { ok: true, data: toStart(existing) };
+    if (t.attemptsAllowed > 0 && db.attempts.filter((x) => x.userId === userId && x.testId === testId && x.status === "SUBMITTED").length >= t.attemptsAllowed) {
+      return { ok: false, code: "ATTEMPTS_EXHAUSTED" };
+    }
     const startedAt = new Date();
     const a: AttemptRec = {
       id: newId("att"), userId, testId, status: "IN_PROGRESS", startedAt: startedAt.toISOString(),
@@ -277,9 +304,12 @@ export const testService: TestService = {
     const db = getDb();
     const bad = checkTest(db, input);
     if (bad) return bad;
+    const now = nowIso();
     const rec: TestRec = {
-      id: newId("test"), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, title: input.title.trim(),
-      durationMinutes: input.durationMinutes, passMark: input.passMark, questionIds: input.questionIds, published: input.published, createdAt: nowIso(),
+      id: newId("test"), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, title: input.title.trim(), description: input.description.trim(),
+      durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
+      randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers, questionIds: input.questionIds,
+      published: input.published, publishedAt: input.published ? now : undefined, createdAt: now,
     };
     db.tests.push(rec);
     return { ok: true, data: { id: rec.id } };
@@ -291,8 +321,10 @@ export const testService: TestService = {
     const bad = checkTest(db, input);
     if (bad) return bad;
     Object.assign(rec, {
-      title: input.title.trim(), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined,
-      durationMinutes: input.durationMinutes, passMark: input.passMark, questionIds: input.questionIds, published: input.published,
+      title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined,
+      durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
+      randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers, questionIds: input.questionIds,
+      published: input.published, publishedAt: input.published ? (rec.publishedAt ?? nowIso()) : rec.publishedAt,
     });
     return { ok: true, data: undefined };
   },
@@ -301,6 +333,23 @@ export const testService: TestService = {
     if (!rec) return { ok: false, code: "NOT_FOUND" };
     rec.deletedAt = archived ? nowIso() : undefined;
     return { ok: true, data: undefined };
+  },
+  async setPublished(id, published) {
+    const db = getDb();
+    const rec = db.tests.find((t) => t.id === id && !t.deletedAt);
+    if (!rec) return { ok: false, code: "NOT_FOUND" };
+    if (published && activeQuestions(db, rec).length === 0) return { ok: false, code: "QUESTIONS_REQUIRED", field: "questionIds" };
+    rec.published = published;
+    if (published) rec.publishedAt = nowIso();
+    return { ok: true, data: undefined };
+  },
+  async duplicate(id) {
+    const db = getDb();
+    const rec = db.tests.find((t) => t.id === id);
+    if (!rec) return { ok: false, code: "NOT_FOUND" };
+    const copy: TestRec = { ...rec, id: newId("test"), title: `${rec.title} (copy)`.slice(0, 160), questionIds: [...rec.questionIds], published: false, publishedAt: undefined, deletedAt: undefined, createdAt: nowIso() };
+    db.tests.push(copy);
+    return { ok: true, data: { id: copy.id } };
   },
 };
 
@@ -312,7 +361,7 @@ function checkTest(db: Db, input: TestInput): Extract<ServiceResult, { ok: false
   }
   const unique = [...new Set(input.questionIds)];
   if (unique.length === 0) return { ok: false, code: "QUESTIONS_REQUIRED", field: "questionIds" };
-  const ok = unique.every((qid) => db.questions.some((q) => q.id === qid && !q.deletedAt && q.subjectSlug === input.subjectSlug));
+  const ok = unique.every((qid) => db.questions.some((q) => q.id === qid && !q.deletedAt && q.status === "published" && q.subjectSlug === input.subjectSlug));
   if (!ok) return { ok: false, code: "QUESTION_SUBJECT_MISMATCH", field: "questionIds" };
   input.questionIds = unique;
   return null;

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Eye, Pencil, Plus, RotateCcw, Search } from "lucide-react";
+import { Archive, Copy, Eye, Pencil, Plus, RotateCcw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/states";
 import type { UploadedFile } from "@/features/storage/upload-client";
 import { validationText } from "@/lib/validators/messages";
 import type { EditableResource } from "@/lib/validators/admin";
-import { setArchivedAction } from "./actions";
+import { duplicateTestAction, setArchivedAction, setTestPublishedAction } from "./actions";
 import { RecordDialog } from "./record-dialog";
 import type { ResolvedField } from "./record-form";
 
@@ -26,6 +26,8 @@ export interface ResourceRow extends DataRow {
   /** filter name → value (matched against the selected filter option) */
   filter: Record<string, string>;
   file?: UploadedFile;
+  /** quick row actions (tests): duplicate, publish / unpublish */
+  quick?: { duplicate?: boolean; publish?: "publish" | "unpublish" };
   /** optional read-only preview (server-rendered) shown in a dialog */
   preview?: React.ReactNode;
   /** short label used in aria-labels of the row actions */
@@ -81,6 +83,32 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
       }
     });
 
+  const runQuick = (fn: () => Promise<{ ok: boolean; message?: string; code?: string }>, doneKey: "duplicatedDone" | "publishedDone" | "unpublishedDone") =>
+    start(async () => {
+      const res = await fn();
+      if (res.ok) {
+        setNotice({ kind: "success", text: t(doneKey) });
+        router.refresh();
+      } else {
+        const msg = res.code === "FORBIDDEN" ? "forbidden" : (res.message ?? "generic");
+        setNotice({ kind: "destructive", text: validationText(v as unknown as (k: string, p?: Record<string, string | number>) => string, msg) });
+      }
+    });
+
+  const quickButtons = (r: ResourceRow) =>
+    r.quick ? (
+      <>
+        {r.quick.publish ? (
+          <Button variant="outline" size="sm" disabled={pending} aria-label={`${r.quick.publish === "publish" ? t("publish") : t("unpublish")}: ${r.label}`} onClick={() => runQuick(() => setTestPublishedAction(r.id, r.quick!.publish === "publish"), r.quick!.publish === "publish" ? "publishedDone" : "unpublishedDone")}>
+            {r.quick.publish === "publish" ? t("publish") : t("unpublish")}
+          </Button>
+        ) : null}
+        {r.quick.duplicate ? (
+          <Button variant="ghost" size="icon" disabled={pending} aria-label={`${t("duplicate")}: ${r.label}`} onClick={() => runQuick(() => duplicateTestAction(r.id), "duplicatedDone")}><Copy className="size-4" aria-hidden /></Button>
+        ) : null}
+      </>
+    ) : null;
+
   const previewButton = (r: ResourceRow) =>
     r.preview ? (
       <Button variant="ghost" size="icon" aria-label={`${t("preview")}: ${r.label}`} onClick={() => setPreviewing(r)}><Eye className="size-4" aria-hidden /></Button>
@@ -96,6 +124,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
           </Button>
         ) : (
           <>
+            {quickButtons(r)}
             {previewButton(r)}
             <Button variant="ghost" size="icon" aria-label={`${c("edit")}: ${r.label}`} onClick={() => setEditing({ row: r })}><Pencil className="size-4" aria-hidden /></Button>
             <Button variant="ghost" size="icon" aria-label={`${t("archive")}: ${r.label}`} onClick={() => setArchiving(r)}><Archive className="size-4 text-destructive" aria-hidden /></Button>

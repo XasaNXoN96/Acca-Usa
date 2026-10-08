@@ -124,11 +124,19 @@ export interface TestSummary {
   subjectSlug: string;
   topicId?: string;
   title: string;
+  description: string;
   questionCount: number;
   totalPoints: number;
   durationMinutes: number;
   passMark: number;
+  /** 0 = unlimited */
+  attemptsAllowed: number;
+  /** Finished attempts of the current user (only set when a user is known). */
+  attemptsUsed?: number;
+  randomizeQuestions: boolean;
+  randomizeAnswers: boolean;
   published: boolean;
+  publishedAt?: string;
   /** Best score for the current user in %, if attempted. */
   bestScore?: number;
   archived?: boolean;
@@ -138,6 +146,8 @@ export interface TestSummary {
 export interface PublicQuestion {
   id: string;
   text: string;
+  /** optional illustration (storage id, served through /api/files after an enrolment check) */
+  imageId?: string;
   options: QuestionOption[];
   points: number;
 }

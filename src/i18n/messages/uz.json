@@ -762,7 +762,13 @@
       "editTitle": "Yozuvni tahrirlash",
       "preview": "Ko‘rib chiqish",
       "previewTitle": "Savolni ko‘rib chiqish",
-      "previewText": "Savol talabaga qanday ko‘rinishi, javob kaliti bilan (faqat admin uchun)."
+      "previewText": "Savol talabaga qanday ko‘rinishi, javob kaliti bilan (faqat admin uchun).",
+      "publish": "E’lon qilish",
+      "unpublish": "E’londan olish",
+      "duplicate": "Nusxalash",
+      "duplicatedDone": "Qoralama nusxa yaratildi.",
+      "publishedDone": "Test e’lon qilindi.",
+      "unpublishedDone": "Test qoralamaga qaytarildi."
     },
     "roles": {
       "STUDENT": "Talaba",
@@ -900,7 +906,7 @@
       },
       "tests": {
         "title": "Testlar",
-        "description": "Mavzu testlari va amaliy testlar.",
+        "description": "E’lon qilingan savollardan test tuzish: vaqt, o‘tish bali, urinishlar, aralashtirish, tartib, ko‘rib chiqish va e’lon qilish.",
         "add": "Test qo‘shish",
         "columns": {
           "title": "Nomi",
@@ -908,7 +914,9 @@
           "questions": "Savollar",
           "duration": "Davomiyligi",
           "passMark": "O‘tish bali",
-          "status": "Holat"
+          "status": "Holat",
+          "points": "Ball",
+          "attempts": "Urinishlar"
         },
         "fields": {
           "title": "Test nomi",
@@ -918,12 +926,17 @@
           "topic": "Mavzu (ixtiyoriy)",
           "published": "E’lon qilingan",
           "questionIds": "Savollar",
-          "publishedHint": "Talabalar faqat e’lon qilingan testlarni ko‘radi.",
-          "durationMinutes": "Davomiyligi (daqiqa)"
+          "publishedHint": "Talabalarga faqat e’lon qilingan testlar ko‘rinadi. Kamida bitta e’lon qilingan savol kerak.",
+          "durationMinutes": "Davomiyligi (daqiqa)",
+          "description": "Tavsif",
+          "attemptsAllowed": "Urinishlar soni (0 = cheklanmagan)",
+          "randomizeQuestions": "Savollarni aralashtirish",
+          "randomizeAnswers": "Javoblarni aralashtirish"
         },
         "filters": {
           "subject": "Fan",
-          "status": "Holat"
+          "status": "Holat",
+          "platform": "Platforma"
         }
       },
       "exams": {
@@ -1038,7 +1051,8 @@
     },
     "testStatus": {
       "published": "E’lon qilingan",
-      "draft": "Qoralama"
+      "draft": "Qoralama",
+      "archived": "Arxivda"
     },
     "answer": {
       "a": "A",
@@ -1057,6 +1071,34 @@
       "correct": "To‘g‘ri: {letter}",
       "explanation": "Izoh",
       "adminOnly": "To‘g‘ri javob va izoh talabalarga faqat testni topshirgandan keyin ko‘rsatiladi."
+    },
+    "picker": {
+      "total": "{count} ta savol · {points} ball",
+      "add": "Savol qo‘shish",
+      "empty": "Hozircha savol yo‘q. Kamida bitta e’lon qilingan savol qo‘shing.",
+      "noneForSubject": "Avval fanni tanlang — faqat uning e’lon qilingan savollarini qo‘shish mumkin.",
+      "moveUp": "Yuqoriga",
+      "moveDown": "Pastga",
+      "remove": "Savolni olib tashlash",
+      "points": "{points} ball",
+      "addTitle": "Savol qo‘shish",
+      "addText": "Tanlangan fanning e’lon qilingan savollari.",
+      "search": "Savollarni qidirish",
+      "difficulty": "Qiyinlik",
+      "topic": "Mavzu",
+      "all": "Hammasi",
+      "nothingToAdd": "Mos savollar qolmadi.",
+      "addSelected": "Tanlanganlarni qo‘shish ({count})",
+      "cancel": "Bekor qilish"
+    },
+    "testPreview": {
+      "notice": "Faqat ko‘rib chiqish — hech narsa saqlanmaydi, urinish va natija yaratilmaydi.",
+      "questions": "Savollar",
+      "duration": "Vaqt",
+      "passMark": "O‘tish bali",
+      "attempts": "Urinishlar",
+      "unlimited": "Cheklanmagan",
+      "start": "Ko‘rib chiqishni boshlash"
     }
   },
   "states": {

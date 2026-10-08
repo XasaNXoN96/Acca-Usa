@@ -74,10 +74,14 @@ export const questionSchema = z.object({
 
 export const testSchema = z.object({
   title: text(3, 160),
+  description: optionalText(600),
   subject: id,
   topic: optionalId,
   durationMinutes: int(1, 240),
   passMark: int(1, 100),
+  attemptsAllowed: int(0, 99),
+  randomizeQuestions: z.boolean().default(false),
+  randomizeAnswers: z.boolean().default(false),
   published: z.boolean().default(false),
   questionIds: z.array(z.string().max(120)).min(1, "questionsRequired").max(200, "invalidChoice"),
 });

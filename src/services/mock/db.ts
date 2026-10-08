@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import type { AppNotification, Difficulty, Material, MaterialKind, PlatformSlug, Role, TestResult, Topic, UserStatus, Locale } from "@/types";
 import { platforms as seedPlatforms, subjects as seedSubjects, allTopics as seedTopics, materials as seedMaterials } from "@/data/mock/catalog";
-import { questionBank, testRecords } from "@/data/mock/assessments";
+import { btQuestions, questionBank, testRecords } from "@/data/mock/assessments";
 import { DEMO_STUDENT_ID, notifications as seedNotifications, seedUsers } from "@/data/mock/people";
 
 /**
@@ -55,7 +55,13 @@ export interface TestRec {
   durationMinutes: number;
   passMark: number;
   questionIds: string[];
+  description: string;
+  /** 0 = unlimited */
+  attemptsAllowed: number;
+  randomizeQuestions: boolean;
+  randomizeAnswers: boolean;
   published: boolean;
+  publishedAt?: string;
   createdAt: string;
   deletedAt?: string;
 }
@@ -134,12 +140,17 @@ function seed(): Db {
       explanation: q.explanation,
       points: q.id === "q-total-cost" ? 2 : 1,
       difficulty: difficultyById[q.id] ?? "easy",
-      tags: [],
+      tags: [] as string[],
       status: "published" as const,
       createdAt: created,
       updatedAt: created,
+    })).concat(btQuestions.map((q) => ({
+      id: q.id, subjectSlug: "bt", topicId: q.topicId, text: q.text, options: q.options, correctOptionId: q.correctOptionId, explanation: q.explanation,
+      points: 1, difficulty: q.difficulty, tags: q.tags, status: "published" as const, createdAt: created, updatedAt: created,
+    }))),
+    tests: testRecords.map((t) => ({
+      ...t, description: "", attemptsAllowed: 0, randomizeQuestions: false, randomizeAnswers: false, published: true, publishedAt: created, createdAt: created,
     })),
-    tests: testRecords.map((t) => ({ ...t, published: true, createdAt: created })),
     enrollments: [
       { userId: DEMO_STUDENT_ID, platform: "acca", createdAt: hoursAgo(900) },
     ],

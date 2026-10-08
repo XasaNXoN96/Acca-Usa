@@ -762,7 +762,13 @@
       "editTitle": "Edit record",
       "preview": "Preview",
       "previewTitle": "Question preview",
-      "previewText": "How the question looks to a student, with the answer key (admin only)."
+      "previewText": "How the question looks to a student, with the answer key (admin only).",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "duplicate": "Duplicate",
+      "duplicatedDone": "Draft copy created.",
+      "publishedDone": "Test published.",
+      "unpublishedDone": "Test moved back to draft."
     },
     "roles": {
       "STUDENT": "Student",
@@ -900,7 +906,7 @@
       },
       "tests": {
         "title": "Tests",
-        "description": "Topic tests and practice tests.",
+        "description": "Build tests from published questions: duration, pass mark, attempts, randomisation, order, preview and publishing.",
         "add": "Add test",
         "columns": {
           "title": "Title",
@@ -908,7 +914,9 @@
           "questions": "Questions",
           "duration": "Duration",
           "passMark": "Pass mark",
-          "status": "Status"
+          "status": "Status",
+          "points": "Points",
+          "attempts": "Attempts"
         },
         "fields": {
           "title": "Test title",
@@ -918,12 +926,17 @@
           "topic": "Topic (optional)",
           "published": "Published",
           "questionIds": "Questions",
-          "publishedHint": "Only published tests are visible to students.",
-          "durationMinutes": "Duration (minutes)"
+          "publishedHint": "Only published tests are visible to students. A test needs at least one published question.",
+          "durationMinutes": "Duration (minutes)",
+          "description": "Description",
+          "attemptsAllowed": "Attempts allowed (0 = unlimited)",
+          "randomizeQuestions": "Randomise question order",
+          "randomizeAnswers": "Randomise answer order"
         },
         "filters": {
           "subject": "Subject",
-          "status": "Status"
+          "status": "Status",
+          "platform": "Platform"
         }
       },
       "exams": {
@@ -1038,7 +1051,8 @@
     },
     "testStatus": {
       "published": "Published",
-      "draft": "Draft"
+      "draft": "Draft",
+      "archived": "Archived"
     },
     "answer": {
       "a": "A",
@@ -1057,6 +1071,34 @@
       "correct": "Correct: {letter}",
       "explanation": "Explanation",
       "adminOnly": "The correct answer and explanation are shown to students only after they submit a test."
+    },
+    "picker": {
+      "total": "{count, plural, one {# question} other {# questions}} · {points, plural, one {# point} other {# points}}",
+      "add": "Add questions",
+      "empty": "No questions yet. Add at least one published question.",
+      "noneForSubject": "Choose a subject first — only its published questions can be added.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove question",
+      "points": "{points, plural, one {# point} other {# points}}",
+      "addTitle": "Add questions",
+      "addText": "Published questions of the selected subject.",
+      "search": "Search questions",
+      "difficulty": "Difficulty",
+      "topic": "Topic",
+      "all": "All",
+      "nothingToAdd": "No more questions match.",
+      "addSelected": "Add selected ({count})",
+      "cancel": "Cancel"
+    },
+    "testPreview": {
+      "notice": "Preview only — nothing is saved, no attempt or result is created.",
+      "questions": "Questions",
+      "duration": "Duration",
+      "passMark": "Pass mark",
+      "attempts": "Attempts",
+      "unlimited": "Unlimited",
+      "start": "Start preview"
     }
   },
   "states": {

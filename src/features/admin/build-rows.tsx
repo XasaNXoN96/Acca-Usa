@@ -9,6 +9,7 @@ import { platformTheme } from "@/lib/platform-theme";
 import { materialKinds, type PlatformSlug } from "@/types";
 import type { FilterDef, ResourceRow } from "./resource-table";
 import { QuestionPreview } from "./question-preview";
+import { TestPreview } from "./test-preview";
 import type { Option } from "./record-form";
 import type { ResourceKey } from "./resources";
 
@@ -136,21 +137,42 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
 
     case "tests": {
       const [tests, questions, topics] = await Promise.all([services.tests.listAllForAdmin(), services.questions.list(), services.topics.listAll()]);
-      const statusOptions: Option[] = [{ value: "published", label: ts("testStatus.published") }, { value: "draft", label: ts("testStatus.draft") }];
+      const statusOf = (x: { archived?: boolean; published: boolean }) => (x.archived ? "archived" : x.published ? "published" : "draft") as "archived" | "published" | "draft";
+      const statusFilter: Option[] = (["draft", "published", "archived"] as const).map((x) => ({ value: x, label: ts(`testStatus.${x}`) }));
+      const statusTone = { draft: "neutral", published: "success", archived: "outline" } as const;
+      const topicName = (id?: string) => topics.find((x) => x.id === id)?.title;
+      const pickable = questions.filter((q) => q.status === "published");
+      const platformOf = (slug: string) => subjects.find((x) => x.slug === slug)?.platform ?? "";
       return {
-        filters: { subject: subjectOptions, status: statusOptions },
+        filters: { platform: platformOptions, subject: subjectOptions, status: statusFilter },
         options: {
           subject: subjectOptions,
           topic: [{ value: "", label: "—" }, ...topics.filter((x) => !x.archived).map((x) => ({ value: x.id, label: x.title, group: x.subjectSlug }))],
-          questionIds: questions.filter((q) => !q.archived).map((q) => ({ value: q.id, label: `${clip(q.text, 80)} (${q.points})`, group: q.subjectSlug })),
+          questionIds: pickable.map((q) => ({
+            value: q.id, label: clip(q.text, 80), group: q.subjectSlug,
+            meta: { text: q.text, points: q.points, difficulty: q.difficulty, topic: topicName(q.topicId), tags: q.tags.join(" ") },
+          })),
         },
-        rows: tests.map((x) =>
-          mk(x.id, {
-            title: bold(x.title), subject: subjectCode(x.subjectSlug), questions: x.questionCount, duration: c("minutes", { count: x.durationMinutes }), passMark: `${x.passMark}%`,
-            status: <Badge variant={x.published ? "success" : "neutral"}>{ts(x.published ? "testStatus.published" : "testStatus.draft")}</Badge>,
-          }, { title: x.title, subject: x.subjectSlug, topic: x.topicId ?? "", durationMinutes: x.durationMinutes, passMark: x.passMark, published: x.published, questionIds: x.questionIds },
-          [x.title, x.subjectSlug], x.title, !!x.archived, { subject: x.subjectSlug, status: x.published ? "published" : "draft" }),
-        ),
+        rows: tests.map((x) => {
+          const status = statusOf(x);
+          const qs = x.questionIds.flatMap((id) => questions.find((q) => q.id === id && q.status === "published" && !q.archived) ?? []);
+          const row = mk(x.id, {
+            title: <span className="flex flex-col"><span className="font-semibold">{x.title}</span>{topicName(x.topicId) ? <span className="type-caption text-muted-foreground">{topicName(x.topicId)}</span> : null}</span>,
+            subject: subjectCode(x.subjectSlug), questions: x.questionCount, points: x.totalPoints, duration: c("minutes", { count: x.durationMinutes }), passMark: `${x.passMark}%`,
+            attempts: x.attemptsAllowed === 0 ? "∞" : x.attemptsAllowed,
+            status: <Badge variant={statusTone[status]}>{ts(`testStatus.${status}`)}</Badge>,
+          }, {
+            title: x.title, description: x.description, subject: x.subjectSlug, topic: x.topicId ?? "", durationMinutes: x.durationMinutes, passMark: x.passMark,
+            attemptsAllowed: x.attemptsAllowed, randomizeQuestions: x.randomizeQuestions, randomizeAnswers: x.randomizeAnswers, published: x.published, questionIds: x.questionIds,
+          }, [x.title, x.subjectSlug, x.description], x.title, !!x.archived,
+          { platform: platformOf(x.subjectSlug), subject: x.subjectSlug, status },
+          undefined,
+          <TestPreview test={{
+            title: x.title, description: x.description, durationMinutes: x.durationMinutes, passMark: x.passMark, attemptsAllowed: x.attemptsAllowed,
+            questions: qs.map((q) => ({ id: q.id, text: q.text, options: q.options, points: q.points, imageId: q.imageId })),
+          }} />);
+          return { ...row, quick: x.archived ? undefined : { duplicate: true, publish: x.published ? ("unpublish" as const) : ("publish" as const) } };
+        }),
       };
     }
 
