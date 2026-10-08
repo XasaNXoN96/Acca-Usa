@@ -19,7 +19,14 @@ no email provider, no payment provider. Production mode refuses to start until t
 - **Storage**: `DemoStorageProvider` writes to the OS temp directory (`$TMPDIR/acca-usa-demo/uploads`). Unattached uploads are
   garbage-collected after an hour. `ProductionStorageProvider` is an unimplemented placeholder (S3-compatible plan in its header).
 - **Forgot password**: no email is sent. The one-time reset link is shown on screen (only in demo mode, only for existing accounts).
-- **Session secret**: generated once and kept in the OS temp dir when `AUTH_SECRET` is unset (never in the repo/browser).
+- **Session secret** (when `AUTH_SECRET` is unset): on a long-lived server a random secret is generated once and kept in the OS temp dir;
+  on serverless platforms (Vercel / Lambda) it is derived from per-deployment identifiers, because every function instance has its own
+  empty `/tmp` and the proxy runs in a separate instance — a random per-instance secret would reject every cookie and bounce each login
+  back to `/login`. Those identifiers are not secret, which is acceptable only for fictional demo data with public credentials.
+  **On Vercel, set `AUTH_SECRET` (`openssl rand -base64 48`) in Project → Settings → Environment Variables** for a real secret.
+- **Serverless caveat**: the in-memory store is per instance. The three seeded accounts work everywhere (their hashes are in the code);
+  accounts registered through the form and admin edits live in one instance only and can disappear or differ between requests.
+  Reliable persistence arrives with the database block.
 - **Seeded accounts** (published on the login page in demo mode only):
 
 | Role | Email | Password |
