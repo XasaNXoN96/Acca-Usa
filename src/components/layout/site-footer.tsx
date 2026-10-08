@@ -21,7 +21,7 @@ export async function SiteFooter() {
   );
 
   return (
-    <footer className="bg-navy text-white">
+    <footer className="bg-surface-navy text-white">
       <div className="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="space-y-3">
           <Logo tone="inverse" />
@@ -46,7 +46,7 @@ export async function SiteFooter() {
       <div className="border-t border-white/15">
         <div className="container-page flex flex-col gap-2 py-5 text-white/75 md:flex-row md:items-center md:justify-between">
           <p className="type-caption max-w-3xl">{t("footer.disclaimer")}</p>
-          <p className="type-caption shrink-0">
+          <p className="type-caption md:text-right">
             {t("footer.copyright", { year: new Date().getUTCFullYear() })} · {t("footer.demoBuild")}
           </p>
         </div>

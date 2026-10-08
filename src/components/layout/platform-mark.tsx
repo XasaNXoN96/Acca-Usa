@@ -10,8 +10,9 @@ export function PlatformMark({ platform, size = "md", className }: { platform: P
     <span
       aria-hidden
       className={cn(
-        "inline-grid shrink-0 place-items-center rounded-lg font-extrabold uppercase tracking-tight text-white",
+        "inline-grid shrink-0 place-items-center rounded-lg font-extrabold uppercase tracking-tight",
         platformTheme[platform].solid,
+        platformTheme[platform].onSolid,
         sizes[size],
         className,
       )}

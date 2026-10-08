@@ -5,13 +5,14 @@ import { DataTable } from "@/components/ui/data-table";
 import { DemoBadge } from "@/components/ui/demo-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { services } from "@/services";
+import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("ranking"))("title") };
 }
 
 export default async function RankingPage() {
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, d, f, entries] = await Promise.all([
     getTranslations("ranking"),
     getTranslations("dashboard"),

@@ -11,6 +11,7 @@ export async function ScoreSummary({ result }: { result: TestResult }) {
   const t = await getTranslations("result");
   const rows = [
     { label: t("total"), value: result.total },
+    { label: t("pointsLabel"), value: `${result.earnedPoints} / ${result.totalPoints}` },
     { label: t("correct"), value: result.correct, tone: "text-success" },
     { label: t("incorrect"), value: result.incorrect, tone: result.incorrect > 0 ? "text-destructive" : undefined },
     ...(result.unanswered > 0 ? [{ label: t("unanswered"), value: result.unanswered, tone: "text-warning" }] : []),

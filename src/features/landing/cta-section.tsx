@@ -8,7 +8,7 @@ export async function CtaSection() {
   return (
     <section aria-labelledby="cta-title" className="py-14 sm:py-20">
       <div className="container-page">
-        <div className="rounded-3xl bg-navy px-6 py-12 text-center text-white sm:px-12">
+        <div className="rounded-3xl bg-surface-navy px-6 py-12 text-center text-white sm:px-12">
           <h2 id="cta-title" className="type-h2 text-balance">
             {t("title")}
           </h2>

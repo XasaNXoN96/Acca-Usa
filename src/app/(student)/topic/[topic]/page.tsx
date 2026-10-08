@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -8,30 +8,34 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import { TopicWorkspace } from "@/features/topic/topic-workspace";
 import { TopicFooter } from "@/features/topic/topic-footer";
+import { TopicTouch } from "@/features/topic/topic-touch";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
+import { requireSession } from "@/lib/auth/guards";
 
 type Params = Promise<{ topic: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { topic } = await params;
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const ctx = await services.topics.getContext(topic, session.user.id);
   return { title: ctx?.topic.title ?? "Topic" };
 }
 
 export default async function TopicPage({ params }: { params: Params }) {
   const { topic: topicId } = await params;
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const ctx = await services.topics.getContext(topicId, session.user.id);
   if (!ctx) notFound();
 
-  const [t, n, tests] = await Promise.all([
+  const [t, n, c, tests] = await Promise.all([
     getTranslations("topic"),
     getTranslations("nav"),
+    getTranslations("common"),
     services.tests.listForSubject(ctx.subject.slug, session.user.id),
   ]);
   const { topic, subject, previous, next } = ctx;
+  if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) redirect(routes.coursePlatform(subject.platform));
   const crumbs = [
     { label: n("courses"), href: routes.courses },
     { label: subject.platform.toUpperCase(), href: routes.coursePlatform(subject.platform) },
@@ -43,7 +47,7 @@ export default async function TopicPage({ params }: { params: Params }) {
   if (topic.status === "locked") {
     return (
       <div className="space-y-6">
-        <Breadcrumbs label="Breadcrumb" items={crumbs} />
+        <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
         <EmptyState
           icon={<Lock aria-hidden />}
           title={t("lockedTitle")}
@@ -64,10 +68,10 @@ export default async function TopicPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs label="Breadcrumb" items={crumbs} />
+      <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
       <h1 className="type-h1 text-balance">{topic.title}</h1>
+      <TopicTouch topicId={topic.id} active={topic.status !== "completed"} />
       <TopicWorkspace
-        title={topic.title}
         description={topic.description}
         keyPoints={topic.keyPoints}
         materials={ctx.materials}

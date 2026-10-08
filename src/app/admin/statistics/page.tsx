@@ -5,9 +5,9 @@ import { DemoBadge } from "@/components/ui/demo-badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Progress, ProgressRing } from "@/components/ui/progress";
 import { ErrorState } from "@/components/ui/states";
-import { services } from "@/services";
 import { can } from "@/lib/permissions";
 import { platformTheme } from "@/lib/platform-theme";
+import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("admin.statistics"))("title") };
@@ -27,7 +27,7 @@ export default async function StatisticsPage() {
     getTranslations("admin.statistics"),
     getTranslations("states"),
     getFormatter(),
-    services.auth.getSession("ADMIN"),
+    requireSession(STAFF_ROLES),
   ]);
   if (!can(session.user.role, "view_statistics")) return <ErrorState title={s("forbiddenTitle")} description={s("forbiddenText")} />;
   const max = Math.max(...signups);

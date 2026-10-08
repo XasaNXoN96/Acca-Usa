@@ -2,9 +2,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /** Scroll container prevents wide tables from breaking the page layout. */
-export function Table({ className, ...props }: React.ComponentProps<"table">) {
+export function Table({ className, label, ...props }: React.ComponentProps<"table"> & { label?: string }) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card" tabIndex={0} role="region" aria-label="Table">
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card" tabIndex={0} role="region" aria-label={label}>
       <table className={cn("w-full min-w-[40rem] caption-bottom text-sm", className)} {...props} />
     </div>
   );

@@ -12,6 +12,8 @@ export const routes = {
   search: (q?: string) => (q ? `/search?q=${encodeURIComponent(q)}` : "/search"),
   login: "/login",
   register: "/register",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
 
   dashboard: "/dashboard",
   courses: "/courses",

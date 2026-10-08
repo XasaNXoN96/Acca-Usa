@@ -35,7 +35,7 @@ export function DataTable({ caption, columns, rows, rowActions, actionsHeader, c
   return (
     <div className={className}>
       <div className="hidden md:block">
-        <Table>
+        <Table label={caption}>
           <TableCaption>{caption}</TableCaption>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -76,7 +76,7 @@ export function DataTable({ caption, columns, rows, rowActions, actionsHeader, c
                 .map((c) => (
                   <div key={c.key} className="flex items-center justify-between gap-4">
                     <dt className="type-caption shrink-0 text-muted-foreground">{c.header}</dt>
-                    <dd className="min-w-0 text-right">{r.cells[c.key]}</dd>
+                    <dd className="min-w-0 text-right [overflow-wrap:anywhere]">{r.cells[c.key]}</dd>
                   </div>
                 ))}
             </dl>

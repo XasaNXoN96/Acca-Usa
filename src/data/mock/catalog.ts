@@ -145,15 +145,29 @@ export const topicsBySubject: Record<string, Topic[]> = Object.fromEntries(
 
 export const allTopics: Topic[] = Object.values(topicsBySubject).flat();
 
+/** Seed notes only — real files are uploaded through the demo storage provider. */
 export const materials: Material[] = [
-  ...maTopics.flatMap<Material>((t) => [
-    { id: `${t.id}-video`, subjectSlug: "ma", topicId: t.id, kind: "video", title: `${t.title} — lecture`, meta: `${t.durationMinutes}:00` },
-    { id: `${t.id}-pdf`, subjectSlug: "ma", topicId: t.id, kind: "pdf", title: `${t.title} — workbook`, meta: "PDF" },
-    { id: `${t.id}-notes`, subjectSlug: "ma", topicId: t.id, kind: "notes", title: `${t.title} — study notes`, meta: "Notes" },
-  ]),
-  { id: "ma-slides-intro", subjectSlug: "ma", topicId: "ma-introduction-to-management-accounting", kind: "slides", title: "Introduction — slide deck", meta: "Slides" },
-  { id: "ma-audio-cost", subjectSlug: "ma", topicId: "ma-cost-classification", kind: "audio", title: "Cost classification — audio summary", meta: "Audio" },
-  { id: "ma-book-kit", subjectSlug: "ma", kind: "book", title: "Management Accounting — revision kit", meta: "PDF" },
+  ...maTopics.map<Material>((t) => ({
+    id: `${t.id}-notes`,
+    subjectSlug: "ma",
+    topicId: t.id,
+    kind: "notes",
+    title: `${t.title} — study notes`,
+    meta: "Notes",
+    body: `${t.description}\n\n${t.keyPoints.map((k) => `• ${k}`).join("\n")}`,
+    createdAt: "2026-01-10T10:00:00.000Z",
+  })),
+  {
+    id: "ma-cost-classification-workbook",
+    subjectSlug: "ma",
+    topicId: "ma-cost-classification",
+    kind: "pdf",
+    title: "Cost classification — sample workbook",
+    meta: "PDF",
+    fileId: "seed-ma-workbook",
+    fileMime: "application/pdf",
+    createdAt: "2026-01-10T10:00:00.000Z",
+  },
 ];
 
 export const getPlatform = (slug: string) => platforms.find((p) => p.slug === slug);

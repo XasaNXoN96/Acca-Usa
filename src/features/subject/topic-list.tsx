@@ -21,7 +21,7 @@ export async function TopicList({ topics }: { topics: TopicWithStatus[] }) {
               aria-hidden
               className={cn(
                 "grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold",
-                topic.status === "completed" && "bg-success text-white",
+                topic.status === "completed" && "bg-success text-success-foreground",
                 topic.status === "in_progress" && "bg-navy text-navy-foreground",
                 topic.status === "unlocked" && "border-2 border-navy text-navy",
                 locked && "bg-muted text-muted-foreground",

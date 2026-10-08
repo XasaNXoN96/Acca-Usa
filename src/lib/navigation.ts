@@ -1,4 +1,5 @@
 import { routes } from "./routes";
+import type { Permission } from "./permissions";
 
 export type NavIconName =
   | "dashboard" | "courses" | "acca" | "cima" | "fia" | "exams" | "progress" | "ranking"
@@ -13,6 +14,8 @@ export interface NavItem {
   /** path prefixes that mark this item active (defaults to href) */
   match?: string[];
   exact?: boolean;
+  /** admin items: hidden unless the role holds this permission */
+  permission?: Permission;
 }
 
 export const studentNav: NavItem[] = [
@@ -41,17 +44,17 @@ export const studentBottomNav: NavItem[] = [
 
 export const adminNav: NavItem[] = [
   { labelKey: "overview", href: routes.admin, icon: "overview", exact: true },
-  { labelKey: "platforms", href: routes.adminSection("platforms"), icon: "platforms" },
-  { labelKey: "subjects", href: routes.adminSection("subjects"), icon: "subjects" },
-  { labelKey: "topics", href: routes.adminSection("topics"), icon: "topics" },
-  { labelKey: "materials", href: routes.adminSection("materials"), icon: "materials" },
-  { labelKey: "question-bank", href: routes.adminSection("question-bank"), icon: "questions" },
-  { labelKey: "tests", href: routes.adminSection("tests"), icon: "tests" },
-  { labelKey: "exams", href: routes.adminSection("exams"), icon: "exams" },
-  { labelKey: "students", href: routes.adminSection("students"), icon: "students" },
-  { labelKey: "payments", href: routes.adminSection("payments"), icon: "payments" },
-  { labelKey: "statistics", href: routes.adminSection("statistics"), icon: "statistics" },
-  { labelKey: "settings", href: routes.adminSection("settings"), icon: "settings" },
+  { labelKey: "platforms", href: routes.adminSection("platforms"), icon: "platforms", permission: "manage_content" },
+  { labelKey: "subjects", href: routes.adminSection("subjects"), icon: "subjects", permission: "manage_content" },
+  { labelKey: "topics", href: routes.adminSection("topics"), icon: "topics", permission: "manage_content" },
+  { labelKey: "materials", href: routes.adminSection("materials"), icon: "materials", permission: "manage_content" },
+  { labelKey: "question-bank", href: routes.adminSection("question-bank"), icon: "questions", permission: "manage_tests" },
+  { labelKey: "tests", href: routes.adminSection("tests"), icon: "tests", permission: "manage_tests" },
+  { labelKey: "exams", href: routes.adminSection("exams"), icon: "exams", permission: "manage_tests" },
+  { labelKey: "students", href: routes.adminSection("students"), icon: "students", permission: "view_students" },
+  { labelKey: "payments", href: routes.adminSection("payments"), icon: "payments", permission: "manage_payments" },
+  { labelKey: "statistics", href: routes.adminSection("statistics"), icon: "statistics", permission: "view_statistics" },
+  { labelKey: "settings", href: routes.adminSection("settings"), icon: "settings", permission: "manage_settings" },
 ];
 
 export function isActive(pathname: string, item: NavItem): boolean {

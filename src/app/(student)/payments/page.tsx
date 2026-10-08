@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/states";
 import { PageHeader } from "@/components/ui/page-header";
 import { services } from "@/services";
 import { formatDate, formatMoney } from "@/lib/format";
+import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("payments"))("title") };
@@ -15,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive" } as const;
 
 export default async function PaymentsPage() {
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, c, locale, payments] = await Promise.all([
     getTranslations("payments"),
     getTranslations("common"),

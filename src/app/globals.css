@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "@fontsource-variable/inter";
 
+/* Class-based dark mode: <html class="dark"> (set before paint, see lib/theme.ts) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ==========================================================================
    ACCA USA design tokens
    Single source of truth. Components consume semantic tokens only
@@ -56,6 +59,16 @@
   --info: #1e4fc2;
   --info-soft: #eaf0fd;
 
+  /* Always-dark panels (sidebar, footer, CTA, hero, video frame) — identical in both themes */
+  --surface-navy: #0b1f3a;
+
+  /* Text colour to put ON each solid brand/status colour */
+  --acca-foreground: #ffffff;
+  --cima-foreground: #ffffff;
+  --fia-foreground: #ffffff;
+  --success-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
+
   --ring: #1d4ed8;
 
   /* Radius */
@@ -66,6 +79,66 @@
   --shadow-sm: 0 1px 3px rgb(11 31 58 / 0.08), 0 1px 2px rgb(11 31 58 / 0.04);
   --shadow-md: 0 8px 24px -10px rgb(11 31 58 / 0.18), 0 2px 6px rgb(11 31 58 / 0.05);
   --shadow-lg: 0 24px 48px -16px rgb(11 31 58 / 0.25);
+}
+
+
+/* ---------- Dark theme: same semantic tokens, re-tuned for contrast (AA) ---------- */
+.dark {
+  color-scheme: dark;
+  --background: #0b1322;
+  --app: #070d19;
+  --foreground: #e8eef8;
+  --card: #111c30;
+  --card-foreground: #e8eef8;
+  --muted: #172338;
+  --muted-foreground: #a9b6ca;
+  --subtle-foreground: #8e9cb3;
+  --border: #24344f;
+  --input: #53647f;
+
+  --primary: #ff6b81;
+  --primary-hover: #ff8597;
+  --primary-foreground: #2b0610;
+  --primary-soft: #3a1621;
+  --primary-on-dark: #ff6b81;
+
+  --navy: #9db8e8;
+  --navy-soft: #1b2c4a;
+  --navy-foreground: #0b1322;
+  --secondary: #1b2c4a;
+  --secondary-foreground: #e8eef8;
+  --accent: #172338;
+  --accent-foreground: #e8eef8;
+
+  --surface-navy: #070f1e;
+
+  --acca: #ff6b81;
+  --acca-soft: #3a1621;
+  --acca-foreground: #2b0610;
+  --cima: #6b9bff;
+  --cima-soft: #172a52;
+  --cima-foreground: #07142e;
+  --fia: #38c79b;
+  --fia-soft: #0f3328;
+  --fia-foreground: #04201a;
+
+  --success: #3ccf9f;
+  --success-soft: #0f3328;
+  --success-foreground: #04201a;
+  --warning: #f0b24a;
+  --warning-soft: #3a2c0d;
+  --destructive: #ff7a70;
+  --destructive-soft: #3a1a17;
+  --destructive-foreground: #2b0806;
+  --info: #7aa5ff;
+  --info-soft: #172a52;
+
+  --ring: #8db0ff;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 8px 24px -10px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 24px 48px -16px rgb(0 0 0 / 0.7);
 }
 
 @theme inline {
@@ -82,6 +155,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface-navy: var(--surface-navy);
+  --color-acca-foreground: var(--acca-foreground);
+  --color-cima-foreground: var(--cima-foreground);
+  --color-fia-foreground: var(--fia-foreground);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive-foreground: var(--destructive-foreground);
 
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);

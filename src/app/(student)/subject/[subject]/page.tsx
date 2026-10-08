@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { MaterialList } from "@/features/subject/material-list";
 import { ProgressPanel } from "@/features/subject/progress-panel";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
+import { requireSession } from "@/lib/auth/guards";
 
 type Params = Promise<{ subject: string }>;
 type Search = Promise<{ tab?: string | string[] }>;
@@ -32,8 +33,9 @@ export default async function SubjectPage({ params, searchParams }: { params: Pa
   if (!subject) notFound();
 
   const tab = parseTab(sp.tab);
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const userId = session.user.id;
+  if (!(await services.enrollments.isEnrolled(userId, subject.platform))) redirect(routes.coursePlatform(subject.platform));
   const [t, topics, tests, materials, progress] = await Promise.all([
     getTranslations("subject"),
     services.topics.listForSubject(subject.slug, userId),

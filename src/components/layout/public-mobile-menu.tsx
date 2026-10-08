@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/layout/logo";
 import { LanguageSegmented } from "@/components/layout/language-switcher";
+import { ThemeSegmented } from "@/components/layout/theme-toggle";
 import type { MegaPlatform } from "@/components/layout/mega-menu";
 import { routes } from "@/lib/routes";
 import { platformTheme } from "@/lib/platform-theme";
 import { cn } from "@/lib/utils";
 
 /** Public-site drawer: search, platform accordions, links, language and auth actions. */
-export function PublicMobileMenu({ platforms }: { platforms: MegaPlatform[] }) {
+export function PublicMobileMenu({ platforms, home, homeLabel }: { platforms: MegaPlatform[]; home: string | null; homeLabel: string }) {
   const t = useTranslations();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -112,15 +113,22 @@ export function PublicMobileMenu({ platforms }: { platforms: MegaPlatform[] }) {
           </ul>
 
           <LanguageSegmented />
+          <ThemeSegmented />
 
-          <div className="grid grid-cols-2 gap-2 pb-2">
-            <Button asChild variant="outline" size="lg">
-              <Link href={routes.login}>{t("common.signIn")}</Link>
-            </Button>
-            <Button asChild size="lg">
-              <Link href={routes.register}>{t("common.register")}</Link>
-            </Button>
-          </div>
+          {home ? (
+            <div className="pb-2">
+              <Button asChild size="lg" className="w-full"><Link href={home}>{homeLabel}</Link></Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 pb-2">
+              <Button asChild variant="outline" size="lg">
+                <Link href={routes.login}>{t("common.signIn")}</Link>
+              </Button>
+              <Button asChild size="lg">
+                <Link href={routes.register}>{t("common.register")}</Link>
+              </Button>
+            </div>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

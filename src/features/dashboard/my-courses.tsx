@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { PlatformMark } from "@/components/layout/platform-mark";
+import { EnrollButton } from "@/features/courses/enroll-buttons";
 import { platformTheme } from "@/lib/platform-theme";
 import { routes } from "@/lib/routes";
 import type { Enrollment, Platform } from "@/types";
@@ -27,10 +28,7 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
           const active = e.status === "active";
           return (
             <li key={e.platform}>
-              <Link
-                href={routes.coursePlatform(e.platform)}
-                className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-xs"
-              >
+              <Link href={routes.coursePlatform(e.platform)} className="flex min-h-16 items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-xs">
                 <PlatformMark platform={e.platform} />
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold uppercase">{e.platform}</span>
@@ -72,9 +70,11 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
                 </div>
                 <Progress value={e.progress} tone={theme.tone} label={`${e.platform.toUpperCase()} ${e.progress}%`} />
               </div>
-              <Button asChild variant={active ? theme.button : "outline"} size="sm" className="mt-auto w-full">
-                <Link href={routes.coursePlatform(e.platform)}>{active ? t("continue") : t("explore")}</Link>
-              </Button>
+              {active ? (
+                <Button asChild variant={theme.button} size="sm" className="mt-auto w-full"><Link href={routes.coursePlatform(e.platform)}>{t("continue")}</Link></Button>
+              ) : (
+                <EnrollButton platform={e.platform} size="sm" label={t("enroll")} className="mt-auto" />
+              )}
             </Card>
           );
         })}

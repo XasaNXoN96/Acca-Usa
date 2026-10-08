@@ -71,7 +71,7 @@ function ReviewCard({ item, number }: { item: ReviewItem; number: number }) {
           {item.flagged ? (
             <Badge variant="warning">
               <Flag className="fill-current" aria-hidden />
-              <span className="sr-only">Flagged</span>
+              <span className="sr-only">{t("flaggedLabel")}</span>
             </Badge>
           ) : null}
           <Badge variant={status === "correct" ? "success" : status === "incorrect" ? "destructive" : "warning"}>

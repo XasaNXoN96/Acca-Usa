@@ -132,3 +132,29 @@ Run before every commit: `npm run check` (lint + typecheck + i18n + brand) and `
 - No `console.log` in committed code (`console.error` only inside error boundaries).
 - No duplicated logic: if the same rule appears twice (status → badge variant, tab parsing, money formatting) extract it.
 - Commits are small and describe the *why*.
+
+## 18. Authentication, sessions and roles (P0)
+- Passwords are hashed with scrypt (`lib/auth/password.ts`) and compared in constant time; plaintext never reaches a store, a log, a cookie or the browser's storage. Seed accounts carry hashes only.
+- Sessions are signed, `httpOnly`, `SameSite=Lax` cookies (`Secure` in production). The signing secret is server-only (`AUTH_SECRET`; in demo mode a random one in the OS temp dir). Never read it from client code.
+- The proxy (`src/proxy.ts`) is a pre-check only. **Authority** is the server: `requireSession` in layouts/pages, `sessionOrNull` + `can()` in every server action and route handler. The user is re-read on every request, so suspension, role change and password reset apply immediately (`tokenVersion`).
+- Self-registration creates STUDENT only. Staff roles are granted by an admin; an admin cannot change their own role/status or archive themselves, and the last active admin cannot be removed.
+- Login/forgot/reset/register are rate limited. Forgot-password answers identically for unknown and known emails (demo mode additionally shows the one-time link because no mail provider exists). Reset tokens are random, stored hashed, single-use and expire in 30 minutes.
+- Post-login redirects go through `safeNext()` (same-site relative paths only).
+
+## 19. Data providers, demo mode and storage
+- UI → features → services/contracts → provider. Only `services/index.ts` knows which provider is active; `NEXT_PUBLIC_APP_MODE=production` refuses to start until real providers exist.
+- Demo data is in-memory, labelled, and resets on restart; never persist it to `localStorage` or treat it as production data. Never invent production statistics (derive numbers from real state or label them "Demo data").
+- Every mutation is a server action: session → role/permission → Zod validation → service. Field errors travel as codes and are translated in the UI.
+- Files: validate **kind allow-list, extension, size cap and magic bytes** on the server; never trust the browser MIME type; serve through `/api/files/[id]` (session + enrolment checked, `nosniff`, inline only for safe types, Range supported). SVG/HTML uploads are not allowed. Storage ids are random UUIDs (no user-controlled paths).
+- Unattached uploads are garbage-collected; replacing/removing a material's file deletes the old object.
+- Soft delete everywhere users can delete (archive/restore); parents hide children at read time.
+
+## 20. Theme (light / dark / system)
+- Theme tokens live in `globals.css` (`:root` and `.dark`); components use semantic tokens only. Always-dark panels use `surface-navy`; text on solid brand colours uses the matching `*-foreground` token.
+- The choice is stored in the `acca_theme` cookie; the server renders the class for explicit choices and a blocking head script resolves "system" before paint (no flash). Controls read the theme through `lib/theme-client.ts`.
+- Every new component must be checked in both themes and in Russian at 360px.
+
+## 21. Tests and attempts (P0)
+- A test is startable only when published, not archived and it has questions. The learner must be enrolled in the platform; the timer starts when **Start** is pressed and the deadline is stored on the server.
+- Autosave accepts answers/flags/position only — never elapsed time. Submission is scored on the server; results are frozen snapshots so later edits to the question bank never rewrite history.
+- Notifications store a code + params and are translated at render time.

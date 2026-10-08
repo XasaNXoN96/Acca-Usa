@@ -9,12 +9,15 @@ import { StatCard } from "@/components/ui/stat-card";
 import { navIcons } from "@/components/layout/nav-icons";
 import { services } from "@/services";
 import { adminNav } from "@/lib/navigation";
+import { can } from "@/lib/permissions";
+import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("admin.overview"))("title") };
 }
 
 export default async function AdminHome() {
+  const session = await requireSession(STAFF_ROLES);
   const [t, r, ts, students, subjects, topics, tests] = await Promise.all([
     getTranslations("admin.overview"),
     getTranslations("admin.resources"),
@@ -22,7 +25,7 @@ export default async function AdminHome() {
     services.users.listStudents(),
     services.subjects.list(),
     services.topics.listAll(),
-    services.tests.listAll(),
+    services.tests.listAllForAdmin(),
   ]);
   const titles: Record<string, string> = {
     platforms: r("platforms.title"), subjects: r("subjects.title"), topics: r("topics.title"), materials: r("materials.title"),
@@ -41,7 +44,7 @@ export default async function AdminHome() {
       <section aria-labelledby="manage" className="space-y-3">
         <h2 id="manage" className="type-h3">{t("quickLinks")}</h2>
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
-          {adminNav.filter((i) => i.icon !== "overview").map((item) => {
+          {adminNav.filter((i) => i.icon !== "overview" && (!i.permission || can(session.user.role, i.permission))).map((item) => {
             const Icon = navIcons[item.icon];
             return (
               <li key={item.href}>

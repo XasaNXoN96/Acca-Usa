@@ -1,36 +1,16 @@
 import "server-only";
-import type { AuthService, NotificationService, PaymentService, UserService, DashboardService } from "../contracts";
-import type { DashboardOverview, Enrollment } from "@/types";
-import { demoAdmin, demoStudent, payments, students } from "@/data/mock/people";
-import { getSubject, getTopic } from "@/data/mock/catalog";
-import { getUserNotifications, getUserProgress } from "./store";
-import { certificateService, progressService, rankingService, testService } from "./learning";
-
-export const authService: AuthService = {
-  /**
-   * DEMO ONLY. There is no authentication yet — this returns a fixed demo identity and
-   * flags it so the UI can show a notice. Replace with Auth.js `auth()` next stage.
-   */
-  async getSession(role = "STUDENT") {
-    return { user: role === "ADMIN" ? demoAdmin : demoStudent, isDemo: true };
-  },
-};
-
-export const userService: UserService = {
-  async getById(id) {
-    return [demoStudent, demoAdmin, ...students].find((u) => u.id === id) ?? null;
-  },
-  async listStudents() {
-    return students;
-  },
-  async updateLocale() {
-    // Persisted with the user record once the database is connected.
-  },
-};
+import type { DashboardService, NotificationService, PaymentService } from "../contracts";
+import type { DashboardOverview, PlatformSlug } from "@/types";
+import { DEMO_STUDENT_ID, payments } from "@/data/mock/people";
+import { getDb, platformOfSubject, userNotifications, userProgress } from "./db";
+import { platformProgress, visibleSubjects, visibleTopicsOf } from "./calc";
+import { authService, toUser, userService } from "./auth-users";
+import { certificateService, progressService, rankingService } from "./learning";
+import { testService } from "./assessment";
 
 export const paymentService: PaymentService = {
   async listForUser(userId) {
-    return userId === demoStudent.id ? payments.filter((p) => p.studentName === "Demo Student") : [];
+    return userId === DEMO_STUDENT_ID ? payments.filter((p) => p.studentName === "Demo Student") : [];
   },
   async listAll() {
     return payments;
@@ -39,79 +19,88 @@ export const paymentService: PaymentService = {
 
 export const notificationService: NotificationService = {
   async list(userId) {
-    return [...getUserNotifications(userId)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return [...userNotifications(getDb(), userId)].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
   async unreadCount(userId) {
-    return getUserNotifications(userId).filter((n) => !n.read).length;
+    return userNotifications(getDb(), userId).filter((n) => !n.read).length;
   },
   async markRead(userId, id) {
-    const n = getUserNotifications(userId).find((x) => x.id === id);
+    const n = userNotifications(getDb(), userId).find((x) => x.id === id);
     if (n) n.read = true;
   },
   async markAllRead(userId) {
-    getUserNotifications(userId).forEach((n) => (n.read = true));
+    userNotifications(getDb(), userId).forEach((n) => (n.read = true));
   },
 };
 
 export const dashboardService: DashboardService = {
   async getOverview(userId): Promise<DashboardOverview> {
-    const [platformProgress, activity, topRank, certs, unread, ma] = await Promise.all([
-      progressService.getPlatformProgress(userId),
-      progressService.recentActivity(userId),
+    const db = getDb();
+    const rec = db.users.find((u) => u.id === userId);
+    if (!rec) throw new Error("NOT_FOUND");
+
+    const [activity, topRank, certs, unread, results, published] = await Promise.all([
+      progressService.recentActivity(userId, 5),
       rankingService.top(userId, 5),
       certificateService.listForUser(userId),
       notificationService.unreadCount(userId),
-      testService.listForSubject("ma", userId),
+      testService.listResults(userId, 3),
+      testService.listPublished(userId),
     ]);
 
-    const enrollments: Enrollment[] = [
-      { platform: "acca", status: "active", progress: platformProgress.acca },
-      { platform: "cima", status: "active", progress: platformProgress.cima },
-      { platform: "fia", status: "not_enrolled", progress: 0, priceLabel: "$29" },
-    ];
+    const enrolledPlatforms = new Set<PlatformSlug>(db.enrollments.filter((e) => e.userId === userId).map((e) => e.platform));
+    const enrollments = db.platforms
+      .filter((p) => !p.deletedAt)
+      .map((p) => ({
+        platform: p.slug,
+        status: enrolledPlatforms.has(p.slug) ? ("active" as const) : ("not_enrolled" as const),
+        progress: enrolledPlatforms.has(p.slug) ? platformProgress(db, userId, p.slug) : 0,
+      }));
     const active = enrollments.filter((e) => e.status === "active");
-    const progress = getUserProgress(userId);
-    const topicIds = Object.keys(progress);
-    const completed = topicIds.filter((id) => (progress[id] ?? 0) >= 100).length;
-    const inProgress = topicIds.filter((id) => {
-      const p = progress[id] ?? 0;
-      return p > 0 && p < 100;
-    }).length;
-    const total = 25;
 
-    const continueLearning = ["ma-cost-classification", "bt-governance-ethics-and-sustainability"].flatMap((id) => {
-      const t = getTopic(id);
-      if (!t) return [];
-      return [{ topicId: id, topicTitle: t.title, subjectName: getSubject(t.subjectSlug)?.name ?? "", progress: progress[id] ?? 0 }];
-    });
+    // Everything below is derived from the learner's REAL state in the enrolled platforms.
+    const progress = userProgress(db, userId);
+    const subjects = visibleSubjects(db).filter((s) => enrolledPlatforms.has(platformOfSubject(db, s)));
+    const topics = subjects.flatMap((s) => visibleTopicsOf(db, s.slug).map((t) => ({ t, s })));
+    const pct = (id: string) => progress.get(id)?.percent ?? 0;
+    const completed = topics.filter(({ t }) => pct(t.id) >= 100);
+    const started = topics.filter(({ t }) => pct(t.id) > 0 && pct(t.id) < 100);
+    const minutes = completed.reduce((a, { t }) => a + t.durationMinutes, 0);
 
-    const user = (await authServiceUser(userId)) ?? demoStudent;
+    const continueLearning = started
+      .sort((a, b) => (progress.get(b.t.id)?.updatedAt ?? "").localeCompare(progress.get(a.t.id)?.updatedAt ?? ""))
+      .slice(0, 4)
+      .map(({ t, s }) => ({ topicId: t.id, topicTitle: t.title, subjectName: s.name, platform: platformOfSubject(db, s), progress: pct(t.id) }));
+
+    const attempted = new Set(db.attempts.filter((a) => a.userId === userId && a.result).map((a) => a.testId));
+    const subjectName = (slug: string) => db.subjects.find((s) => s.slug === slug)?.name ?? slug;
+    const availableTests = published
+      .filter((t) => {
+        const s = db.subjects.find((x) => x.slug === t.subjectSlug);
+        return s && enrolledPlatforms.has(platformOfSubject(db, s)) && !attempted.has(t.id);
+      })
+      .slice(0, 3)
+      .map((test) => ({ test, subjectName: subjectName(test.subjectSlug) }));
+
     return {
-      user,
+      user: toUser(rec),
       stats: {
         enrolledCourses: active.length,
-        completedTopics: completed,
-        learningHours: 45,
+        completedTopics: completed.length,
+        learningHours: Math.round((minutes / 60) * 10) / 10,
         overallProgress: active.length ? Math.round(active.reduce((a, e) => a + e.progress, 0) / active.length) : 0,
       },
       enrollments,
       continueLearning,
       recentActivity: activity,
-      progressBreakdown: { completed, inProgress, notStarted: Math.max(0, total - completed - inProgress), total },
+      progressBreakdown: { completed: completed.length, inProgress: started.length, notStarted: Math.max(0, topics.length - completed.length - started.length), total: topics.length },
       ranking: topRank,
-      tests: ma.map((test, i) => ({
-        test,
-        subjectName: "Management Accounting",
-        status: i === 0 ? ("upcoming" as const) : ("recent" as const),
-        score: test.bestScore,
-        dateISO: new Date().toISOString(),
-      })),
+      recentResults: results,
+      availableTests,
       certificates: certs,
       unreadNotifications: unread,
     };
   },
 };
 
-async function authServiceUser(userId: string) {
-  return userService.getById(userId);
-}
+export { authService, userService };

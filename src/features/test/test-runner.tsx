@@ -18,16 +18,16 @@ import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { AttemptDraft, TestForAttempt } from "@/types";
 
-export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; draft: AttemptDraft | null; exitHref: string }) {
+export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; draft: AttemptDraft; exitHref: string }) {
   const t = useTranslations("test");
   const router = useRouter();
   const total = test.questions.length;
   const limit = test.durationMinutes * 60;
 
-  const [index, setIndex] = useState(() => Math.min(draft?.currentIndex ?? 0, Math.max(total - 1, 0)));
-  const [answers, setAnswers] = useState<Record<string, string>>(draft?.answers ?? {});
-  const [flagged, setFlagged] = useState<string[]>(draft?.flagged ?? []);
-  const [elapsed, setElapsed] = useState(draft?.elapsedSeconds ?? 0);
+  const [index, setIndex] = useState(() => Math.min(draft.currentIndex, Math.max(total - 1, 0)));
+  const [answers, setAnswers] = useState<Record<string, string>>(draft.answers);
+  const [flagged, setFlagged] = useState<string[]>(draft.flagged);
+  const [elapsed, setElapsed] = useState(draft.elapsedSeconds);
   const elapsedRef = useRef(elapsed);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -35,21 +35,21 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
   const [submitError, setSubmitError] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
   const [done, setDone] = useState(false);
-  const [showResumed, setShowResumed] = useState(() => !!draft && (draft.currentIndex > 0 || Object.keys(draft.answers).length > 0));
+  const [showResumed, setShowResumed] = useState(() => draft.currentIndex > 0 || Object.keys(draft.answers).length > 0);
   const timeUpHandled = useRef(false);
 
   const guard = useLeaveGuard(!done, () => setLeaveOpen(true));
 
   // Timer: derived from wall-clock so background tabs and throttled intervals cannot drift.
   useEffect(() => {
-    const startedAt = Date.now() - (draft?.elapsedSeconds ?? 0) * 1000;
+    const startedAt = Date.now() - draft.elapsedSeconds * 1000;
     const id = setInterval(() => {
       const e = Math.floor((Date.now() - startedAt) / 1000);
       elapsedRef.current = e;
       setElapsed(e);
     }, 1000);
     return () => clearInterval(id);
-  }, [draft?.elapsedSeconds]);
+  }, [draft.elapsedSeconds]);
 
   const remaining = Math.max(0, limit - elapsed);
 
@@ -60,18 +60,23 @@ export function TestRunner({ test, draft, exitHref }: { test: TestForAttempt; dr
   const snapshot = useMemo(() => ({ answers, flagged, currentIndex: index }), [answers, flagged, index]);
   const autosave = useAutosave(
     snapshot,
-    async (v) => (await saveDraftAction({ testId: test.id, ...v, elapsedSeconds: elapsedRef.current })).ok,
+    async (v) => (await saveDraftAction({ testId: test.id, ...v })).ok,
     { enabled: !done },
   );
 
   const submit = useCallback(async () => {
     setSubmitting(true);
     setSubmitError(false);
-    const res = await submitTestAction({ testId: test.id, answers, flagged, elapsedSeconds: elapsedRef.current });
+    const res = await submitTestAction({ testId: test.id, answers, flagged });
     if (res.ok) {
       setDone(true);
       guard.allow();
       router.push(routes.testResult(test.id, res.attemptId));
+    } else if (res.code === "NO_ATTEMPT") {
+      // The server already closed this attempt (deadline passed) — go to the result it produced.
+      setDone(true);
+      guard.allow();
+      router.push(routes.testResult(test.id));
     } else {
       setSubmitting(false);
       setSubmitError(true);

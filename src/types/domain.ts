@@ -1,17 +1,20 @@
 /**
  * Domain types shared by UI, services and (later) Prisma mappers.
  * Dates are ISO-8601 UTC strings; format them at the edge with lib/format.ts.
+ * Nothing here ever carries password material.
  */
 
 export type Role = "STUDENT" | "TEACHER" | "ADMIN";
 export type PlatformSlug = "acca" | "cima" | "fia";
 export type Locale = "en" | "ru" | "uz";
+export type UserStatus = "active" | "suspended";
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
+  status: UserStatus;
   locale: Locale;
   createdAt: string;
 }
@@ -28,10 +31,11 @@ export interface Platform {
   name: string;
   fullName: string;
   levels: Level[];
+  archived?: boolean;
 }
 
 export interface Subject {
-  /** URL slug, e.g. "ma". Unique across platforms in the mock catalogue. */
+  /** URL slug, e.g. "ma". Unique across platforms. */
   slug: string;
   code: string;
   name: string;
@@ -39,6 +43,7 @@ export interface Subject {
   levelId: string;
   topicCount: number;
   testCount: number;
+  archived?: boolean;
 }
 
 export type TopicStatus = "completed" | "in_progress" | "unlocked" | "locked";
@@ -52,6 +57,7 @@ export interface Topic {
   durationMinutes: number;
   description: string;
   keyPoints: string[];
+  archived?: boolean;
 }
 
 export interface TopicWithStatus extends Topic {
@@ -60,7 +66,8 @@ export interface TopicWithStatus extends Topic {
   progress: number;
 }
 
-export type MaterialKind = "video" | "pdf" | "notes" | "audio" | "slides" | "book";
+export const materialKinds = ["video", "pdf", "notes", "audio", "slides", "image", "file", "book"] as const;
+export type MaterialKind = (typeof materialKinds)[number];
 
 export interface Material {
   id: string;
@@ -68,8 +75,36 @@ export interface Material {
   topicId?: string;
   kind: MaterialKind;
   title: string;
-  /** Size / duration label as plain data, e.g. "12:40" or "2.4 MB". */
+  /** Human label, e.g. "2.4 MB · video/mp4". Derived from the stored file. */
   meta: string;
+  /** Reference to a StorageProvider object. Served through /api/files/[id] after a session check. */
+  fileId?: string;
+  fileMime?: string;
+  /** Text content for kind = "notes" (rendered as plain text, never as HTML). */
+  body?: string;
+  createdAt: string;
+  archived?: boolean;
+}
+
+export const difficulties = ["easy", "medium", "hard"] as const;
+export type Difficulty = (typeof difficulties)[number];
+
+export interface QuestionOption {
+  id: string;
+  text: string;
+}
+
+/** Admin view of a bank question — includes the answer. Never sent to students before submission. */
+export interface BankQuestion {
+  id: string;
+  subjectSlug: string;
+  text: string;
+  options: QuestionOption[];
+  correctOptionId: string;
+  explanation: string;
+  points: number;
+  difficulty: Difficulty;
+  archived?: boolean;
 }
 
 export interface TestSummary {
@@ -78,15 +113,13 @@ export interface TestSummary {
   topicId?: string;
   title: string;
   questionCount: number;
+  totalPoints: number;
   durationMinutes: number;
   passMark: number;
+  published: boolean;
   /** Best score for the current user in %, if attempted. */
   bestScore?: number;
-}
-
-export interface QuestionOption {
-  id: string;
-  text: string;
+  archived?: boolean;
 }
 
 /** What the browser receives. Correct answers and explanations never leave the server before submission. */
@@ -94,6 +127,7 @@ export interface PublicQuestion {
   id: string;
   text: string;
   options: QuestionOption[];
+  points: number;
 }
 
 export interface TestForAttempt extends TestSummary {
@@ -103,12 +137,13 @@ export interface TestForAttempt extends TestSummary {
 /** questionId -> optionId */
 export type AnswerMap = Record<string, string>;
 
+/** In-progress attempt state, owned by the server (deadline is authoritative). */
 export interface AttemptDraft {
   testId: string;
   answers: AnswerMap;
   flagged: string[];
   currentIndex: number;
-  /** Seconds elapsed on the server clock when the draft was saved. */
+  /** Seconds elapsed on the SERVER clock when the page was rendered / the draft saved. */
   elapsedSeconds: number;
 }
 
@@ -121,6 +156,7 @@ export interface ReviewItem {
   explanation: string;
   isCorrect: boolean;
   flagged: boolean;
+  points: number;
 }
 
 export interface TestResult {
@@ -133,7 +169,9 @@ export interface TestResult {
   correct: number;
   incorrect: number;
   unanswered: number;
-  /** 0–100 */
+  earnedPoints: number;
+  totalPoints: number;
+  /** 0–100, points based */
   scorePercent: number;
   passMark: number;
   passed: boolean;
@@ -143,19 +181,27 @@ export interface TestResult {
   /** Subject progress before/after this attempt — drives the "progress update" block. */
   progressBefore: number;
   progressAfter: number;
-  isDemo: boolean;
+}
+
+export interface ResultListItem {
+  attemptId: string;
+  testId: string;
+  testTitle: string;
+  subjectName: string;
+  scorePercent: number;
+  passed: boolean;
+  submittedAt: string;
 }
 
 export interface Enrollment {
   platform: PlatformSlug;
   status: "active" | "not_enrolled";
   progress: number;
-  priceLabel?: string;
 }
 
 export interface ActivityItem {
   id: string;
-  kind: "topic" | "test" | "material";
+  kind: "topic" | "test" | "enroll";
   title: string;
   context: string;
   href: string;
@@ -167,11 +213,12 @@ export interface DashboardOverview {
   user: User;
   stats: { enrolledCourses: number; completedTopics: number; learningHours: number; overallProgress: number };
   enrollments: Enrollment[];
-  continueLearning: { topicId: string; topicTitle: string; subjectName: string; progress: number }[];
+  continueLearning: { topicId: string; topicTitle: string; subjectName: string; platform: PlatformSlug; progress: number }[];
   recentActivity: ActivityItem[];
   progressBreakdown: { completed: number; inProgress: number; notStarted: number; total: number };
   ranking: RankingEntry[];
-  tests: { test: TestSummary; subjectName: string; status: "upcoming" | "recent"; score?: number; dateISO: string }[];
+  recentResults: ResultListItem[];
+  availableTests: { test: TestSummary; subjectName: string }[];
   certificates: Certificate[];
   unreadNotifications: number;
 }
@@ -202,10 +249,20 @@ export type NotificationTarget =
   | { kind: "payment" }
   | { kind: "none" };
 
+export type NotificationCode =
+  | "welcome"
+  | "topic_unlocked"
+  | "result_ready"
+  | "exam_scheduled"
+  | "certificate_issued"
+  | "payment_received"
+  | "enrolled";
+
+/** Notifications store a CODE + params, never prose — text is translated at render time (RU/EN/UZ). */
 export interface AppNotification {
   id: string;
-  title: string;
-  body: string;
+  code: NotificationCode;
+  params?: Record<string, string>;
   createdAt: string;
   read: boolean;
   target: NotificationTarget;
@@ -235,5 +292,13 @@ export interface Exam {
 export interface StudentRecord extends User {
   platforms: PlatformSlug[];
   progress: number;
-  status: "active" | "suspended";
+  archived?: boolean;
+}
+
+export interface StoredFile {
+  id: string;
+  name: string;
+  mime: string;
+  size: number;
+  createdAt: string;
 }

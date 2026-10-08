@@ -5,7 +5,6 @@
     "titleTemplate": "%s | ACCA USA"
   },
   "common": {
-    "brand": "ACCA USA",
     "close": "Yopish",
     "cancel": "Bekor qilish",
     "save": "Saqlash",
@@ -30,11 +29,10 @@
     "register": "Ro‘yxatdan o‘tish",
     "signOut": "Chiqish",
     "demoData": "Demo ma’lumot",
-    "demoNotice": "Demo ko‘rinish: kirish va haqiqiy ma’lumotlar hali ulanmagan.",
+    "demoNotice": "Demo rejim: barcha ma’lumotlar to‘qima va server qayta ishga tushganda tiklanadi.",
     "skipToContent": "Asosiy tarkibga o‘tish",
     "openMenu": "Menyuni ochish",
     "closeMenu": "Menyuni yopish",
-    "menu": "Menyu",
     "notifications": "Bildirishnomalar",
     "profile": "Profil",
     "progress": "Progress",
@@ -51,10 +49,17 @@
     "comingSoon": "Tez kunda",
     "optional": "Ixtiyoriy",
     "topicsCount": "{count} ta mavzu",
-    "testsCount": "{count} ta test",
     "lessonsCount": "{count} ta dars",
     "minutes": "{count} daq",
-    "percent": "{value}%"
+    "percent": "{value}%",
+    "showPassword": "Parolni ko‘rsatish",
+    "hidePassword": "Parolni yashirish",
+    "demoMode": "Demo rejim",
+    "breadcrumb": "Navigatsiya yo‘li",
+    "table": "Jadval",
+    "all": "Barchasi",
+    "archived": "Arxivda",
+    "saving": "Saqlanmoqda…"
   },
   "nav": {
     "acca": "ACCA",
@@ -64,7 +69,7 @@
     "forums": "Forumlar",
     "search": "Qidiruv",
     "dashboard": "Boshqaruv paneli",
-    "courses": "Mening kurslarim",
+    "courses": "Mening platformalarim",
     "exams": "Sinov imtihonlari",
     "progress": "Progress",
     "ranking": "Reyting",
@@ -79,10 +84,8 @@
     "learn": "O‘qish",
     "account": "Hisob",
     "qualifications": "Malakalar",
-    "backToSite": "Saytga qaytish",
     "adminPanel": "Administrator paneli",
-    "studentArea": "Talaba kabineti",
-    "more": "Yana"
+    "studentArea": "Talaba kabineti"
   },
   "mega": {
     "levels": "Darajalar va fanlar",
@@ -92,7 +95,6 @@
     "practiceTests": "Amaliy testlar va sinov imtihonlari",
     "books": "Kitoblar va takrorlash to‘plamlari",
     "forums": "Hamjamiyat forumlari",
-    "promoTitle": "{platform} bilan boshlang",
     "promoText": "O‘quv dasturi tuzilmasi va demo darslar bilan tanishish uchun bepul hisob yarating."
   },
   "footer": {
@@ -267,7 +269,6 @@
     "i4": "Progressni kuzatish va sertifikatlar",
     "ctaTitle": "{platform} o‘rganishni boshlang",
     "ctaText": "To‘liq dasturni ochish uchun hisob yarating.",
-    "viewSubject": "Fanni ochish",
     "subjectsInLevel": "{count} ta fan"
   },
   "auth": {
@@ -276,7 +277,10 @@
       "subtitle": "O‘qishni davom ettirish uchun kiring.",
       "submit": "Kirish",
       "noAccount": "Hisobingiz yo‘qmi?",
-      "registerLink": "Ro‘yxatdan o‘tish"
+      "registerLink": "Ro‘yxatdan o‘tish",
+      "forgot": "Parolni unutdingizmi?",
+      "demoTitle": "Demo hisoblar",
+      "demoText": "Faqat demo rejimda: formani to‘ldirish uchun rolni tanlang va «Kirish» tugmasini bosing."
     },
     "register": {
       "title": "Hisob yarating",
@@ -291,7 +295,8 @@
       "password": "Parol",
       "confirmPassword": "Parolni tasdiqlang",
       "passwordHint": "Kamida 8 belgi, harf va raqam bilan.",
-      "terms": "Foydalanish shartlari va maxfiylik siyosatiga roziman"
+      "terms": "Foydalanish shartlari va maxfiylik siyosatiga roziman",
+      "newPassword": "Yangi parol"
     },
     "errors": {
       "required": "Bu maydon majburiy.",
@@ -302,14 +307,45 @@
       "passwordMismatch": "Parollar mos kelmadi.",
       "termsRequired": "Davom etish uchun shartlarni qabul qiling."
     },
-    "notConnectedTitle": "Autentifikatsiya hali ulanmagan",
-    "notConnectedText": "Kiritilgan ma’lumotlar to‘g‘ri, lekin haqiqiy kirish va ro‘yxatdan o‘tish backend bloki bilan yoqiladi. Hech narsa yuborilmadi va saqlanmadi.",
-    "continueDemo": "Demo panelga o‘tish"
+    "passwordRules": {
+      "title": "Parol talablari",
+      "length": "8+ belgi",
+      "letter": "Harf",
+      "number": "Raqam",
+      "met": "(bajarildi)",
+      "notMet": "(hali bajarilmadi)"
+    },
+    "serverErrors": {
+      "invalidCredentials": "Elektron pochta yoki parol noto‘g‘ri.",
+      "suspended": "Hisob bloklangan. Administrator bilan bog‘laning.",
+      "emailTaken": "Bu elektron pochta bilan hisob allaqachon mavjud.",
+      "rateLimited": "Urinishlar juda ko‘p. {minutes} daqiqadan keyin qayta urining.",
+      "invalidToken": "Tiklash havolasi yaroqsiz yoki muddati tugagan.",
+      "generic": "Nimadir xato ketdi. Formani tekshirib, qayta urinib ko‘ring."
+    },
+    "forgot": {
+      "title": "Parolni tiklash",
+      "subtitle": "Hisobingiz elektron pochtasini kiriting — tiklash havolasini yuboramiz.",
+      "submit": "Havolani yuborish",
+      "back": "Kirishga qaytish",
+      "sentTitle": "Pochtangizni tekshiring",
+      "sentText": "Agar bu elektron pochta bilan hisob mavjud bo‘lsa, tiklash havolasi yuborildi. Havola 30 daqiqa amal qiladi.",
+      "demoTitle": "Demo rejim: xat yuborilmaydi",
+      "demoText": "Davom etish uchun bir martalik havoladan foydalaning:",
+      "demoCta": "Havolani ochish"
+    },
+    "reset": {
+      "title": "Yangi parol tanlang",
+      "subtitle": "Boshqa joyda ishlatmagan mustahkam parol tanlang.",
+      "submit": "Parolni yangilash",
+      "invalidTitle": "Havola yaroqsiz yoki muddati tugagan",
+      "invalidText": "Davom etish uchun yangi havola so‘rang.",
+      "requestNew": "Yangi havola so‘rash",
+      "success": "Parol yangilandi. Yangi parol bilan kiring."
+    }
   },
   "student": {
-    "demoSession": "Demo sessiya",
     "userMenu": "Hisob menyusi",
-    "greeting": "Salom, {name}",
     "support": "Yordam kerakmi?"
   },
   "dashboard": {
@@ -322,11 +358,10 @@
       "progress": "Umumiy progress",
       "hoursValue": "{hours} soat"
     },
-    "myCourses": "Mening kurslarim",
+    "myCourses": "Mening platformalarim",
     "active": "Faol",
     "notEnrolled": "Yozilmagan",
     "continue": "Davom etish",
-    "explore": "Batafsil",
     "continueLearning": "O‘qishni davom ettirish",
     "recentActivity": "So‘nggi faollik",
     "noActivity": "Hali faollik yo‘q. Birinchi mavzuni boshlang.",
@@ -340,18 +375,37 @@
     "you": "Siz",
     "points": "{points} ball",
     "tests": "Testlar va imtihonlar",
-    "upcoming": "Kutilmoqda",
-    "recent": "So‘nggi",
     "certificates": "Sertifikatlar",
     "earned": "Olingan",
-    "inProgressCert": "Jarayonda",
-    "notifications": "{count, plural, =0 {Yangi bildirishnoma yo‘q} other {# ta yangi bildirishnoma}}"
+    "notifications": "{count, plural, =0 {Yangi bildirishnoma yo‘q} other {# ta yangi bildirishnoma}}",
+    "enroll": "Yozilish",
+    "noEnrollmentsTitle": "Birinchi platformani tanlang",
+    "noEnrollmentsText": "Fanlar, mavzular va testlarni ochish uchun ACCA, CIMA yoki FIA ga yoziling. Har bir platformaning o‘z progressi bor.",
+    "continueEmpty": "Hozircha hech narsa boshlanmagan. Boshlash uchun mavzuni oching.",
+    "recentResults": "So‘nggi test natijalari",
+    "noResults": "Test natijalari hali yo‘q.",
+    "availableTests": "Mavjud testlar",
+    "noTests": "Platformalaringizda hali testlar yo‘q.",
+    "passed": "O‘tdi",
+    "failed": "O‘tmadi",
+    "startTest": "Testni boshlash",
+    "enrollTitle": "Platformaga yoziling"
   },
   "courses": {
-    "title": "Mening kurslarim",
-    "description": "Malakalaringiz va fanlaringiz bir joyda.",
+    "title": "Mening platformalarim",
+    "description": "Malakalaringiz. Har bir platformaning o‘z fanlari va progressi bor.",
     "subjects": "Fanlar",
-    "level": "Daraja"
+    "level": "Daraja",
+    "enrolled": "Yozilgansiz",
+    "enrollCta": "Yozilish (demoda bepul)",
+    "enrolling": "Yozilmoqda…",
+    "leave": "Platformani tark etish",
+    "leaveTitle": "Bu platformani tark etasizmi?",
+    "leaveText": "Progress saqlanadi. Istalgan vaqtda qayta yozilishingiz mumkin.",
+    "gateTitle": "{platform} ni ochish uchun yoziling",
+    "gateText": "Bu platformaning fanlari, mavzulari, materiallari va testlari yozilgandan so‘ng ochiladi.",
+    "viewSubjects": "Fanlarni ko‘rish",
+    "actionError": "Yozilishni yangilab bo‘lmadi. Qayta urinib ko‘ring."
   },
   "subject": {
     "tabs": {
@@ -369,7 +423,6 @@
     "next": "Keyingi qadam",
     "startTopic": "Mavzuni boshlash",
     "continueTopic": "Mavzuni davom ettirish",
-    "reviewTopic": "Mavzuni takrorlash",
     "status": {
       "completed": "Tugallangan",
       "in_progress": "Jarayonda",
@@ -390,7 +443,9 @@
       "notes": "Konspekt",
       "audio": "Audio",
       "slides": "Slaydlar",
-      "book": "Kitob"
+      "book": "Kitob",
+      "image": "Rasm",
+      "file": "Fayl"
     },
     "progressTitle": "Mavzular bo‘yicha progress"
   },
@@ -409,18 +464,19 @@
     "noResources": "Bu mavzu uchun yuklab olinadigan fayllar hali yo‘q.",
     "markCompleted": "Tugallangan deb belgilash",
     "completed": "Tugallangan",
-    "completedToast": "Mavzu tugallangan deb belgilandi.",
     "previous": "Oldingi mavzu",
     "next": "Keyingi mavzu",
     "takeTest": "Mavzu testini topshirish",
-    "mediaPending": "Media hali ulanmagan",
-    "mediaPendingText": "Fayl saqlash va striming backend bloki bilan keladi. Bu yerda {kind} ko‘rsatiladi.",
-    "notesTitle": "Konspekt",
-    "notesText": "Mavzuning qisqacha mazmuni. To‘liq konspekt materiallar kutubxonasidan yuklanadi.",
     "lockedTitle": "Bu mavzu yopiq",
     "lockedText": "Uni ochish uchun oldingi mavzuni tugating.",
     "backToSubject": "Fanga qaytish",
-    "errorSaving": "Saqlab bo‘lmadi. Qayta urinib ko‘ring."
+    "errorSaving": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+    "noMaterialOfKind": "Bu mavzuga hali {kind} qo‘shilmagan.",
+    "open": "Ochish",
+    "download": "Yuklab olish",
+    "notesEmpty": "Bu mavzuga hali konspektlar qo‘shilmagan.",
+    "videoUnsupported": "Brauzeringiz bu videoni ijro eta olmaydi.",
+    "audioUnsupported": "Brauzeringiz bu audioni ijro eta olmaydi."
   },
   "test": {
     "timeRemaining": "Qolgan vaqt",
@@ -469,7 +525,20 @@
     "submitting": "Yuborilmoqda…",
     "submitError": "Testni yuborib bo‘lmadi. Ulanishni tekshirib, qayta urinib ko‘ring.",
     "resumed": "Qoralama tiklandi — qolgan joyingizdan davom eting.",
-    "notFound": "Test topilmadi."
+    "notFound": "Test topilmadi.",
+    "intro": {
+      "title": "Boshlashga tayyormisiz?",
+      "startText": "Sizda {minutes} daqiqa bor. Taymer «Boshlash» bosilganda ishga tushadi va to‘xtatilmaydi. Javoblar avtomatik saqlanadi.",
+      "start": "Testni boshlash",
+      "resume": "Testni davom ettirish",
+      "questions": "Savollar",
+      "duration": "Davomiyligi",
+      "passMark": "O‘tish bali",
+      "points": "Ballar",
+      "previousBest": "Eng yaxshi natijangiz: {score}%",
+      "backToSubject": "Fanga qaytish",
+      "startError": "Testni boshlab bo‘lmadi. Qayta urinib ko‘ring."
+    }
   },
   "result": {
     "title": "Test yakunlandi!",
@@ -504,7 +573,13 @@
       "incorrect": "Faqat noto‘g‘rilari",
       "flagged": "Belgilanganlar"
     },
-    "noItems": "Bu filtr bo‘yicha savollar yo‘q."
+    "noItems": "Bu filtr bo‘yicha savollar yo‘q.",
+    "points": "Ballar: {earned} / {total}",
+    "noResultTitle": "Natija hali yo‘q",
+    "noResultText": "Siz bu testni hali tugatmagansiz.",
+    "flaggedLabel": "Belgilangan",
+    "startTest": "Testni boshlash",
+    "pointsLabel": "Ballar"
   },
   "exams": {
     "title": "Sinov imtihonlari",
@@ -526,7 +601,10 @@
     "title": "Progress",
     "description": "Fanlar bo‘yicha qanday ketayotganingiz.",
     "bySubject": "Fanlar bo‘yicha",
-    "empty": "Mavzuni boshlang — progressingiz shu yerda ko‘rinadi."
+    "empty": "Mavzuni boshlang — progressingiz shu yerda ko‘rinadi.",
+    "results": "Test natijalari",
+    "noResults": "Tugallangan testlaringiz shu yerda ko‘rinadi.",
+    "view": "Ochish"
   },
   "ranking": {
     "title": "Reyting",
@@ -564,7 +642,37 @@
     "markAllRead": "Barchasini o‘qilgan deb belgilash",
     "unread": "Yangi",
     "empty": "Yangi bildirishnomalar yo‘q.",
-    "open": "Ochish"
+    "open": "Ochish",
+    "codes": {
+      "welcome": {
+        "title": "ACCA USA ga xush kelibsiz",
+        "body": "Birinchi mavzuni boshlash uchun platformaga yoziling."
+      },
+      "topic_unlocked": {
+        "title": "Yangi mavzu ochildi",
+        "body": "«{topic}» mavzusi endi mavjud."
+      },
+      "result_ready": {
+        "title": "Test natijasi tayyor",
+        "body": "«{test}» testi natijasi tayyor."
+      },
+      "exam_scheduled": {
+        "title": "Sinov imtihoni rejalashtirildi",
+        "body": "{exam}: sana va davomiylikni tekshiring."
+      },
+      "certificate_issued": {
+        "title": "Sertifikat berildi",
+        "body": "{title} tugatganlik sertifikati mavjud."
+      },
+      "payment_received": {
+        "title": "To‘lov qabul qilindi",
+        "body": "To‘lovingiz qayd etildi."
+      },
+      "enrolled": {
+        "title": "Yozildingiz",
+        "body": "Siz {platform} platformasiga yozildingiz."
+      }
+    }
   },
   "profilePage": {
     "title": "Profil",
@@ -629,7 +737,7 @@
     "emptyText": "Boshqacha yozib yoki qisqaroq so‘z bilan urinib ko‘ring."
   },
   "admin": {
-    "demoNotice": "Admin demo ko‘rinishi: autentifikatsiya ulanmaguncha rollarni tekshirish ishlamaydi.",
+    "demoNotice": "Demo rejim: admin o‘zgarishlari faqat xotirada saqlanadi va server qayta ishga tushganda tiklanadi.",
     "overview": {
       "title": "Administrator sharhi",
       "description": "Platforma raqamlarda. Ko‘rsatkichlar — demo ma’lumot.",
@@ -646,9 +754,21 @@
       "noMatch": "So‘rovingizga mos yozuvlar yo‘q.",
       "rows": "{count} ta yozuv",
       "confirmDeleteTitle": "Bu yozuvni o‘chirasizmi?",
-      "confirmDeleteText": "Yozuv arxivlanadi (yumshoq o‘chirish) va administrator uni tiklashi mumkin.",
-      "demoSave": "Faqat shu ko‘rinishda saqlandi — backend ulanmaguncha hech narsa saqlanmaydi.",
-      "newRecord": "Yangi yozuv"
+      "confirmDeleteText": "Yozuv arxivlanadi (yumshoq o‘chirish). Hech narsa yo‘q qilinmaydi, keyinroq tiklash mumkin.",
+      "showArchived": "Arxivni ko‘rsatish",
+      "restore": "Tiklash",
+      "archive": "Arxivlash",
+      "archivedBadge": "Arxivda",
+      "saved": "Saqlandi.",
+      "archivedDone": "Yozuv arxivlandi. Uni «Arxivni ko‘rsatish» orqali tiklash mumkin.",
+      "restoredDone": "Yozuv tiklandi.",
+      "forbidden": "Bu amal uchun ruxsatingiz yo‘q.",
+      "readOnly": "Faqat ko‘rish.",
+      "loading": "Yozuvlar yuklanmoqda…",
+      "filterAll": "Barchasi",
+      "selectPlaceholder": "Tanlang…",
+      "createTitle": "Yangi yozuv",
+      "editTitle": "Yozuvni tahrirlash"
     },
     "roles": {
       "STUDENT": "Talaba",
@@ -662,13 +782,14 @@
     "resources": {
       "platforms": {
         "title": "Platformalar",
-        "description": "ACCA USA da mavjud malakalar.",
+        "description": "Uch malaka tizim tomonidan belgilangan. Platformani qayta nomlash yoki arxivlash mumkin.",
         "add": "Platforma qo‘shish",
         "columns": {
           "name": "Nomi",
           "fullName": "To‘liq nomi",
           "levels": "Darajalar",
-          "subjects": "Fanlar"
+          "subjects": "Fanlar",
+          "status": "Holat"
         },
         "fields": {
           "name": "Qisqa nomi",
@@ -684,11 +805,16 @@
           "name": "Nomi",
           "platform": "Platforma",
           "topics": "Mavzular",
-          "tests": "Testlar"
+          "tests": "Testlar",
+          "level": "Daraja"
         },
         "fields": {
           "code": "Kod",
           "name": "Fan nomi",
+          "platform": "Platforma",
+          "level": "Platforma va daraja"
+        },
+        "filters": {
           "platform": "Platforma"
         }
       },
@@ -699,10 +825,17 @@
         "columns": {
           "order": "№",
           "title": "Nomi",
-          "subject": "Fan"
+          "subject": "Fan",
+          "duration": "Davomiyligi"
         },
         "fields": {
           "title": "Mavzu nomi",
+          "subject": "Fan",
+          "description": "Tavsif",
+          "durationMinutes": "Davomiyligi (daqiqa)",
+          "lessonCount": "Darslar soni"
+        },
+        "filters": {
           "subject": "Fan"
         }
       },
@@ -714,26 +847,51 @@
           "title": "Nomi",
           "kind": "Turi",
           "subject": "Fan",
-          "meta": "Tafsilotlar"
+          "meta": "Tafsilotlar",
+          "topic": "Mavzu"
         },
         "fields": {
           "title": "Material nomi",
+          "kind": "Turi",
+          "subject": "Fan",
+          "topic": "Mavzu (ixtiyoriy)",
+          "body": "Konspekt matni",
+          "file": "Fayl",
+          "fileId": "Fayl"
+        },
+        "filters": {
           "kind": "Turi",
           "subject": "Fan"
         }
       },
       "question-bank": {
         "title": "Savollar banki",
-        "description": "Testlar tuziladigan savollar.",
+        "description": "To‘rtta variant, to‘g‘ri javob, izoh, ball va qiyinlik darajasi bilan savollar.",
         "add": "Savol qo‘shish",
         "columns": {
           "id": "ID",
           "text": "Savol",
-          "options": "Variantlar"
+          "options": "Variantlar",
+          "subject": "Fan",
+          "difficulty": "Qiyinlik",
+          "points": "Ball",
+          "answer": "To‘g‘ri"
         },
         "fields": {
           "text": "Savol matni",
-          "explanation": "Izoh"
+          "explanation": "Izoh",
+          "subject": "Fan",
+          "optionA": "A varianti",
+          "optionB": "B varianti",
+          "optionC": "C varianti",
+          "optionD": "D varianti",
+          "correct": "To‘g‘ri javob",
+          "points": "Ball",
+          "difficulty": "Qiyinlik"
+        },
+        "filters": {
+          "subject": "Fan",
+          "difficulty": "Qiyinlik"
         }
       },
       "tests": {
@@ -745,18 +903,28 @@
           "subject": "Fan",
           "questions": "Savollar",
           "duration": "Davomiyligi",
-          "passMark": "O‘tish bali"
+          "passMark": "O‘tish bali",
+          "status": "Holat"
         },
         "fields": {
           "title": "Test nomi",
           "subject": "Fan",
           "duration": "Davomiyligi (daqiqa)",
-          "passMark": "O‘tish bali (%)"
+          "passMark": "O‘tish bali (%)",
+          "topic": "Mavzu (ixtiyoriy)",
+          "published": "E’lon qilingan",
+          "questionIds": "Savollar",
+          "publishedHint": "Talabalar faqat e’lon qilingan testlarni ko‘radi.",
+          "durationMinutes": "Davomiyligi (daqiqa)"
+        },
+        "filters": {
+          "subject": "Fan",
+          "status": "Holat"
         }
       },
       "exams": {
         "title": "Imtihonlar",
-        "description": "Rejalashtirilgan sinov imtihonlari.",
+        "description": "Rejalashtirilgan sinov imtihonlari (demo ma’lumot, faqat ko‘rish).",
         "add": "Imtihon rejalashtirish",
         "columns": {
           "title": "Nomi",
@@ -774,7 +942,7 @@
       "students": {
         "title": "Talabalar",
         "description": "Ro‘yxatdan o‘tgan talabalar va xodimlar.",
-        "add": "Foydalanuvchini taklif qilish",
+        "add": "Foydalanuvchi qo‘shish",
         "columns": {
           "name": "Ism",
           "email": "Elektron pochta",
@@ -785,12 +953,19 @@
         "fields": {
           "name": "To‘liq ism",
           "email": "Elektron pochta",
-          "role": "Rol"
+          "role": "Rol",
+          "status": "Holat",
+          "password": "Vaqtinchalik parol",
+          "passwordHint": "Tahrirlashda ixtiyoriy. Darhol xeshlanadi va qayta ko‘rsatilmaydi."
+        },
+        "filters": {
+          "role": "Rol",
+          "status": "Holat"
         }
       },
       "payments": {
         "title": "To‘lovlar",
-        "description": "To‘lov yozuvlari. To‘lovlarni qayta ishlash hali yoqilmagan.",
+        "description": "Demo to‘lov yozuvlari (faqat ko‘rish). Haqiqiy to‘lovlar yoqilmagan.",
         "add": "To‘lov qo‘shish",
         "columns": {
           "student": "Talaba",
@@ -809,7 +984,24 @@
       "required": "Bu maydon majburiy.",
       "emailInvalid": "To‘g‘ri elektron pochta manzilini kiriting.",
       "min": "Kamida {min} ta belgi kiriting.",
-      "number": "{min} dan {max} gacha son kiriting."
+      "number": "{min} dan {max} gacha son kiriting.",
+      "max": "{max} tadan ko‘p bo‘lmagan belgi kiriting.",
+      "range": "{min} dan {max} gacha son kiriting.",
+      "passwordMin": "Parol kamida 8 belgidan iborat bo‘lishi kerak.",
+      "passwordStrength": "Parolda harf va raqam bo‘lishi kerak.",
+      "fileRequired": "Bu material uchun fayl yuklang.",
+      "notesRequired": "Konspekt matnini yozing (kamida 10 belgi).",
+      "questionsRequired": "Kamida bitta savolni tanlang.",
+      "invalidChoice": "To‘g‘ri variantni tanlang.",
+      "emailTaken": "Bu elektron pochta allaqachon ro‘yxatdan o‘tgan.",
+      "lastAdmin": "Oxirgi faol administratorni o‘chirib yoki pasaytirib bo‘lmaydi.",
+      "selfProtect": "O‘z rolingiz va holatingizni o‘zgartirib yoki o‘zingizni arxivlab bo‘lmaydi.",
+      "topicMismatch": "Mavzu tanlangan fanga tegishli emas.",
+      "questionSubjectMismatch": "Barcha savollar tanlangan fanga tegishli bo‘lishi kerak.",
+      "fileType": "Yuklangan fayl material turiga mos kelmaydi.",
+      "notFound": "Yozuv topilmadi.",
+      "generic": "Saqlab bo‘lmadi. Formani tekshiring.",
+      "forbidden": "Bu amal uchun ruxsatingiz yo‘q."
     },
     "statistics": {
       "title": "Statistika",
@@ -833,6 +1025,21 @@
       "reminders": "O‘qish eslatmalarini yuborish",
       "remindersHint": "7 kun faol bo‘lmagan talabalarga pochta yuborish.",
       "saved": "Sozlamalar saqlandi (demo — ma’lumot saqlanmaydi)."
+    },
+    "difficulty": {
+      "easy": "Oson",
+      "medium": "O‘rtacha",
+      "hard": "Qiyin"
+    },
+    "testStatus": {
+      "published": "E’lon qilingan",
+      "draft": "Qoralama"
+    },
+    "answer": {
+      "a": "A",
+      "b": "B",
+      "c": "C",
+      "d": "D"
     }
   },
   "states": {
@@ -846,5 +1053,30 @@
     "emptyTitle": "Hozircha hech narsa yo‘q",
     "forbiddenTitle": "Ruxsat yo‘q",
     "forbiddenText": "Sizning rolingiz bu sahifani ko‘rishga ruxsat bermaydi."
+  },
+  "theme": {
+    "label": "Mavzu",
+    "light": "Yorug‘",
+    "dark": "Qorong‘i",
+    "system": "Tizim"
+  },
+  "upload": {
+    "choose": "Fayl tanlash",
+    "replace": "Almashtirish",
+    "remove": "O‘chirish",
+    "preview": "Ko‘rib chiqish",
+    "uploading": "Yuklanmoqda… {percent}%",
+    "uploaded": "Yuklandi",
+    "allowed": "Ruxsat etilgan: {types} · {max} gacha",
+    "tooLarge": "Fayl juda katta ({max} gacha).",
+    "badType": "Bu fayl turi bu yerda ruxsat etilmagan. Ruxsat etilgan: {types}.",
+    "badSignature": "Fayl mazmuni kengaytmasiga mos kelmaydi.",
+    "empty": "Fayl bo‘sh.",
+    "network": "Yuklab bo‘lmadi. Ulanishni tekshirib, qayta urinib ko‘ring.",
+    "forbidden": "Fayl yuklash uchun ruxsatingiz yo‘q.",
+    "failed": "Faylni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
+    "selectKindFirst": "Avval material turini tanlang.",
+    "current": "Joriy fayl",
+    "cancel": "Yuklashni bekor qilish"
   }
 }

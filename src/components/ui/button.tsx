@@ -15,10 +15,10 @@ export const buttonVariants = cva(
         outline: "border border-input bg-background text-foreground hover:bg-muted",
         "outline-primary": "border border-primary bg-background text-primary hover:bg-primary-soft",
         ghost: "text-foreground hover:bg-muted",
-        destructive: "bg-destructive text-white shadow-xs hover:bg-destructive/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90",
         link: "h-auto rounded-sm p-0 text-primary underline-offset-4 hover:underline",
-        cima: "bg-cima text-white shadow-xs hover:bg-cima/90",
-        fia: "bg-fia text-white shadow-xs hover:bg-fia/90",
+        cima: "bg-cima text-cima-foreground shadow-xs hover:bg-cima/90",
+        fia: "bg-fia text-fia-foreground shadow-xs hover:bg-fia/90",
       },
       size: {
         sm: "h-9 px-3",

@@ -5,7 +5,6 @@
     "titleTemplate": "%s | ACCA USA"
   },
   "common": {
-    "brand": "ACCA USA",
     "close": "Close",
     "cancel": "Cancel",
     "save": "Save",
@@ -30,11 +29,10 @@
     "register": "Register",
     "signOut": "Sign out",
     "demoData": "Demo data",
-    "demoNotice": "Demo preview: sign-in and real data are not connected yet.",
+    "demoNotice": "Demo mode: all data is fictional and resets when the server restarts.",
     "skipToContent": "Skip to main content",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "menu": "Menu",
     "notifications": "Notifications",
     "profile": "Profile",
     "progress": "Progress",
@@ -51,10 +49,17 @@
     "comingSoon": "Coming soon",
     "optional": "Optional",
     "topicsCount": "{count, plural, one {# topic} other {# topics}}",
-    "testsCount": "{count, plural, one {# test} other {# tests}}",
     "lessonsCount": "{count, plural, one {# lesson} other {# lessons}}",
     "minutes": "{count} min",
-    "percent": "{value}%"
+    "percent": "{value}%",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "demoMode": "Demo mode",
+    "breadcrumb": "Breadcrumb",
+    "table": "Table",
+    "all": "All",
+    "archived": "Archived",
+    "saving": "Saving…"
   },
   "nav": {
     "acca": "ACCA",
@@ -64,7 +69,7 @@
     "forums": "Forums",
     "search": "Search",
     "dashboard": "Dashboard",
-    "courses": "My Courses",
+    "courses": "My Platforms",
     "exams": "Mock Exams",
     "progress": "Progress",
     "ranking": "Ranking",
@@ -79,10 +84,8 @@
     "learn": "Learn",
     "account": "Account",
     "qualifications": "Qualifications",
-    "backToSite": "Back to site",
     "adminPanel": "Admin panel",
-    "studentArea": "Student area",
-    "more": "More"
+    "studentArea": "Student area"
   },
   "mega": {
     "levels": "Levels and subjects",
@@ -92,7 +95,6 @@
     "practiceTests": "Practice tests and mock exams",
     "books": "Books and revision kits",
     "forums": "Community forums",
-    "promoTitle": "Start with {platform}",
     "promoText": "Create a free account to explore the syllabus structure and demo lessons."
   },
   "footer": {
@@ -267,7 +269,6 @@
     "i4": "Progress tracking and certificates",
     "ctaTitle": "Start learning {platform}",
     "ctaText": "Create an account to unlock the full syllabus.",
-    "viewSubject": "Open subject",
     "subjectsInLevel": "{count, plural, one {# subject} other {# subjects}}"
   },
   "auth": {
@@ -276,7 +277,10 @@
       "subtitle": "Sign in to continue learning.",
       "submit": "Sign in",
       "noAccount": "Don’t have an account?",
-      "registerLink": "Register"
+      "registerLink": "Register",
+      "forgot": "Forgot password?",
+      "demoTitle": "Demo accounts",
+      "demoText": "Demo mode only: pick a role to fill the form, then press Sign in."
     },
     "register": {
       "title": "Create your account",
@@ -291,7 +295,8 @@
       "password": "Password",
       "confirmPassword": "Confirm password",
       "passwordHint": "At least 8 characters, with a letter and a number.",
-      "terms": "I agree to the terms of use and privacy policy"
+      "terms": "I agree to the terms of use and privacy policy",
+      "newPassword": "New password"
     },
     "errors": {
       "required": "This field is required.",
@@ -302,14 +307,45 @@
       "passwordMismatch": "Passwords do not match.",
       "termsRequired": "You must accept the terms to continue."
     },
-    "notConnectedTitle": "Authentication is not connected yet",
-    "notConnectedText": "Your input is valid, but real sign-in and registration will be enabled with the backend block. Nothing was sent or stored.",
-    "continueDemo": "Continue to the demo dashboard"
+    "passwordRules": {
+      "title": "Password requirements",
+      "length": "8+ characters",
+      "letter": "A letter",
+      "number": "A number",
+      "met": "(met)",
+      "notMet": "(not met yet)"
+    },
+    "serverErrors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "suspended": "This account is suspended. Contact an administrator.",
+      "emailTaken": "An account with this email already exists.",
+      "rateLimited": "Too many attempts. Try again in {minutes} min.",
+      "invalidToken": "This reset link is invalid or has expired.",
+      "generic": "Something went wrong. Please check the form and try again."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your account email and we will send you a reset link.",
+      "submit": "Send reset link",
+      "back": "Back to sign in",
+      "sentTitle": "Check your inbox",
+      "sentText": "If an account exists for this email, a reset link has been sent. The link is valid for 30 minutes.",
+      "demoTitle": "Demo mode: no email is sent",
+      "demoText": "Use this one-time link to continue:",
+      "demoCta": "Open reset link"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "subtitle": "Pick a strong password you have not used elsewhere.",
+      "submit": "Update password",
+      "invalidTitle": "This reset link is invalid or expired",
+      "invalidText": "Request a new link to continue.",
+      "requestNew": "Request a new link",
+      "success": "Password updated. Sign in with your new password."
+    }
   },
   "student": {
-    "demoSession": "Demo session",
     "userMenu": "Account menu",
-    "greeting": "Hello, {name}",
     "support": "Need help?"
   },
   "dashboard": {
@@ -322,11 +358,10 @@
       "progress": "Overall progress",
       "hoursValue": "{hours} h"
     },
-    "myCourses": "My Courses",
+    "myCourses": "My Platforms",
     "active": "Active",
     "notEnrolled": "Not enrolled",
     "continue": "Continue",
-    "explore": "Explore",
     "continueLearning": "Continue learning",
     "recentActivity": "Recent activity",
     "noActivity": "No activity yet. Start your first topic.",
@@ -340,18 +375,37 @@
     "you": "You",
     "points": "{points} pts",
     "tests": "Tests and exams",
-    "upcoming": "Upcoming",
-    "recent": "Recent",
     "certificates": "Certificates",
     "earned": "Earned",
-    "inProgressCert": "In progress",
-    "notifications": "{count, plural, =0 {No new notifications} one {# new notification} other {# new notifications}}"
+    "notifications": "{count, plural, =0 {No new notifications} one {# new notification} other {# new notifications}}",
+    "enroll": "Enroll",
+    "noEnrollmentsTitle": "Choose your first platform",
+    "noEnrollmentsText": "Enroll in ACCA, CIMA or FIA to unlock subjects, topics and tests. Each platform has its own progress.",
+    "continueEmpty": "Nothing in progress yet. Open a topic to start.",
+    "recentResults": "Recent test results",
+    "noResults": "No test results yet.",
+    "availableTests": "Available tests",
+    "noTests": "No tests available in your platforms yet.",
+    "passed": "Passed",
+    "failed": "Not passed",
+    "startTest": "Start test",
+    "enrollTitle": "Enroll in a platform"
   },
   "courses": {
-    "title": "My Courses",
-    "description": "Your qualifications and subjects in one place.",
+    "title": "My Platforms",
+    "description": "Your qualifications. Each platform keeps its own subjects and progress.",
     "subjects": "Subjects",
-    "level": "Level"
+    "level": "Level",
+    "enrolled": "Enrolled",
+    "enrollCta": "Enroll (free in demo)",
+    "enrolling": "Enrolling…",
+    "leave": "Leave platform",
+    "leaveTitle": "Leave this platform?",
+    "leaveText": "Your progress is kept. You can enroll again at any time.",
+    "gateTitle": "Enroll to access {platform}",
+    "gateText": "Subjects, topics, materials and tests of this platform open after you enroll.",
+    "viewSubjects": "View subjects",
+    "actionError": "Could not update your enrolment. Please try again."
   },
   "subject": {
     "tabs": {
@@ -369,7 +423,6 @@
     "next": "Next up",
     "startTopic": "Start topic",
     "continueTopic": "Continue topic",
-    "reviewTopic": "Review topic",
     "status": {
       "completed": "Completed",
       "in_progress": "In progress",
@@ -390,7 +443,9 @@
       "notes": "Notes",
       "audio": "Audio",
       "slides": "Slides",
-      "book": "Book"
+      "book": "Book",
+      "image": "Image",
+      "file": "File"
     },
     "progressTitle": "Topic progress"
   },
@@ -409,18 +464,19 @@
     "noResources": "No downloadable resources for this topic yet.",
     "markCompleted": "Mark as completed",
     "completed": "Completed",
-    "completedToast": "Topic marked as completed.",
     "previous": "Previous topic",
     "next": "Next topic",
     "takeTest": "Take the topic test",
-    "mediaPending": "Media is not connected yet",
-    "mediaPendingText": "File storage and streaming arrive with the backend block. This panel shows where the {kind} will appear.",
-    "notesTitle": "Study notes",
-    "notesText": "Summary of this topic. Full formatted notes will be loaded from the materials library.",
     "lockedTitle": "This topic is locked",
     "lockedText": "Complete the previous topic to unlock it.",
     "backToSubject": "Back to subject",
-    "errorSaving": "Could not save. Please try again."
+    "errorSaving": "Could not save. Please try again.",
+    "noMaterialOfKind": "No {kind} has been added to this topic yet.",
+    "open": "Open",
+    "download": "Download",
+    "notesEmpty": "No notes have been added to this topic yet.",
+    "videoUnsupported": "Your browser cannot play this video.",
+    "audioUnsupported": "Your browser cannot play this audio."
   },
   "test": {
     "timeRemaining": "Time remaining",
@@ -469,7 +525,20 @@
     "submitting": "Submitting…",
     "submitError": "Could not submit the test. Check your connection and try again.",
     "resumed": "Draft restored — continue where you left off.",
-    "notFound": "This test could not be found."
+    "notFound": "This test could not be found.",
+    "intro": {
+      "title": "Ready to start?",
+      "startText": "You have {minutes} min. The timer starts when you press Start and cannot be paused. Answers are saved automatically.",
+      "start": "Start test",
+      "resume": "Resume test",
+      "questions": "Questions",
+      "duration": "Duration",
+      "passMark": "Pass mark",
+      "points": "Points",
+      "previousBest": "Your best score: {score}%",
+      "backToSubject": "Back to subject",
+      "startError": "Could not start the test. Please try again."
+    }
   },
   "result": {
     "title": "Test completed!",
@@ -504,7 +573,13 @@
       "incorrect": "Incorrect only",
       "flagged": "Flagged"
     },
-    "noItems": "No questions match this filter."
+    "noItems": "No questions match this filter.",
+    "points": "Points: {earned} / {total}",
+    "noResultTitle": "No result yet",
+    "noResultText": "You have not completed this test yet.",
+    "flaggedLabel": "Flagged",
+    "startTest": "Start test",
+    "pointsLabel": "Points"
   },
   "exams": {
     "title": "Mock Exams",
@@ -526,7 +601,10 @@
     "title": "Progress",
     "description": "How you are doing across your subjects.",
     "bySubject": "By subject",
-    "empty": "Start a topic to see your progress here."
+    "empty": "Start a topic to see your progress here.",
+    "results": "Test results",
+    "noResults": "Your completed tests will appear here.",
+    "view": "View"
   },
   "ranking": {
     "title": "Ranking",
@@ -564,7 +642,37 @@
     "markAllRead": "Mark all as read",
     "unread": "Unread",
     "empty": "You are all caught up.",
-    "open": "Open"
+    "open": "Open",
+    "codes": {
+      "welcome": {
+        "title": "Welcome to ACCA USA",
+        "body": "Enroll in a platform to start your first topic."
+      },
+      "topic_unlocked": {
+        "title": "New topic unlocked",
+        "body": "“{topic}” is now available."
+      },
+      "result_ready": {
+        "title": "Test result ready",
+        "body": "Your result for “{test}” is ready."
+      },
+      "exam_scheduled": {
+        "title": "Mock exam scheduled",
+        "body": "{exam} is scheduled. Check the date and duration."
+      },
+      "certificate_issued": {
+        "title": "Certificate issued",
+        "body": "Your {title} completion certificate is available."
+      },
+      "payment_received": {
+        "title": "Payment received",
+        "body": "Your payment was recorded."
+      },
+      "enrolled": {
+        "title": "Enrolled",
+        "body": "You are now enrolled in {platform}."
+      }
+    }
   },
   "profilePage": {
     "title": "Profile",
@@ -629,7 +737,7 @@
     "emptyText": "Try a different spelling or a shorter keyword."
   },
   "admin": {
-    "demoNotice": "Admin preview: role checks are not enforced until authentication is connected.",
+    "demoNotice": "Demo mode: admin changes are kept in memory only and reset when the server restarts.",
     "overview": {
       "title": "Admin overview",
       "description": "Platform at a glance. Figures are demo data.",
@@ -646,9 +754,21 @@
       "noMatch": "No records match your search.",
       "rows": "{count, plural, one {# record} other {# records}}",
       "confirmDeleteTitle": "Delete this record?",
-      "confirmDeleteText": "The record will be archived (soft delete) and can be restored by an administrator.",
-      "demoSave": "Saved in this preview only — nothing is stored until the backend is connected.",
-      "newRecord": "New record"
+      "confirmDeleteText": "The record will be archived (soft delete). Nothing is destroyed and you can restore it later.",
+      "showArchived": "Show archived",
+      "restore": "Restore",
+      "archive": "Archive",
+      "archivedBadge": "Archived",
+      "saved": "Saved.",
+      "archivedDone": "Record archived. You can restore it from “Show archived”.",
+      "restoredDone": "Record restored.",
+      "forbidden": "You do not have permission for this action.",
+      "readOnly": "Read-only view.",
+      "loading": "Loading records…",
+      "filterAll": "All",
+      "selectPlaceholder": "Select…",
+      "createTitle": "New record",
+      "editTitle": "Edit record"
     },
     "roles": {
       "STUDENT": "Student",
@@ -662,13 +782,14 @@
     "resources": {
       "platforms": {
         "title": "Platforms",
-        "description": "Qualifications offered on ACCA USA.",
+        "description": "The three qualifications are fixed by design. You can rename a platform or archive it.",
         "add": "Add platform",
         "columns": {
           "name": "Name",
           "fullName": "Full name",
           "levels": "Levels",
-          "subjects": "Subjects"
+          "subjects": "Subjects",
+          "status": "Status"
         },
         "fields": {
           "name": "Short name",
@@ -684,11 +805,16 @@
           "name": "Name",
           "platform": "Platform",
           "topics": "Topics",
-          "tests": "Tests"
+          "tests": "Tests",
+          "level": "Level"
         },
         "fields": {
           "code": "Code",
           "name": "Subject name",
+          "platform": "Platform",
+          "level": "Platform and level"
+        },
+        "filters": {
           "platform": "Platform"
         }
       },
@@ -699,10 +825,17 @@
         "columns": {
           "order": "#",
           "title": "Title",
-          "subject": "Subject"
+          "subject": "Subject",
+          "duration": "Duration"
         },
         "fields": {
           "title": "Topic title",
+          "subject": "Subject",
+          "description": "Description",
+          "durationMinutes": "Duration (minutes)",
+          "lessonCount": "Number of lessons"
+        },
+        "filters": {
           "subject": "Subject"
         }
       },
@@ -714,26 +847,51 @@
           "title": "Title",
           "kind": "Type",
           "subject": "Subject",
-          "meta": "Details"
+          "meta": "Details",
+          "topic": "Topic"
         },
         "fields": {
           "title": "Material title",
+          "kind": "Type",
+          "subject": "Subject",
+          "topic": "Topic (optional)",
+          "body": "Notes text",
+          "file": "File",
+          "fileId": "File"
+        },
+        "filters": {
           "kind": "Type",
           "subject": "Subject"
         }
       },
       "question-bank": {
         "title": "Question bank",
-        "description": "Questions that tests are built from.",
+        "description": "Questions with four options, a correct answer, explanation, points and difficulty.",
         "add": "Add question",
         "columns": {
           "id": "ID",
           "text": "Question",
-          "options": "Options"
+          "options": "Options",
+          "subject": "Subject",
+          "difficulty": "Difficulty",
+          "points": "Points",
+          "answer": "Correct"
         },
         "fields": {
           "text": "Question text",
-          "explanation": "Explanation"
+          "explanation": "Explanation",
+          "subject": "Subject",
+          "optionA": "Option A",
+          "optionB": "Option B",
+          "optionC": "Option C",
+          "optionD": "Option D",
+          "correct": "Correct answer",
+          "points": "Points",
+          "difficulty": "Difficulty"
+        },
+        "filters": {
+          "subject": "Subject",
+          "difficulty": "Difficulty"
         }
       },
       "tests": {
@@ -745,18 +903,28 @@
           "subject": "Subject",
           "questions": "Questions",
           "duration": "Duration",
-          "passMark": "Pass mark"
+          "passMark": "Pass mark",
+          "status": "Status"
         },
         "fields": {
           "title": "Test title",
           "subject": "Subject",
           "duration": "Duration (minutes)",
-          "passMark": "Pass mark (%)"
+          "passMark": "Pass mark (%)",
+          "topic": "Topic (optional)",
+          "published": "Published",
+          "questionIds": "Questions",
+          "publishedHint": "Only published tests are visible to students.",
+          "durationMinutes": "Duration (minutes)"
+        },
+        "filters": {
+          "subject": "Subject",
+          "status": "Status"
         }
       },
       "exams": {
         "title": "Exams",
-        "description": "Scheduled mock exams.",
+        "description": "Scheduled mock exams (demo data, read-only).",
         "add": "Schedule exam",
         "columns": {
           "title": "Title",
@@ -785,12 +953,19 @@
         "fields": {
           "name": "Full name",
           "email": "Email",
-          "role": "Role"
+          "role": "Role",
+          "status": "Status",
+          "password": "Temporary password",
+          "passwordHint": "Optional when editing. It is hashed immediately and never shown again."
+        },
+        "filters": {
+          "role": "Role",
+          "status": "Status"
         }
       },
       "payments": {
         "title": "Payments",
-        "description": "Payment records. Processing is not enabled yet.",
+        "description": "Demo payment records (read-only). Real payments are not enabled.",
         "add": "Record payment",
         "columns": {
           "student": "Student",
@@ -809,7 +984,24 @@
       "required": "This field is required.",
       "emailInvalid": "Enter a valid email address.",
       "min": "Enter at least {min} characters.",
-      "number": "Enter a number between {min} and {max}."
+      "number": "Enter a number between {min} and {max}.",
+      "max": "Use at most {max} characters.",
+      "range": "Enter a number between {min} and {max}.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "passwordStrength": "Password needs a letter and a number.",
+      "fileRequired": "Upload a file for this material.",
+      "notesRequired": "Write the notes text (at least 10 characters).",
+      "questionsRequired": "Select at least one question.",
+      "invalidChoice": "Choose a valid option.",
+      "emailTaken": "This email is already registered.",
+      "lastAdmin": "You cannot remove or demote the last active administrator.",
+      "selfProtect": "You cannot change your own role or status, or archive yourself.",
+      "topicMismatch": "The topic does not belong to the selected subject.",
+      "questionSubjectMismatch": "All questions must belong to the selected subject.",
+      "fileType": "The uploaded file does not match the material type.",
+      "notFound": "The record was not found.",
+      "generic": "Could not save. Please check the form.",
+      "forbidden": "You do not have permission for this action."
     },
     "statistics": {
       "title": "Statistics",
@@ -833,6 +1025,21 @@
       "reminders": "Send learning reminders",
       "remindersHint": "Email students who have been inactive for 7 days.",
       "saved": "Settings saved (demo — not stored)."
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "testStatus": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "answer": {
+      "a": "A",
+      "b": "B",
+      "c": "C",
+      "d": "D"
     }
   },
   "states": {
@@ -846,5 +1053,30 @@
     "emptyTitle": "Nothing here yet",
     "forbiddenTitle": "You don’t have access",
     "forbiddenText": "Your role does not allow viewing this page."
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "upload": {
+    "choose": "Choose file",
+    "replace": "Replace",
+    "remove": "Remove",
+    "preview": "Preview",
+    "uploading": "Uploading… {percent}%",
+    "uploaded": "Uploaded",
+    "allowed": "Allowed: {types} · max {max}",
+    "tooLarge": "The file is too large (max {max}).",
+    "badType": "This file type is not allowed here. Allowed: {types}.",
+    "badSignature": "The file content does not match its extension.",
+    "empty": "The file is empty.",
+    "network": "Upload failed. Check your connection and try again.",
+    "forbidden": "You do not have permission to upload files.",
+    "failed": "Upload failed. Please try again.",
+    "selectKindFirst": "Choose the material type first.",
+    "current": "Current file",
+    "cancel": "Cancel upload"
   }
 }

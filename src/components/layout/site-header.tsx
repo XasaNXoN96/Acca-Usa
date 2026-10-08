@@ -4,9 +4,13 @@ import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { DemoModeBadge } from "@/components/layout/demo-mode-badge";
 import { MegaMenuNav, type MegaPlatform } from "@/components/layout/mega-menu";
 import { PublicMobileMenu } from "@/components/layout/public-mobile-menu";
 import { services } from "@/services";
+import { getSession } from "@/lib/auth/session";
+import { homeFor } from "@/lib/auth/guards";
 import { routes } from "@/lib/routes";
 
 async function loadMegaPlatforms(): Promise<MegaPlatform[]> {
@@ -24,8 +28,8 @@ async function loadMegaPlatforms(): Promise<MegaPlatform[]> {
 }
 
 export async function SiteHeader() {
-  const t = await getTranslations("common");
-  const platforms = await loadMegaPlatforms();
+  const [t, n, platforms, session] = await Promise.all([getTranslations("common"), getTranslations("nav"), loadMegaPlatforms(), getSession()]);
+  const home = session ? homeFor(session.user.role) : null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
@@ -54,14 +58,24 @@ export async function SiteHeader() {
             </Link>
           </Button>
 
+          <DemoModeBadge className="hidden 2xl:inline-flex" />
+          <ThemeToggle className="hidden sm:inline-flex" />
           <LanguageSwitcher className="hidden sm:inline-flex" />
-          <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-            <Link href={routes.login}>{t("signIn")}</Link>
-          </Button>
-          <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href={routes.register}>{t("register")}</Link>
-          </Button>
-          <PublicMobileMenu platforms={platforms} />
+          {home ? (
+            <Button asChild size="sm" className="hidden sm:inline-flex">
+              <Link href={home}>{session?.user.role === "STUDENT" ? n("dashboard") : n("adminPanel")}</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+                <Link href={routes.login}>{t("signIn")}</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link href={routes.register}>{t("register")}</Link>
+              </Button>
+            </>
+          )}
+          <PublicMobileMenu platforms={platforms} home={home} homeLabel={session?.user.role === "STUDENT" ? n("dashboard") : n("adminPanel")} />
         </div>
       </div>
     </header>

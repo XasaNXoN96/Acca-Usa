@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { DemoBadge } from "@/components/ui/demo-badge";
+import { Card } from "@/components/ui/card";
 import { StatsRow } from "@/features/dashboard/stats-row";
 import { MyCourses } from "@/features/dashboard/my-courses";
 import { ContinueLearning } from "@/features/dashboard/continue-learning";
@@ -11,13 +12,14 @@ import { RankingPreview } from "@/features/dashboard/ranking-preview";
 import { TestsPreview } from "@/features/dashboard/tests-preview";
 import { CertificatesPreview } from "@/features/dashboard/certificates-preview";
 import { services } from "@/services";
+import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("nav"))("dashboard") };
 }
 
 export default async function DashboardPage() {
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, data, platforms] = await Promise.all([
     getTranslations("dashboard"),
     services.dashboard.getOverview(session.user.id),
@@ -32,6 +34,12 @@ export default async function DashboardPage() {
         actions={<DemoBadge />}
       />
       <StatsRow stats={data.stats} />
+      {data.stats.enrolledCourses === 0 ? (
+        <Card className="space-y-1 p-5">
+          <h2 className="type-h3">{t("noEnrollmentsTitle")}</h2>
+          <p className="type-small text-muted-foreground">{t("noEnrollmentsText")}</p>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -45,7 +53,7 @@ export default async function DashboardPage() {
             </div>
           </div>
           <RecentActivity items={data.recentActivity} />
-          <TestsPreview items={data.tests} />
+          <TestsPreview results={data.recentResults} available={data.availableTests} />
         </div>
         <div className="space-y-6">
           <ProgressOverview data={data.progressBreakdown} overall={data.stats.overallProgress} />

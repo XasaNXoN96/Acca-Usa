@@ -9,6 +9,7 @@ import { DemoBadge } from "@/components/ui/demo-badge";
 import { EmptyState } from "@/components/ui/states";
 import { PageHeader } from "@/components/ui/page-header";
 import { services } from "@/services";
+import { requireSession } from "@/lib/auth/guards";
 import { formatDateTime } from "@/lib/format";
 import { routes } from "@/lib/routes";
 
@@ -19,12 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
 const statusVariant = { scheduled: "info", open: "success", completed: "neutral" } as const;
 
 export default async function ExamsPage() {
+  const session = await requireSession();
   const [t, c, locale, exams, tests, subjects] = await Promise.all([
     getTranslations("exams"),
     getTranslations("common"),
     getLocale(),
     services.exams.list(),
-    services.tests.listAll(),
+    services.tests.listPublished(session.user.id),
     services.subjects.list(),
   ]);
   const subjectName = (slug: string) => subjects.find((s) => s.slug === slug)?.code ?? slug;

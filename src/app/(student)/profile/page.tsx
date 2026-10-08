@@ -3,14 +3,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProfileForm } from "@/features/profile/profile-form";
 import { isLocale } from "@/i18n/config";
-import { services } from "@/services";
+import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("profilePage"))("title") };
 }
 
 export default async function ProfilePage() {
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, locale] = await Promise.all([getTranslations("profilePage"), getLocale()]);
   return (
     <>

@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/states";
 import { formatRelative } from "@/lib/format";
 import type { ActivityItem } from "@/types";
 
-const icons = { topic: BookOpenCheck, test: ClipboardCheck, material: FileText } as const;
+const icons = { topic: BookOpenCheck, test: ClipboardCheck, enroll: FileText } as const;
 
 export async function RecentActivity({ items }: { items: ActivityItem[] }) {
   const [t, locale] = await Promise.all([getTranslations("dashboard"), getLocale()]);

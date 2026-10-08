@@ -2,9 +2,10 @@ import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
 import { services } from "@/services";
 import { studentBottomNav, studentNav } from "@/lib/navigation";
+import { requireSession } from "@/lib/auth/guards";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  const [t, session] = await Promise.all([getTranslations("nav"), services.auth.getSession("STUDENT")]);
+  const [t, session] = await Promise.all([getTranslations("nav"), requireSession()]);
   const unread = await services.notifications.unreadCount(session.user.id);
   const labels: Record<string, string> = {
     dashboard: t("dashboard"),

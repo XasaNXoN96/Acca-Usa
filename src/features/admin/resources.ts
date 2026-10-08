@@ -1,106 +1,95 @@
 import type { Permission } from "@/lib/permissions";
+import type { EditableResource } from "@/lib/validators/admin";
 
-export const resourceKeys = [
-  "platforms",
-  "subjects",
-  "topics",
-  "materials",
-  "question-bank",
-  "tests",
-  "exams",
-  "students",
-  "payments",
-] as const;
+export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
-export type FieldKind = "text" | "email" | "textarea" | "number" | "select";
+export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "checkbox" | "password" | "file";
 
 export interface FieldDef {
   name: string;
   kind: FieldKind;
   required?: boolean;
-  min?: number;
-  max?: number;
+  /** options are filtered by the current value of this other field (options carry a `group`) */
+  dependsOn?: string;
+  /** render only while another field has one of these values */
+  showIf?: { field: string; in?: string[]; notIn?: string[] };
 }
 
-/** Declarative description of each admin list: which permission it needs and what its form edits. */
-export const resourceConfig: Record<ResourceKey, { permission: Permission; fields: FieldDef[]; columns: string[] }> = {
+export interface ResourceConfig {
+  /** to open the page */
+  permission: Permission;
+  /** to create / edit / archive (undefined = read-only list) */
+  editPermission?: Permission;
+  columns: string[];
+  fields: FieldDef[];
+  /** filter names (options are supplied by the server builder) */
+  filters: string[];
+  canCreate: boolean;
+}
+
+export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
   platforms: {
-    permission: "manage_content",
+    permission: "manage_content", editPermission: "manage_content", canCreate: false, filters: [],
     columns: ["name", "fullName", "levels", "subjects"],
-    fields: [
-      { name: "name", kind: "text", required: true, min: 2, max: 20 },
-      { name: "fullName", kind: "text", required: true, min: 3, max: 120 },
-    ],
+    fields: [{ name: "name", kind: "text", required: true }, { name: "fullName", kind: "text", required: true }],
   },
   subjects: {
-    permission: "manage_content",
+    permission: "manage_content", editPermission: "manage_content", canCreate: true, filters: ["platform"],
     columns: ["code", "name", "platform", "topics", "tests"],
-    fields: [
-      { name: "code", kind: "text", required: true, min: 1, max: 12 },
-      { name: "name", kind: "text", required: true, min: 3, max: 120 },
-      { name: "platform", kind: "select", required: true },
-    ],
+    fields: [{ name: "code", kind: "text", required: true }, { name: "name", kind: "text", required: true }, { name: "level", kind: "select", required: true }],
   },
   topics: {
-    permission: "manage_content",
-    columns: ["order", "title", "subject"],
+    permission: "manage_content", editPermission: "manage_content", canCreate: true, filters: ["subject"],
+    columns: ["order", "title", "subject", "duration"],
     fields: [
-      { name: "title", kind: "text", required: true, min: 3, max: 160 },
-      { name: "subject", kind: "select", required: true },
+      { name: "title", kind: "text", required: true }, { name: "subject", kind: "select", required: true },
+      { name: "description", kind: "textarea" }, { name: "durationMinutes", kind: "number", required: true }, { name: "lessonCount", kind: "number", required: true },
     ],
   },
   materials: {
-    permission: "manage_content",
-    columns: ["title", "kind", "subject", "meta"],
+    permission: "manage_content", editPermission: "manage_content", canCreate: true, filters: ["kind", "subject"],
+    columns: ["title", "kind", "subject", "topic", "meta"],
     fields: [
-      { name: "title", kind: "text", required: true, min: 3, max: 160 },
-      { name: "kind", kind: "select", required: true },
-      { name: "subject", kind: "select", required: true },
+      { name: "title", kind: "text", required: true }, { name: "kind", kind: "select", required: true },
+      { name: "subject", kind: "select", required: true }, { name: "topic", kind: "select", dependsOn: "subject" },
+      { name: "body", kind: "textarea", showIf: { field: "kind", in: ["notes"] } },
+      { name: "fileId", kind: "file", showIf: { field: "kind", notIn: ["notes"] } },
     ],
   },
   "question-bank": {
-    permission: "manage_tests",
-    columns: ["id", "text", "options"],
+    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["subject", "difficulty"],
+    columns: ["text", "subject", "difficulty", "points", "answer"],
     fields: [
-      { name: "text", kind: "textarea", required: true, min: 10, max: 600 },
-      { name: "explanation", kind: "textarea", required: true, min: 10, max: 800 },
+      { name: "subject", kind: "select", required: true }, { name: "text", kind: "textarea", required: true },
+      { name: "optionA", kind: "text", required: true }, { name: "optionB", kind: "text", required: true },
+      { name: "optionC", kind: "text", required: true }, { name: "optionD", kind: "text", required: true },
+      { name: "correct", kind: "select", required: true }, { name: "explanation", kind: "textarea", required: true },
+      { name: "points", kind: "number", required: true }, { name: "difficulty", kind: "select", required: true },
     ],
   },
   tests: {
-    permission: "manage_tests",
-    columns: ["title", "subject", "questions", "duration", "passMark"],
+    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["subject", "status"],
+    columns: ["title", "subject", "questions", "duration", "passMark", "status"],
     fields: [
-      { name: "title", kind: "text", required: true, min: 3, max: 160 },
-      { name: "subject", kind: "select", required: true },
-      { name: "duration", kind: "number", required: true, min: 1, max: 240 },
-      { name: "passMark", kind: "number", required: true, min: 1, max: 100 },
+      { name: "title", kind: "text", required: true }, { name: "subject", kind: "select", required: true },
+      { name: "topic", kind: "select", dependsOn: "subject" },
+      { name: "durationMinutes", kind: "number", required: true }, { name: "passMark", kind: "number", required: true },
+      { name: "questionIds", kind: "multiselect", required: true, dependsOn: "subject" },
+      { name: "published", kind: "checkbox" },
     ],
   },
-  exams: {
-    permission: "manage_tests",
-    columns: ["title", "platform", "startsAt", "duration", "status"],
-    fields: [
-      { name: "title", kind: "text", required: true, min: 3, max: 160 },
-      { name: "platform", kind: "select", required: true },
-      { name: "duration", kind: "number", required: true, min: 1, max: 360 },
-    ],
-  },
+  exams: { permission: "manage_tests", canCreate: false, filters: [], columns: ["title", "platform", "startsAt", "duration", "status"], fields: [] },
   students: {
-    permission: "view_students",
+    permission: "view_students", editPermission: "manage_students", canCreate: true, filters: ["role", "status"],
     columns: ["name", "email", "role", "progress", "status"],
     fields: [
-      { name: "name", kind: "text", required: true, min: 2, max: 80 },
-      { name: "email", kind: "email", required: true },
-      { name: "role", kind: "select", required: true },
+      { name: "name", kind: "text", required: true }, { name: "email", kind: "email", required: true },
+      { name: "role", kind: "select", required: true }, { name: "status", kind: "select", required: true },
+      { name: "password", kind: "password" },
     ],
   },
-  payments: {
-    permission: "manage_payments",
-    columns: ["student", "description", "amount", "status", "date"],
-    fields: [
-      { name: "student", kind: "text", required: true, min: 2, max: 80 },
-      { name: "amount", kind: "number", required: true, min: 1, max: 100000 },
-    ],
-  },
+  payments: { permission: "manage_payments", canCreate: false, filters: [], columns: ["student", "description", "amount", "status", "date"], fields: [] },
 };
+
+export const isEditable = (r: ResourceKey): r is EditableResource & ResourceKey => !!resourceConfig[r].editPermission;

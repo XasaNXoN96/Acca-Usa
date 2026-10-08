@@ -40,7 +40,7 @@ export async function Hero() {
 async function HeroVisual() {
   const t = await getTranslations("landing.hero");
   return (
-    <div aria-hidden className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-[#16396b] shadow-lg">
+    <div aria-hidden className="relative mx-auto w-full max-w-lg overflow-hidden rounded-3xl bg-gradient-to-br from-surface-navy to-[#16396b] shadow-lg">
       <div className="space-y-4 p-5 sm:p-8">
         <div className="rounded-2xl bg-background p-5 shadow-lg">
           <div className="flex items-center gap-4">

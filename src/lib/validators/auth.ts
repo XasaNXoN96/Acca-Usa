@@ -45,3 +45,15 @@ export const profileSchema = z.object({
   language: z.enum(["en", "ru", "uz"]),
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
+
+export const forgotSchema = z.object({ email });
+export type ForgotInput = z.infer<typeof forgotSchema>;
+
+export const resetSchema = z
+  .object({
+    token: z.string().min(20).max(200),
+    password,
+    confirmPassword: z.string().min(1, "required"),
+  })
+  .refine((v) => v.password === v.confirmPassword, { path: ["confirmPassword"], message: "passwordMismatch" });
+export type ResetInput = z.infer<typeof resetSchema>;

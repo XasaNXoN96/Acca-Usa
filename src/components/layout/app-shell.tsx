@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { UserMenu } from "@/components/layout/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { DemoBanner } from "@/components/layout/demo-banner";
 import type { NavItem } from "@/lib/navigation";
 import { routes } from "@/lib/routes";
@@ -38,7 +39,7 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
 
   return (
     <div className="min-h-dvh bg-app">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[4.5rem] flex-col bg-navy text-white md:flex lg:w-60">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[4.5rem] flex-col bg-surface-navy text-white md:flex lg:w-60">
         <div className="flex h-16 shrink-0 items-center justify-center border-b border-white/10 px-3 lg:justify-start lg:px-5">
           <Logo tone="inverse" href={homeHref} stacked className="lg:hidden" />
           <Logo tone="inverse" href={homeHref} className="hidden lg:inline-flex" />
@@ -95,13 +96,14 @@ export async function AppShell({ variant, items, labels, bottomItems, user, unre
             )}
 
             <div className="ml-auto flex items-center gap-1">
+              <ThemeToggle className="hidden sm:inline-flex" />
               <LanguageSwitcher className="hidden sm:inline-flex" />
               {variant === "student" ? (
                 <Button asChild variant="ghost" size="icon" className="relative">
                   <Link href={routes.notifications} aria-label={t("dashboard.notifications", { count: unreadNotifications })}>
                     <Bell className="size-5" aria-hidden />
                     {unreadNotifications > 0 ? (
-                      <span aria-hidden className="absolute right-1.5 top-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[0.625rem] font-bold leading-4 text-white">
+                      <span aria-hidden className="absolute right-1.5 top-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[0.625rem] font-bold leading-4 text-primary-foreground">
                         {unreadNotifications}
                       </span>
                     ) : null}

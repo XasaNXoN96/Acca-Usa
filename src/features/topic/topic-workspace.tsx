@@ -7,39 +7,40 @@ import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MediaPanel } from "./media-panel";
+import { EmptyState } from "@/components/ui/states";
+import { MaterialCard, fileUrl } from "./material-viewers";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import type { Material } from "@/types";
+import type { Material, MaterialKind } from "@/types";
 
 const tabs = [
-  { id: "video", icon: Video },
-  { id: "pdf", icon: FileText },
-  { id: "notes", icon: StickyNote },
-  { id: "audio", icon: FileAudio },
-  { id: "slides", icon: Presentation },
-] as const;
+  { id: "video", icon: Video, kinds: ["video"] },
+  { id: "pdf", icon: FileText, kinds: ["pdf", "book"] },
+  { id: "notes", icon: StickyNote, kinds: ["notes"] },
+  { id: "audio", icon: FileAudio, kinds: ["audio"] },
+  { id: "slides", icon: Presentation, kinds: ["slides"] },
+] as const satisfies readonly { id: string; icon: unknown; kinds: readonly MaterialKind[] }[];
 type TabId = (typeof tabs)[number]["id"];
 
 export function TopicWorkspace({
-  title,
   description,
   keyPoints,
   materials,
   testId,
 }: {
-  title: string;
   description: string;
   keyPoints: string[];
   materials: Material[];
   testId: string | null;
 }) {
   const t = useTranslations("topic");
+  const k = useTranslations("subject.materialKinds");
   const [tab, setTab] = useState<TabId>("video");
+  const downloads = materials.filter((m) => m.fileId);
+  const count = (id: TabId) => materials.filter((m) => (tabs.find((x) => x.id === id)!.kinds as readonly string[]).includes(m.kind)).length;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-      {/* Outline (desktop): mirrors the tabs, plus the topic test */}
       <aside className="hidden lg:block">
         <Card className="p-3">
           <h2 className="type-eyebrow px-2 pb-2 pt-1 text-muted-foreground">{t("contents")}</h2>
@@ -55,11 +56,10 @@ export function TopicWorkspace({
                     tab === id ? "bg-primary-soft font-semibold text-primary" : "hover:bg-muted",
                   )}
                 >
-                  <span className="grid size-6 shrink-0 place-items-center rounded-md bg-muted text-xs font-bold text-muted-foreground" aria-hidden>
-                    {i + 1}
-                  </span>
+                  <span className="grid size-6 shrink-0 place-items-center rounded-md bg-muted text-xs font-bold text-muted-foreground" aria-hidden>{i + 1}</span>
                   <Icon className="size-4 shrink-0" aria-hidden />
-                  <span className="truncate">{t(`tabs.${id}`)}</span>
+                  <span className="min-w-0 flex-1 truncate">{t(`tabs.${id}`)}</span>
+                  <span className="type-caption tabular-nums text-muted-foreground">{count(id)}</span>
                 </button>
               </li>
             ))}
@@ -86,46 +86,48 @@ export function TopicWorkspace({
             ))}
           </TabsList>
 
-          {(["video", "pdf", "audio", "slides"] as const).map((id) => (
-            <TabsContent key={id} value={id}>
-              <MediaPanel kind={id} title={title} materials={materials} />
-            </TabsContent>
-          ))}
-          <TabsContent value="notes">
-            <Card className="space-y-3 p-5">
-              <h2 className="type-h3">{t("notesTitle")}</h2>
-              <p className="text-muted-foreground">{t("notesText")}</p>
-              <p>{description}</p>
-              <ul className="list-disc space-y-1 pl-5 text-sm">
-                {keyPoints.map((p) => (
-                  <li key={p}>{p}</li>
-                ))}
-              </ul>
-            </Card>
-          </TabsContent>
+          {tabs.map(({ id, kinds }) => {
+            const list = materials.filter((m) => (kinds as readonly string[]).includes(m.kind));
+            return (
+              <TabsContent key={id} value={id} className="space-y-4">
+                {list.length === 0 ? (
+                  <EmptyState
+                    title={t("noMaterialOfKind", { kind: k(kinds[0]).toLowerCase() })}
+                    description={id === "notes" ? t("notesEmpty") : undefined}
+                  />
+                ) : (
+                  list.map((m) => <MaterialCard key={m.id} material={m} />)
+                )}
+              </TabsContent>
+            );
+          })}
         </Tabs>
 
         <section aria-labelledby="about-topic" className="space-y-3">
           <h2 id="about-topic" className="type-h3">{t("about")}</h2>
           <p className="text-muted-foreground">{description}</p>
-          <h3 className="type-small font-semibold">{t("keyPoints")}</h3>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {keyPoints.map((p) => (
-              <li key={p} className="rounded-lg bg-muted/60 px-3 py-2 text-sm">{p}</li>
-            ))}
-          </ul>
+          {keyPoints.length ? (
+            <>
+              <h3 className="type-small font-semibold">{t("keyPoints")}</h3>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {keyPoints.map((p) => (
+                  <li key={p} className="rounded-lg bg-muted/60 px-3 py-2 text-sm">{p}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </section>
 
         <section aria-labelledby="topic-resources" className="space-y-3">
           <h2 id="topic-resources" className="type-h3">{t("resources")}</h2>
-          {materials.length === 0 ? (
+          {downloads.length === 0 ? (
             <p className="type-small text-muted-foreground">{t("noResources")}</p>
           ) : (
             <ul className="grid gap-2 sm:grid-cols-2">
-              {materials.map((m) => (
+              {downloads.map((m) => (
                 <li key={m.id} className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm">
                   <span className="min-w-0 truncate font-medium">{m.title}</span>
-                  <span className="type-caption shrink-0 text-muted-foreground">{m.meta}</span>
+                  <a href={fileUrl(m.fileId!, true)} className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:underline">{t("download")}</a>
                 </li>
               ))}
             </ul>

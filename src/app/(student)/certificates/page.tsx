@@ -10,13 +10,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Progress } from "@/components/ui/progress";
 import { services } from "@/services";
 import { formatDate } from "@/lib/format";
+import { requireSession } from "@/lib/auth/guards";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("certificates"))("title") };
 }
 
 export default async function CertificatesPage() {
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, locale, certs] = await Promise.all([getTranslations("certificates"), getLocale(), services.certificates.listForUser(session.user.id)]);
   return (
     <>

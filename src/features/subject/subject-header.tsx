@@ -7,11 +7,11 @@ import { routes } from "@/lib/routes";
 import type { Subject } from "@/types";
 
 export async function SubjectHeader({ subject, percent, completed, total }: { subject: Subject; percent: number; completed: number; total: number }) {
-  const [t, n, f] = await Promise.all([getTranslations("subject"), getTranslations("nav"), getFormatter()]);
+  const [t, n, f, c] = await Promise.all([getTranslations("subject"), getTranslations("nav"), getFormatter(), getTranslations("common")]);
   return (
     <div className="space-y-4">
       <Breadcrumbs
-        label="Breadcrumb"
+        label={c("breadcrumb")}
         items={[
           { label: n("courses"), href: routes.courses },
           { label: subject.platform.toUpperCase(), href: routes.coursePlatform(subject.platform) },

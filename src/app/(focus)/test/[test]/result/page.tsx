@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/states";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { ScoreSummary } from "@/features/result/score-summary";
@@ -10,6 +10,7 @@ import { ProgressUpdate } from "@/features/result/progress-update";
 import { ReviewList } from "@/features/result/review-list";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
+import { requireSession } from "@/lib/auth/guards";
 
 type Params = Promise<{ test: string }>;
 type Search = Promise<{ attempt?: string | string[] }>;
@@ -21,9 +22,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ResultPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const [{ test: testId }, sp] = await Promise.all([params, searchParams]);
   const attemptId = Array.isArray(sp.attempt) ? sp.attempt[0] : sp.attempt;
-  const session = await services.auth.getSession("STUDENT");
+  const session = await requireSession();
   const [t, result] = await Promise.all([getTranslations("result"), services.tests.getResult(testId, session.user.id, attemptId)]);
-  if (!result) notFound();
+  if (!result) {
+    const summary = await services.tests.getSummary(testId);
+    if (!summary) notFound();
+    return (
+      <main id="main" tabIndex={-1} className="container-page grid min-h-dvh place-items-center py-10 outline-none">
+        <div className="w-full max-w-lg">
+          <EmptyState
+            title={t("noResultTitle")}
+            description={t("noResultText")}
+            action={<Button asChild><Link href={routes.test(testId)}>{t("startTest")}</Link></Button>}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <>
@@ -36,7 +51,6 @@ export default async function ResultPage({ params, searchParams }: { params: Par
         </div>
       </header>
       <main id="main" tabIndex={-1} className="container-page max-w-4xl space-y-6 py-8 outline-none sm:py-12">
-        {result.isDemo ? <Alert variant="info">{t("demoNotice")}</Alert> : null}
         <ScoreSummary result={result} />
         <ProgressUpdate result={result} />
 

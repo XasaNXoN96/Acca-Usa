@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { isTheme, themeInitScript, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,17 +20,26 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0b1f3a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1322" },
+  ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [locale, messages, t] = await Promise.all([getLocale(), getMessages(), getTranslations("common")]);
+  const [locale, messages, t, jar] = await Promise.all([getLocale(), getMessages(), getTranslations("common"), cookies()]);
+  const stored = jar.get(THEME_COOKIE)?.value;
+  const theme = isTheme(stored) ? stored : "system";
   return (
-    <html lang={locale}>
+    // suppressHydrationWarning: the blocking script below may add the `dark` class for "system" before hydration.
+    <html lang={locale} className={theme === "dark" ? "dark" : undefined} data-theme={theme} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <a
           href="#main"
-          className="sr-only z-[100] rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+          className="sr-only z-[100] rounded-lg bg-navy px-4 py-3 text-sm font-semibold text-navy-foreground focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
         >
           {t("skipToContent")}
         </a>

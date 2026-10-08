@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
 import { ChevronDown, CreditCard, LogOut, User } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -14,10 +15,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { routes } from "@/lib/routes";
+import { logoutAction } from "@/features/auth/actions";
 
 export function UserMenu({ name, email, showStudentLinks = true }: { name: string; email: string; showStudentLinks?: boolean }) {
   const t = useTranslations();
   const initial = name.trim().charAt(0).toUpperCase() || "?";
+  const [pending, start] = useTransition();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,11 +57,9 @@ export function UserMenu({ name, email, showStudentLinks = true }: { name: strin
             <DropdownMenuSeparator />
           </>
         ) : null}
-        <DropdownMenuItem asChild>
-          <Link href={routes.login}>
-            <LogOut aria-hidden />
-            {t("common.signOut")}
-          </Link>
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); start(() => logoutAction()); }} disabled={pending}>
+          <LogOut aria-hidden />
+          {t("common.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

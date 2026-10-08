@@ -1,7 +1,7 @@
 /**
  * DEMO DATA — fictional people, payments, notifications. None of this is real.
  */
-import type { AppNotification, Certificate, Exam, Payment, RankingEntry, StudentRecord, User } from "@/types";
+import type { AppNotification, Certificate, Exam, Locale, Payment, PlatformSlug, RankingEntry, Role, UserStatus } from "@/types";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
 const daysFromNow = (d: number, hour = 9) => {
@@ -11,32 +11,51 @@ const daysFromNow = (d: number, hour = 9) => {
   return x.toISOString();
 };
 
-export const demoStudent: User = {
-  id: "u-demo-student",
-  name: "Demo Student",
-  email: "student@example.com",
-  role: "STUDENT",
-  locale: "en",
-  createdAt: "2026-01-15T09:00:00.000Z",
-};
+/**
+ * Seed accounts for DEMO MODE. Only salted scrypt hashes live here — never plaintext.
+ * The matching demo credentials are published on the login page while APP_MODE=demo
+ * (see docs/DEMO_MODE.md). They exist only in the in-memory demo store.
+ */
+export interface SeedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  status: UserStatus;
+  locale: Locale;
+  createdAt: string;
+  /** null = account has no password yet (use "forgot password" to set one) */
+  passwordHash: string | null;
+}
 
-export const demoAdmin: User = {
-  id: "u-demo-admin",
-  name: "Demo Admin",
-  email: "admin@example.com",
-  role: "ADMIN",
-  locale: "en",
-  createdAt: "2026-01-02T09:00:00.000Z",
-};
+export const DEMO_STUDENT_ID = "u-demo-student";
+export const DEMO_ADMIN_ID = "u-demo-admin";
+export const DEMO_TEACHER_ID = "u-demo-teacher";
 
-export const students: StudentRecord[] = [
-  { ...demoStudent, platforms: ["acca", "cima"], progress: 54, status: "active" },
-  { id: "u-s2", name: "Aziza Karimova", email: "aziza@example.com", role: "STUDENT", locale: "uz", createdAt: "2026-02-03T10:00:00.000Z", platforms: ["acca"], progress: 71, status: "active" },
-  { id: "u-s3", name: "Daniil Sokolov", email: "daniil@example.com", role: "STUDENT", locale: "ru", createdAt: "2026-02-18T10:00:00.000Z", platforms: ["cima"], progress: 33, status: "active" },
-  { id: "u-s4", name: "Maria Lopez", email: "maria@example.com", role: "STUDENT", locale: "en", createdAt: "2026-03-07T10:00:00.000Z", platforms: ["fia", "acca"], progress: 48, status: "active" },
-  { id: "u-s5", name: "Jasur Rahimov", email: "jasur@example.com", role: "STUDENT", locale: "uz", createdAt: "2026-03-21T10:00:00.000Z", platforms: ["acca"], progress: 12, status: "suspended" },
-  { id: "u-t1", name: "Elena Petrova", email: "elena@example.com", role: "TEACHER", locale: "ru", createdAt: "2026-01-10T10:00:00.000Z", platforms: [], progress: 0, status: "active" },
+export const demoCredentials = [
+  { role: "STUDENT" as const, email: "student@example.com", password: "Student-Demo1" },
+  { role: "TEACHER" as const, email: "teacher@example.com", password: "Teacher-Demo1" },
+  { role: "ADMIN" as const, email: "admin@example.com", password: "Admin-Demo1" },
 ];
+
+export const seedUsers: SeedUser[] = [
+  { id: DEMO_STUDENT_ID, name: "Demo Student", email: "student@example.com", role: "STUDENT", status: "active", locale: "en", createdAt: "2026-01-15T09:00:00.000Z", passwordHash: "s1$cg06V5H7ikr2boLxwpc79A$kG-cqFIVBV-EEet6L9HA8EJauhlZK4b2A1RUUNQPp4HIV8i1X1VlPGgZcBa3AOOqZptwaklxKcqVzcF3bGnTLw" },
+  { id: DEMO_TEACHER_ID, name: "Demo Teacher", email: "teacher@example.com", role: "TEACHER", status: "active", locale: "en", createdAt: "2026-01-05T09:00:00.000Z", passwordHash: "s1$XYF3BRn1YEgtktXeJFkX3A$DZeIVArSZf00aebMR7JFrWdCflW1liisqSlExbHStN_KPgwimyjbPfJTIQQzijkxOjvBW8X8SntTaDKGyTt5NA" },
+  { id: DEMO_ADMIN_ID, name: "Demo Admin", email: "admin@example.com", role: "ADMIN", status: "active", locale: "en", createdAt: "2026-01-02T09:00:00.000Z", passwordHash: "s1$9vWD23uRPc5ZLOFECRrxQQ$3k_ulf6Btq3aH9hFPYAHsKLuiMW2Yv99-5E-SR6kFrCuwTkIljI2c9p-LpX6ilNnaxxmmeu7XsyNbd8OKEht2A" },
+  { id: "u-s2", name: "Aziza Karimova", email: "aziza@example.com", role: "STUDENT", status: "active", locale: "uz", createdAt: "2026-02-03T10:00:00.000Z", passwordHash: null },
+  { id: "u-s3", name: "Daniil Sokolov", email: "daniil@example.com", role: "STUDENT", status: "active", locale: "ru", createdAt: "2026-02-18T10:00:00.000Z", passwordHash: null },
+  { id: "u-s4", name: "Maria Lopez", email: "maria@example.com", role: "STUDENT", status: "active", locale: "en", createdAt: "2026-03-07T10:00:00.000Z", passwordHash: null },
+  { id: "u-s5", name: "Jasur Rahimov", email: "jasur@example.com", role: "STUDENT", status: "suspended", locale: "uz", createdAt: "2026-03-21T10:00:00.000Z", passwordHash: null },
+];
+
+/** Fictional enrolment/progress for the non-login demo students (admin lists only). */
+export const seedStudentSummary: Record<string, { platforms: PlatformSlug[]; progress: number }> = {
+  [DEMO_STUDENT_ID]: { platforms: ["acca", "cima"], progress: 54 },
+  "u-s2": { platforms: ["acca"], progress: 71 },
+  "u-s3": { platforms: ["cima"], progress: 33 },
+  "u-s4": { platforms: ["fia", "acca"], progress: 48 },
+  "u-s5": { platforms: ["acca"], progress: 12 },
+};
 
 export const ranking: Omit<RankingEntry, "isCurrentUser">[] = [
   { rank: 1, userId: "u-s2", name: "Aziza Karimova", points: 2480 },
@@ -44,7 +63,7 @@ export const ranking: Omit<RankingEntry, "isCurrentUser">[] = [
   { rank: 3, userId: "u-s4", name: "Maria Lopez", points: 2195 },
   { rank: 4, userId: "u-s7", name: "Chen Wei", points: 2040 },
   { rank: 5, userId: "u-s3", name: "Daniil Sokolov", points: 1985 },
-  { rank: 6, userId: "u-demo-student", name: "Demo Student", points: 1720 },
+  { rank: 6, userId: DEMO_STUDENT_ID, name: "Demo Student", points: 1720 },
   { rank: 7, userId: "u-s8", name: "Sara Nilsson", points: 1655 },
   { rank: 8, userId: "u-s5", name: "Jasur Rahimov", points: 1210 },
 ];
@@ -56,12 +75,12 @@ export const certificates: Certificate[] = [
 ];
 
 export const notifications: AppNotification[] = [
-  { id: "n1", title: "New topic unlocked", body: "“Cost classification” is now available in Management Accounting.", createdAt: hoursAgo(2), read: false, target: { kind: "topic", id: "ma-cost-classification" } },
-  { id: "n2", title: "Test result ready", body: "Your result for “Introduction to management accounting — quiz” is ready.", createdAt: hoursAgo(26), read: false, target: { kind: "result", id: "ma-introduction" } },
-  { id: "n3", title: "Mock exam scheduled", body: "ACCA MA Mock Exam 1 starts soon. Check the date and duration.", createdAt: hoursAgo(50), read: true, target: { kind: "exam", id: "ex-ma-1" } },
-  { id: "n4", title: "Certificate issued", body: "Your BT course completion certificate is available.", createdAt: hoursAgo(120), read: true, target: { kind: "certificate" } },
-  { id: "n5", title: "Payment received", body: "Your payment for ACCA access was recorded.", createdAt: hoursAgo(300), read: true, target: { kind: "payment" } },
-  { id: "n6", title: "Welcome to ACCA USA", body: "Start with your first topic whenever you are ready.", createdAt: hoursAgo(700), read: true, target: { kind: "none" } },
+  { id: "n1", code: "topic_unlocked", params: { topic: "Cost classification" }, createdAt: hoursAgo(2), read: false, target: { kind: "topic", id: "ma-cost-classification" } },
+  { id: "n2", code: "result_ready", params: { test: "Introduction to management accounting — quiz" }, createdAt: hoursAgo(26), read: false, target: { kind: "result", id: "ma-introduction" } },
+  { id: "n3", code: "exam_scheduled", params: { exam: "ACCA MA — Mock Exam 1" }, createdAt: hoursAgo(50), read: true, target: { kind: "exam", id: "ex-ma-1" } },
+  { id: "n4", code: "certificate_issued", params: { title: "BT" }, createdAt: hoursAgo(120), read: true, target: { kind: "certificate" } },
+  { id: "n5", code: "payment_received", createdAt: hoursAgo(300), read: true, target: { kind: "payment" } },
+  { id: "n6", code: "welcome", createdAt: hoursAgo(700), read: true, target: { kind: "none" } },
 ];
 
 export const payments: Payment[] = [

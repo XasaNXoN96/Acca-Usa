@@ -3,15 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/layout/logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { LanguageSegmented } from "@/components/layout/language-switcher";
+import { ThemeSegmented } from "@/components/layout/theme-toggle";
+import { LogoutButton } from "@/features/auth/logout-button";
 import type { NavItem } from "@/lib/navigation";
-import { routes } from "@/lib/routes";
 
 export function MobileDrawer({
   items,
@@ -68,12 +69,8 @@ export function MobileDrawer({
         </div>
         <div className="pb-safe space-y-3 border-t border-border p-4">
           <LanguageSegmented />
-          <Button asChild variant="outline" className="w-full">
-            <Link href={routes.login}>
-              <LogOut aria-hidden />
-              {t("signOut")}
-            </Link>
-          </Button>
+          <ThemeSegmented />
+          <LogoutButton className="w-full" />
         </div>
       </SheetContent>
     </Sheet>

@@ -32,7 +32,7 @@ export function TopicFooter({ topicId, completed, previousHref, nextHref }: Prop
 
   return (
     <div className="space-y-2 border-t border-border pt-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         {previousHref ? (
           <Button asChild variant="outline" className="order-2 sm:order-1">
             <Link href={previousHref}>
