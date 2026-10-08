@@ -1080,5 +1080,18 @@
     "selectKindFirst": "Avval material turini tanlang.",
     "current": "Joriy fayl",
     "cancel": "Yuklashni bekor qilish"
+  },
+  "publicSubject": {
+    "courseTopics": "Kurs mavzulari",
+    "locked": "Yopiq",
+    "access": "Kirish",
+    "topicNumber": "{number}-mavzu",
+    "signInToOpen": "Bu mavzuni ochish uchun tizimga kiring.",
+    "enrollToUnlock": "Bu mavzuni ochish uchun {platform} ga yoziling.",
+    "signInCta": "Kirish va ochish",
+    "enrollCta": "{platform} ga yozilish",
+    "noTopics": "Mavzular tez orada qo‘shiladi.",
+    "notice": "Faqat mavzular ro‘yxati ommaga ochiq. Darslar, materiallar va testlar kirish va platformaga yozilgandan keyin ochiladi.",
+    "topicsBadge": "{count} ta mavzu"
   }
 }

@@ -206,6 +206,9 @@ export const materialService: MaterialService = {
 /* ---------------- topics ---------------- */
 
 export const topicService: TopicService = {
+  async listPublic(subjectSlug) {
+    return visibleTopicsOf(getDb(), subjectSlug).map((t, i) => ({ id: t.id, order: i + 1, title: t.title }));
+  },
   async listForSubject(subjectSlug, userId) {
     return topicsWithStatus(getDb(), userId, subjectSlug);
   },

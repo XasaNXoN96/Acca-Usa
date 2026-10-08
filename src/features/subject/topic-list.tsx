@@ -56,7 +56,7 @@ export async function TopicList({ topics }: { topics: TopicWithStatus[] }) {
               </div>
             ) : (
               <Link
-                href={routes.topic(topic.id)}
+                href={routes.subjectTopic(topic.subjectSlug, topic.id)}
                 className="flex min-h-[4.25rem] items-center gap-3 rounded-xl border border-border bg-card p-3.5 shadow-xs transition-shadow hover:shadow-md"
               >
                 {body}

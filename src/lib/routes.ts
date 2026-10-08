@@ -21,6 +21,9 @@ export const routes = {
   subject: (slug: string) => `/subject/${encodeURIComponent(slug)}`,
   subjectTab: (slug: string, tab: "overview" | "topics" | "tests" | "materials" | "progress") =>
     `/subject/${encodeURIComponent(slug)}?tab=${tab}`,
+  /** Canonical topic URL (protected). The subject page itself is public and lists only topic titles. */
+  subjectTopic: (subjectSlug: string, topicId: string) => `/subject/${encodeURIComponent(subjectSlug)}/topic/${encodeURIComponent(topicId)}`,
+  /** Legacy topic URL (notifications, activity, search): redirects to the canonical subject/topic URL. */
   topic: (id: string) => `/topic/${encodeURIComponent(id)}`,
   test: (id: string) => `/test/${encodeURIComponent(id)}`,
   testResult: (id: string, attemptId?: string) =>

@@ -237,7 +237,10 @@ await step("student: login → My Platforms is empty → enroll in ACCA only", a
 });
 await step("platforms are separate: CIMA is gated until enrolled", async () => {
   await stu.goto("/platform/cima"); await stu.getByText("Enroll to access CIMA").waitFor();
-  await stu.goto("/subject/cima-e1"); await stu.waitForURL(/\/platform\/cima/);
+  // a subject of a platform without access shows the PUBLIC outline (locked topics + Enroll CTA); the topic itself is gated
+  await stu.goto("/subject/cima-e1"); await stu.getByRole("heading", { name: "Course Topics" }).waitFor();
+  await stu.getByText("Locked", { exact: true }).first().waitFor();
+  await stu.goto("/subject/cima-e1/topic/cima-e1-introduction-and-syllabus-overview"); await stu.waitForURL(/\/platform\/cima/);
 });
 await step("student: subject → topic → notes + media render", async () => {
   await stu.goto("/subject/" + subj.code.toLowerCase());

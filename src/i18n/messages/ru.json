@@ -1080,5 +1080,18 @@
     "selectKindFirst": "Сначала выберите тип материала.",
     "current": "Текущий файл",
     "cancel": "Отменить загрузку"
+  },
+  "publicSubject": {
+    "courseTopics": "Темы курса",
+    "locked": "Закрыто",
+    "access": "Доступ",
+    "topicNumber": "Тема {number}",
+    "signInToOpen": "Войдите, чтобы открыть эту тему.",
+    "enrollToUnlock": "Запишитесь на {platform}, чтобы открыть эту тему.",
+    "signInCta": "Войти и открыть",
+    "enrollCta": "Записаться на {platform}",
+    "noTopics": "Темы скоро появятся.",
+    "notice": "Публично виден только список тем. Уроки, материалы и тесты доступны после входа и записи на платформу.",
+    "topicsBadge": "{count, plural, one {# тема} few {# темы} many {# тем} other {# темы}}"
   }
 }

@@ -113,7 +113,19 @@ export interface TopicInput {
   durationMinutes: number;
   lessonCount: number;
 }
+export interface PublicTopic {
+  id: string;
+  /** 1-based position among the subject's visible topics (recomputed on every read) */
+  order: number;
+  title: string;
+}
+
 export interface TopicService {
+  /**
+   * Public course outline: titles and positions ONLY — no descriptions, materials, tests or answers.
+   * Safe to render for anonymous visitors. Reflects admin create / edit / archive immediately.
+   */
+  listPublic(subjectSlug: string): Promise<PublicTopic[]>;
   listForSubject(subjectSlug: string, userId: string): Promise<TopicWithStatus[]>;
   getContext(topicId: string, userId: string): Promise<TopicContext | null>;
   listAll(): Promise<{ id: string; title: string; subjectSlug: string; order: number; durationMinutes: number; description: string; lessonCount: number; archived: boolean }[]>;

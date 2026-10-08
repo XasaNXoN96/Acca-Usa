@@ -1080,5 +1080,18 @@
     "selectKindFirst": "Choose the material type first.",
     "current": "Current file",
     "cancel": "Cancel upload"
+  },
+  "publicSubject": {
+    "courseTopics": "Course Topics",
+    "locked": "Locked",
+    "access": "Access",
+    "topicNumber": "Topic {number}",
+    "signInToOpen": "Sign in to open this topic.",
+    "enrollToUnlock": "Enroll in {platform} to unlock this topic.",
+    "signInCta": "Sign in to open",
+    "enrollCta": "Enroll in {platform}",
+    "noTopics": "Topics will be added soon.",
+    "notice": "Only the topic list is public. Lessons, materials and tests are available after you sign in and enroll.",
+    "topicsBadge": "{count, plural, one {# Topic} other {# Topics}}"
   }
 }

@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <LoginForm next={safeNext(sp.next) ?? undefined} demoAccounts={isDemoMode ? demoCredentials : undefined} />
       <p className="type-small text-center text-muted-foreground">
         {t("login.noAccount")}{" "}
-        <Link href={routes.register} className="font-semibold text-primary hover:underline">{t("login.registerLink")}</Link>
+        <Link href={safeNext(sp.next) ? `${routes.register}?next=${encodeURIComponent(safeNext(sp.next)!)}` : routes.register} className="font-semibold text-primary hover:underline">{t("login.registerLink")}</Link>
       </p>
     </div>
   );

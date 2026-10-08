@@ -42,7 +42,7 @@ export async function loginAction(input: unknown, next?: string | null): Promise
   return { ok: true, redirectTo: safeNext(next) ?? homeFor(res.user.role) };
 }
 
-export async function registerAction(input: unknown): Promise<AuthResult> {
+export async function registerAction(input: unknown, next?: string | null): Promise<AuthResult> {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: "INVALID_INPUT" };
 
@@ -62,7 +62,7 @@ export async function registerAction(input: unknown): Promise<AuthResult> {
   const login = await services.auth.verifyCredentials(parsed.data.email, parsed.data.password);
   if ("error" in login) return { ok: false, code: "INVALID_CREDENTIALS" };
   await startSession(login.user, login.tokenVersion);
-  return { ok: true, redirectTo: routes.dashboard };
+  return { ok: true, redirectTo: safeNext(next) ?? routes.dashboard };
 }
 
 export async function logoutAction(): Promise<void> {

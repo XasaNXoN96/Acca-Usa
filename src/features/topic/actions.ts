@@ -33,7 +33,7 @@ export async function markTopicCompletedAction(raw: unknown): Promise<{ ok: bool
   const a = await allowed(parsed.data.topicId);
   if (!a) return { ok: false };
   await services.progress.markTopicCompleted(a.session.user.id, a.ctx.topic.id);
-  revalidatePath(routes.topic(a.ctx.topic.id));
+  revalidatePath(routes.subjectTopic(a.ctx.subject.slug, a.ctx.topic.id));
   revalidatePath(routes.subject(a.ctx.subject.slug));
   revalidatePath(routes.dashboard);
   return { ok: true };

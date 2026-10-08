@@ -103,7 +103,7 @@ export function LoginForm({ next, demoAccounts }: { next?: string; demoAccounts?
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({ next }: { next?: string }) {
   const t = useTranslations("auth");
   const err = useErrorText();
   const serverError = useServerError();
@@ -121,7 +121,7 @@ export function RegisterForm() {
   const onSubmit = form.handleSubmit((values) =>
     start(async () => {
       setFailure(null);
-      const res = await registerAction(values);
+      const res = await registerAction(values, next);
       if (res.ok) {
         router.replace(res.redirectTo);
         router.refresh();

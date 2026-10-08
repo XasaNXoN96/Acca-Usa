@@ -1,41 +1,19 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SubjectHeader } from "@/features/subject/subject-header";
-import { SubjectNav, subjectTabs, type SubjectTab } from "@/features/subject/subject-nav";
+import { SubjectNav, type SubjectTab } from "@/features/subject/subject-nav";
 import { TopicList } from "@/features/subject/topic-list";
 import { TestList } from "@/features/subject/test-list";
 import { MaterialList } from "@/features/subject/material-list";
 import { ProgressPanel } from "@/features/subject/progress-panel";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
-import { requireSession } from "@/lib/auth/guards";
+import type { Subject } from "@/types";
 
-type Params = Promise<{ subject: string }>;
-type Search = Promise<{ tab?: string | string[] }>;
-
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const subject = await services.subjects.getBySlug((await params).subject);
-  return { title: subject ? `${subject.code} — ${subject.name}` : "Subject" };
-}
-
-function parseTab(raw: string | string[] | undefined): SubjectTab {
-  const v = Array.isArray(raw) ? raw[0] : raw;
-  return (subjectTabs as readonly string[]).includes(v ?? "") ? (v as SubjectTab) : "topics";
-}
-
-export default async function SubjectPage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  const [{ subject: slug }, sp] = await Promise.all([params, searchParams]);
-  const subject = await services.subjects.getBySlug(slug);
-  if (!subject) notFound();
-
-  const tab = parseTab(sp.tab);
-  const session = await requireSession();
-  const userId = session.user.id;
-  if (!(await services.enrollments.isEnrolled(userId, subject.platform))) redirect(routes.coursePlatform(subject.platform));
+/** The learner's own subject workspace (progress, unlocking, tests, materials). Only rendered for users with access. */
+export async function StudentSubjectView({ subject, tab, userId }: { subject: Subject; tab: SubjectTab; userId: string }) {
   const [t, topics, tests, materials, progress] = await Promise.all([
     getTranslations("subject"),
     services.topics.listForSubject(subject.slug, userId),
@@ -68,7 +46,7 @@ export default async function SubjectPage({ params, searchParams }: { params: Pa
                     <p className="type-h3 truncate">{next.order}. {next.title}</p>
                   </div>
                   <Button asChild>
-                    <Link href={routes.topic(next.id)}>{next.status === "in_progress" ? t("continueTopic") : t("startTopic")}</Link>
+                    <Link href={routes.subjectTopic(subject.slug, next.id)}>{next.status === "in_progress" ? t("continueTopic") : t("startTopic")}</Link>
                   </Button>
                 </Card>
               ) : null}
