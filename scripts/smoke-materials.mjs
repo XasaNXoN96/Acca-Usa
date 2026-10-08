@@ -73,7 +73,7 @@ await step("General file: name, type, size and Open/Download", async () => {
 });
 await step("Mark as completed → ✓ Completed (persists after reload, shows in topic list, can be undone)", async () => {
   await s.goto(M("notes")); const b = s.getByRole("button", { name: "Mark as completed" }); await b.click();
-  await s.getByRole("button", { name: "Completed" }).waitFor(); await s.reload(); await s.getByRole("button", { name: "Completed" }).waitFor();
+  await s.getByRole("button", { name: "Completed" }).waitFor(); await s.waitForLoadState("networkidle"); await s.reload(); await s.getByRole("button", { name: "Completed" }).waitFor();
   assert((await s.getByRole("button", { name: "Completed" }).getAttribute("aria-pressed")) === "true", "aria-pressed");
   await s.goto(`/subject/bt/topic/${T1}`); await s.getByText("1 of 7 completed").waitFor();
   await s.goto(M("notes")); await s.getByRole("button", { name: "Completed" }).click(); await s.getByRole("button", { name: "Mark as completed" }).waitFor();
