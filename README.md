@@ -42,8 +42,16 @@ PROJECT_RULES.md  binding technical rules
 
 ## Routes
 Public: `/`, `/all-courses`, `/acca`, `/fia`, `/books`, `/forums`, `/search`, `/login`, `/register`
-Student: `/dashboard`, `/courses`, `/platform/[platform]`, `/subject/[subject]`, `/topic/[topic]`, `/test/[test]`, `/test/[test]/result`, `/exams`, `/progress`, `/ranking`, `/certificates`, `/payments`, `/notifications`, `/profile`
-Admin: `/admin` and `/admin/{platforms,subjects,topics,materials,question-bank,tests,exams,students,payments,statistics,settings}`
+Student: `/dashboard`, `/courses`, `/platform/[platform]`, `/subject/[subject]` (public outline for guests), `/subject/[subject]/topic/[topic]`, `/subject/[subject]/topic/[topic]/material/[material]` (material viewer), `/test/[test]`, `/test/[test]/result`, `/exams`, `/progress`, `/ranking`, `/certificates`, `/certificates/[id]`, `/payments`, `/notifications`, `/profile`
+Admin: `/admin` and `/admin/{platforms,subjects,topics,materials,question-bank,tests,exams,students,certificates,payments,statistics,notifications,settings}`
+
+Roles: `ADMIN` and `STUDENT` only. Public registration always creates a student.
+
+## Learning flow
+Guest: `/` → `/all-courses` → subject → topics → locked materials (sign-in dialog). Student: material viewer (video, PDF, text, image, audio, file) → mark completed → topic test → result + review → progress → dashboard → certificate. Admin builds the content: subject → topic → material → question bank → test builder → publish; statistics, certificates and notifications are derived from real records.
+
+## Quality gates
+`npm run check` (lint, typecheck, i18n parity + quality, brand) · `npm run build` · `npm run smoke:all` (every smoke / audit suite against a fresh server, see docs/QA.md).
 
 ## Next block (backend)
 1. `prisma migrate dev`, seed catalogue.
