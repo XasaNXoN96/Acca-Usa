@@ -19,7 +19,7 @@ await step("all courses: ACCA levels + all 15 subjects, FIA subjects, NO CIMA an
   const acca = page.locator("[data-platform-section=acca]");
   for (const lvl of ["Applied Knowledge", "Applied Skills", "Strategic Professional"]) await acca.getByRole("heading", { name: lvl }).waitFor();
   assert((await acca.locator("ul > li a").count()) === 15, "ACCA should list 15 subjects");
-  for (const code of ["BT", "MA", "FA", "LW", "PM", "TX", "FR", "AA", "FM", "SBL", "SBR", "AFM", "APM", "ATX", "AAA"]) await acca.getByRole("link", { name: new RegExp(`^Open ${code} — `) }).waitFor();
+  for (const code of ["BT", "MA", "FA", "LW", "PM", "TX", "FR", "AA", "FM", "SBL", "SBR", "AFM", "APM", "ATX", "AAA"]) await acca.getByRole("link", { name: new RegExp(`^${code} — `) }).waitFor();
   assert((await page.locator("[data-platform-section=fia] ul > li a").count()) === 3, "FIA should list 3 subjects");
   assert((await page.locator("[data-platform-section]").count()) === 2, "exactly ACCA and FIA");
   assert(!/cima/i.test(await page.content()), "CIMA found on /all-courses");

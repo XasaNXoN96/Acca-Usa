@@ -50,10 +50,10 @@ export default async function AllCoursesPage() {
                     <li key={s.slug}>
                       <Link
                         href={routes.subject(s.slug)}
-                        aria-label={`${s.code} — ${s.name}`}
                         className="group flex min-h-14 items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5 shadow-xs transition-colors hover:bg-muted/60"
                       >
                         <span className={cn("grid min-w-12 shrink-0 place-items-center rounded-lg px-2 py-1 text-sm font-bold", theme.soft, theme.text)}>{s.code}</span>
+                        <span className="sr-only"> — </span>
                         <span className="min-w-0 flex-1 text-pretty font-semibold leading-snug">{s.name}</span>
                         <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
                       </Link>
