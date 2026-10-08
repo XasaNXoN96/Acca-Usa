@@ -8,6 +8,7 @@ import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { platformTheme } from "@/lib/platform-theme";
 import { materialKinds, type PlatformSlug } from "@/types";
 import type { FilterDef, ResourceRow } from "./resource-table";
+import { QuestionPreview } from "./question-preview";
 import type { Option } from "./record-form";
 import type { ResourceKey } from "./resources";
 
@@ -23,9 +24,9 @@ const clip = (s: string, n = 90) => (s.length > n ? `${s.slice(0, n - 1)}…` : 
 
 function mk(
   id: string, cells: ResourceRow["cells"], values: ResourceRow["values"], search: string[], label: string,
-  archived: boolean, filter: Record<string, string> = {}, file?: ResourceRow["file"],
+  archived: boolean, filter: Record<string, string> = {}, file?: ResourceRow["file"], preview?: React.ReactNode,
 ): ResourceRow {
-  return { id, cells, values, search: search.join(" ").toLowerCase(), label, archived, filter, file };
+  return { id, cells, values, search: search.join(" ").toLowerCase(), label, archived, filter, file, preview };
 }
 
 const bold = (text: string) => <span className="font-semibold">{text}</span>;
@@ -102,22 +103,34 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
     }
 
     case "question-bank": {
-      const questions = await services.questions.list();
+      const [questions, topics] = await Promise.all([services.questions.list(), services.topics.listAll()]);
       const diff = (["easy", "medium", "hard"] as const).map((d) => ({ value: d, label: ts(`difficulty.${d}`) }));
       const tone = { easy: "success", medium: "warning", hard: "destructive" } as const;
+      const statusTone = { draft: "warning", published: "success", archived: "neutral" } as const;
       const letters = (["a", "b", "c", "d"] as const).map((l) => ({ value: l, label: ts(`answer.${l}`) }));
+      const statusFilter = (["draft", "published", "archived"] as const).map((x) => ({ value: x, label: ts(`questionStatus.${x}`) }));
+      const formStatus = statusFilter.filter((x) => x.value !== "archived");
+      const topicTitle = (id?: string) => topics.find((x) => x.id === id)?.title;
+      const topicOptions = topics.filter((x) => !x.archived).map((x) => ({ value: x.id, label: `${subjectCode(x.subjectSlug)} · ${x.title}`, group: x.subjectSlug }));
+      const platformOf = (slug: string) => subjects.find((x) => x.slug === slug)?.platform ?? "";
       return {
-        options: { subject: subjectOptions, correct: letters, difficulty: diff }, filters: { subject: subjectOptions, difficulty: diff },
-        rows: questions.map((q) => {
+        options: { subject: subjectOptions, topic: [{ value: "", label: "—" }, ...topicOptions], correct: letters, difficulty: diff, status: formStatus },
+        filters: { platform: platformOptions, subject: subjectOptions, topic: topicOptions, difficulty: diff, status: statusFilter },
+        rows: await Promise.all(questions.map(async (q) => {
           const opt = (i: number) => q.options[i]?.text ?? "";
           return mk(q.id, {
-            text: <span className="line-clamp-2 font-medium">{q.text}</span>, subject: subjectCode(q.subjectSlug),
-            difficulty: <Badge variant={tone[q.difficulty]}>{ts(`difficulty.${q.difficulty}`)}</Badge>, points: q.points, answer: ts(`answer.${q.correctOptionId as "a"}`),
+            text: <span className="line-clamp-2 font-medium">{q.text}</span>, subject: subjectCode(q.subjectSlug), topic: topicTitle(q.topicId) ?? "—",
+            difficulty: <Badge variant={tone[q.difficulty]}>{ts(`difficulty.${q.difficulty}`)}</Badge>, points: q.points,
+            status: <Badge variant={statusTone[q.status]}>{ts(`questionStatus.${q.status}`)}</Badge>, updated: formatDate(q.updatedAt, locale),
           }, {
-            subject: q.subjectSlug, text: q.text, optionA: opt(0), optionB: opt(1), optionC: opt(2), optionD: opt(3),
+            subject: q.subjectSlug, topic: q.topicId ?? "", text: q.text, imageId: q.imageId ?? "", optionA: opt(0), optionB: opt(1), optionC: opt(2), optionD: opt(3),
             correct: q.correctOptionId, explanation: q.explanation, points: q.points, difficulty: q.difficulty,
-          }, [q.text, q.subjectSlug], clip(q.text, 60), !!q.archived, { subject: q.subjectSlug, difficulty: q.difficulty });
-        }),
+            status: q.status === "archived" ? "draft" : q.status, tags: q.tags.join(", "),
+          }, [q.text, q.subjectSlug, q.tags.join(" "), topicTitle(q.topicId) ?? "", q.explanation], clip(q.text, 60), !!q.archived,
+          { platform: platformOf(q.subjectSlug), subject: q.subjectSlug, topic: q.topicId ?? "", difficulty: q.difficulty, status: q.status },
+          q.imageId ? await (async () => { const f = await getStorage().stat(q.imageId!); return f ? { id: f.id, name: f.name, mime: f.mime, size: f.size } : undefined; })() : undefined,
+          <QuestionPreview question={q} />);
+        })),
       };
     }
 

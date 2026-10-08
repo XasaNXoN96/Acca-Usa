@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Pencil, Plus, RotateCcw, Search } from "lucide-react";
+import { Archive, Eye, Pencil, Plus, RotateCcw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,8 @@ export interface ResourceRow extends DataRow {
   /** filter name → value (matched against the selected filter option) */
   filter: Record<string, string>;
   file?: UploadedFile;
+  /** optional read-only preview (server-rendered) shown in a dialog */
+  preview?: React.ReactNode;
   /** short label used in aria-labels of the row actions */
   label: string;
 }
@@ -52,6 +54,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<{ row: ResourceRow | null } | null>(null);
   const [archiving, setArchiving] = useState<ResourceRow | null>(null);
+  const [previewing, setPreviewing] = useState<ResourceRow | null>(null);
   const [notice, setNotice] = useState<{ kind: "success" | "destructive"; text: string } | null>(null);
   const [pending, start] = useTransition();
 
@@ -59,7 +62,7 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
     const q = query.trim().toLowerCase();
     return rows.filter(
       (r) =>
-        (showArchived || !r.archived) &&
+        (showArchived || !r.archived || filterValues.status === "archived") &&
         (q === "" || r.search.includes(q)) &&
         filters.every((f) => !filterValues[f.name] || r.filter[f.name] === filterValues[f.name]),
     );
@@ -78,6 +81,11 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
       }
     });
 
+  const previewButton = (r: ResourceRow) =>
+    r.preview ? (
+      <Button variant="ghost" size="icon" aria-label={`${t("preview")}: ${r.label}`} onClick={() => setPreviewing(r)}><Eye className="size-4" aria-hidden /></Button>
+    ) : null;
+
   const actions = canEdit
     ? (row: DataRow) => {
         const r = rows.find((x) => x.id === row.id);
@@ -88,12 +96,16 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
           </Button>
         ) : (
           <>
+            {previewButton(r)}
             <Button variant="ghost" size="icon" aria-label={`${c("edit")}: ${r.label}`} onClick={() => setEditing({ row: r })}><Pencil className="size-4" aria-hidden /></Button>
             <Button variant="ghost" size="icon" aria-label={`${t("archive")}: ${r.label}`} onClick={() => setArchiving(r)}><Archive className="size-4 text-destructive" aria-hidden /></Button>
           </>
         );
       }
-    : undefined;
+    : (row: DataRow) => {
+        const r = rows.find((x) => x.id === row.id);
+        return r ? previewButton(r) : null;
+      };
 
   const tableRows: ResourceRow[] = visible.map((r) =>
     r.archived ? { ...r, cells: { ...r.cells, [columns[0]!.key]: (<span className="flex flex-wrap items-center gap-2">{r.cells[columns[0]!.key]}<Badge variant="outline">{t("archivedBadge")}</Badge></span>) } } : r,
@@ -159,6 +171,16 @@ export function AdminResourceTable({ resource, columns, rows, fields, filters, a
           onSaved={() => { setEditing(null); setNotice({ kind: "success", text: t("saved") }); }}
         />
       ) : null}
+
+      <Dialog open={!!previewing} onOpenChange={(o) => !o && setPreviewing(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("previewTitle")}</DialogTitle>
+            <DialogDescription>{t("previewText")}</DialogDescription>
+          </DialogHeader>
+          {previewing?.preview}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!archiving} onOpenChange={(o) => !o && !pending && setArchiving(null)}>
         <DialogContent>

@@ -1,7 +1,8 @@
 import "server-only";
-import type { AttemptStart, QuestionService, ServiceResult, TestInput, TestService } from "../contracts";
+import type { AttemptStart, QuestionInput, QuestionService, ServiceResult, TestInput, TestService } from "../contracts";
 import type { BankQuestion, ResultListItem, ReviewItem, TestResult, TestSummary } from "@/types";
 import { routes } from "@/lib/routes";
+import { getStorage } from "../storage";
 import {
   getDb, newId, nowIso, pushActivity, pushNotification, subjectVisible, topicVisible, userProgress,
   type AttemptRec, type Db, type QuestionRec, type TestRec,
@@ -14,9 +15,21 @@ const LETTERS = ["a", "b", "c", "d"] as const;
 /* ---------------- question bank ---------------- */
 
 const toBank = (q: QuestionRec): BankQuestion => ({
-  id: q.id, subjectSlug: q.subjectSlug, text: q.text, options: q.options, correctOptionId: q.correctOptionId,
-  explanation: q.explanation, points: q.points, difficulty: q.difficulty, archived: !!q.deletedAt,
+  id: q.id, subjectSlug: q.subjectSlug, topicId: q.topicId, tags: q.tags, imageId: q.imageId, text: q.text, options: q.options,
+  correctOptionId: q.correctOptionId, explanation: q.explanation, points: q.points, difficulty: q.difficulty,
+  status: q.deletedAt ? "archived" : q.status, archived: !!q.deletedAt, createdAt: q.createdAt, updatedAt: q.updatedAt,
 });
+
+const cleanTags = (tags: string[]) => [...new Set(tags.map((t) => t.trim()).filter(Boolean))].slice(0, 10);
+
+function checkQuestion(db: Db, input: QuestionInput): { ok: false; code: string; field?: string } | null {
+  if (!db.subjects.some((s) => s.slug === input.subjectSlug && !s.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "subject" };
+  if (input.topicId) {
+    const topic = db.topics.find((t) => t.id === input.topicId && !t.deletedAt);
+    if (!topic || topic.subjectSlug !== input.subjectSlug) return { ok: false, code: "TOPIC_MISMATCH", field: "topic" };
+  }
+  return null;
+}
 
 export const questionService: QuestionService = {
   async list() {
@@ -24,25 +37,34 @@ export const questionService: QuestionService = {
   },
   async create(input) {
     const db = getDb();
-    if (!db.subjects.some((s) => s.slug === input.subjectSlug && !s.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "subject" };
+    const bad = checkQuestion(db, input);
+    if (bad) return bad;
+    const now = nowIso();
     const rec: QuestionRec = {
-      id: newId("q"), subjectSlug: input.subjectSlug, text: input.text.trim(),
+      id: newId("q"), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, text: input.text.trim(),
       options: input.options.map((text, i) => ({ id: LETTERS[i]!, text: text.trim() })),
       correctOptionId: LETTERS[input.correctIndex]!, explanation: input.explanation.trim(), points: input.points,
-      difficulty: input.difficulty, createdAt: nowIso(),
+      difficulty: input.difficulty, tags: cleanTags(input.tags), imageId: input.imageId || undefined, status: input.status,
+      createdAt: now, updatedAt: now,
     };
     db.questions.push(rec);
+    if (rec.imageId) await getStorage().markAttached(rec.imageId, true);
     return { ok: true, data: { id: rec.id } };
   },
   async update(id, input) {
     const db = getDb();
     const rec = db.questions.find((q) => q.id === id);
     if (!rec) return { ok: false, code: "NOT_FOUND" };
-    if (!db.subjects.some((s) => s.slug === input.subjectSlug && !s.deletedAt)) return { ok: false, code: "NOT_FOUND", field: "subject" };
+    const bad = checkQuestion(db, input);
+    if (bad) return bad;
+    const nextImage = input.imageId || undefined;
+    if (rec.imageId && rec.imageId !== nextImage) await getStorage().delete(rec.imageId);
+    if (nextImage && nextImage !== rec.imageId) await getStorage().markAttached(nextImage, true);
     Object.assign(rec, {
-      subjectSlug: input.subjectSlug, text: input.text.trim(),
+      subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, text: input.text.trim(),
       options: input.options.map((text, i) => ({ id: LETTERS[i]!, text: text.trim() })),
       correctOptionId: LETTERS[input.correctIndex]!, explanation: input.explanation.trim(), points: input.points, difficulty: input.difficulty,
+      tags: cleanTags(input.tags), imageId: nextImage, status: input.status, updatedAt: nowIso(),
     });
     return { ok: true, data: undefined };
   },
@@ -50,14 +72,22 @@ export const questionService: QuestionService = {
     const rec = getDb().questions.find((q) => q.id === id);
     if (!rec) return { ok: false, code: "NOT_FOUND" };
     rec.deletedAt = archived ? nowIso() : undefined;
+    rec.updatedAt = nowIso();
     return { ok: true, data: undefined };
+  },
+  async imageAccess(fileId) {
+    const db = getDb();
+    const q = db.questions.find((x) => x.imageId === fileId && !x.deletedAt && x.status === "published");
+    if (!q) return null;
+    const inPublishedTest = db.tests.some((t) => t.published && !t.deletedAt && t.questionIds.includes(q.id));
+    return inPublishedTest ? { subjectSlug: q.subjectSlug } : null;
   },
 };
 
 /* ---------------- tests ---------------- */
 
 const activeQuestions = (db: Db, t: TestRec): QuestionRec[] =>
-  t.questionIds.flatMap((id) => db.questions.find((q) => q.id === id && !q.deletedAt) ?? []);
+  t.questionIds.flatMap((id) => db.questions.find((q) => q.id === id && !q.deletedAt && q.status === "published") ?? []);
 
 function summary(db: Db, t: TestRec, userId?: string): TestSummary {
   const qs = activeQuestions(db, t);

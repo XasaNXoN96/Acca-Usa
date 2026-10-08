@@ -179,6 +179,10 @@ export interface ProgressService {
 
 export interface QuestionInput {
   subjectSlug: string;
+  topicId?: string;
+  tags: string[];
+  imageId?: string;
+  status: "draft" | "published";
   text: string;
   options: [string, string, string, string];
   correctIndex: 0 | 1 | 2 | 3;
@@ -191,6 +195,11 @@ export interface QuestionService {
   create(input: QuestionInput): Promise<ServiceResult<{ id: string }>>;
   update(id: string, input: QuestionInput): Promise<ServiceResult>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
+  /**
+   * Subject of a published question that uses this storage file as its image, if that question sits in a published
+   * test. Lets /api/files serve question images to enrolled students without exposing unpublished content.
+   */
+  imageAccess(fileId: string): Promise<{ subjectSlug: string } | null>;
 }
 
 export interface TestInput {

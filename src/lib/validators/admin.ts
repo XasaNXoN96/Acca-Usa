@@ -43,9 +43,25 @@ export const materialSchema = z
     }
   });
 
+/** "tag one, tag two" → validated list (at most 10 tags of 1–30 characters). */
+const tagsField = z
+  .string()
+  .trim()
+  .max(300, "max:300")
+  .optional()
+  .default("")
+  .superRefine((v, ctx) => {
+    const tags = v.split(",").map((t) => t.trim()).filter(Boolean);
+    if (tags.length > 10 || tags.some((t) => t.length > 30)) ctx.addIssue({ code: "custom", message: "tagsInvalid" });
+  });
+
 export const questionSchema = z.object({
   subject: id,
+  topic: optionalId,
   text: text(10, 600),
+  imageId: z.string().trim().max(80).optional().default(""),
+  tags: tagsField,
+  status: z.enum(["draft", "published"], { message: "invalidChoice" }),
   optionA: text(1, 300),
   optionB: text(1, 300),
   optionC: text(1, 300),

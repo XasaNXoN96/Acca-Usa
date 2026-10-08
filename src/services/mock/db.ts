@@ -39,7 +39,12 @@ export interface QuestionRec {
   explanation: string;
   points: number;
   difficulty: Difficulty;
+  topicId?: string;
+  tags: string[];
+  imageId?: string;
+  status: "draft" | "published";
   createdAt: string;
+  updatedAt: string;
   deletedAt?: string;
 }
 export interface TestRec {
@@ -129,7 +134,10 @@ function seed(): Db {
       explanation: q.explanation,
       points: q.id === "q-total-cost" ? 2 : 1,
       difficulty: difficultyById[q.id] ?? "easy",
+      tags: [],
+      status: "published" as const,
       createdAt: created,
+      updatedAt: created,
     })),
     tests: testRecords.map((t) => ({ ...t, published: true, createdAt: created })),
     enrollments: [

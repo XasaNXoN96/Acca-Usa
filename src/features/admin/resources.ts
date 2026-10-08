@@ -14,6 +14,10 @@ export interface FieldDef {
   dependsOn?: string;
   /** render only while another field has one of these values */
   showIf?: { field: string; in?: string[]; notIn?: string[] };
+  /** for kind "file": fixed upload kind (otherwise taken from the form's `kind` value) */
+  fileKind?: string;
+  /** initial value of a NEW record's field */
+  default?: string;
 }
 
 export interface ResourceConfig {
@@ -58,14 +62,16 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
     ],
   },
   "question-bank": {
-    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["subject", "difficulty"],
-    columns: ["text", "subject", "difficulty", "points", "answer"],
+    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["platform", "subject", "topic", "difficulty", "status"],
+    columns: ["text", "subject", "topic", "difficulty", "points", "status", "updated"],
     fields: [
-      { name: "subject", kind: "select", required: true }, { name: "text", kind: "textarea", required: true },
+      { name: "subject", kind: "select", required: true }, { name: "topic", kind: "select", dependsOn: "subject" },
+      { name: "text", kind: "textarea", required: true }, { name: "imageId", kind: "file", fileKind: "image" },
       { name: "optionA", kind: "text", required: true }, { name: "optionB", kind: "text", required: true },
       { name: "optionC", kind: "text", required: true }, { name: "optionD", kind: "text", required: true },
       { name: "correct", kind: "select", required: true }, { name: "explanation", kind: "textarea", required: true },
       { name: "points", kind: "number", required: true }, { name: "difficulty", kind: "select", required: true },
+      { name: "status", kind: "select", required: true, default: "published" }, { name: "tags", kind: "text" },
     ],
   },
   tests: {

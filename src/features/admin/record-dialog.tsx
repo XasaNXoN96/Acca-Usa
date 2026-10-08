@@ -38,7 +38,7 @@ export function RecordDialog({
 
   const schema = useMemo(() => schemaFor(resource, id === null), [resource, id]);
   const defaults = useMemo(
-    () => Object.fromEntries(fields.map((f) => [f.name, initial?.[f.name] ?? (f.kind === "multiselect" ? [] : f.kind === "checkbox" ? false : "")])),
+    () => Object.fromEntries(fields.map((f) => [f.name, initial?.[f.name] ?? f.default ?? (f.kind === "multiselect" ? [] : f.kind === "checkbox" ? false : "")])),
     [fields, initial],
   );
   const form = useForm<FieldValues>({ resolver: zodResolver(schema as unknown as ZodType<FieldValues>) as unknown as Resolver<FieldValues>, defaultValues: defaults });

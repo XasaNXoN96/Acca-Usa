@@ -759,7 +759,10 @@
       "filterAll": "Barchasi",
       "selectPlaceholder": "Tanlang…",
       "createTitle": "Yangi yozuv",
-      "editTitle": "Yozuvni tahrirlash"
+      "editTitle": "Yozuvni tahrirlash",
+      "preview": "Ko‘rib chiqish",
+      "previewTitle": "Savolni ko‘rib chiqish",
+      "previewText": "Savol talabaga qanday ko‘rinishi, javob kaliti bilan (faqat admin uchun)."
     },
     "roles": {
       "STUDENT": "Talaba",
@@ -856,7 +859,7 @@
       },
       "question-bank": {
         "title": "Savollar banki",
-        "description": "To‘rtta variant, to‘g‘ri javob, izoh, ball va qiyinlik darajasi bilan savollar.",
+        "description": "To‘rt variantli, to‘g‘ri javobli savollar: izoh, ball, qiyinlik, mavzu va teglar bilan.",
         "add": "Savol qo‘shish",
         "columns": {
           "id": "ID",
@@ -865,7 +868,10 @@
           "subject": "Fan",
           "difficulty": "Qiyinlik",
           "points": "Ball",
-          "answer": "To‘g‘ri"
+          "answer": "To‘g‘ri",
+          "topic": "Mavzu",
+          "status": "Holati",
+          "updated": "Yangilandi"
         },
         "fields": {
           "text": "Savol matni",
@@ -877,11 +883,19 @@
           "optionD": "D varianti",
           "correct": "To‘g‘ri javob",
           "points": "Ball",
-          "difficulty": "Qiyinlik"
+          "difficulty": "Qiyinlik",
+          "topic": "Mavzu (ixtiyoriy)",
+          "imageId": "Rasm (ixtiyoriy)",
+          "status": "Holati",
+          "tags": "Teglar",
+          "tagsHint": "Vergul bilan ajrating, ko‘pi bilan 10 ta teg."
         },
         "filters": {
           "subject": "Fan",
-          "difficulty": "Qiyinlik"
+          "difficulty": "Qiyinlik",
+          "platform": "Platforma",
+          "topic": "Mavzu",
+          "status": "Holati"
         }
       },
       "tests": {
@@ -991,7 +1005,8 @@
       "fileType": "Yuklangan fayl material turiga mos kelmaydi.",
       "notFound": "Yozuv topilmadi.",
       "generic": "Saqlab bo‘lmadi. Formani tekshiring.",
-      "forbidden": "Bu amal uchun ruxsatingiz yo‘q."
+      "forbidden": "Bu amal uchun ruxsatingiz yo‘q.",
+      "tagsInvalid": "Ko‘pi bilan 10 ta teg, har biri 30 belgigacha."
     },
     "statistics": {
       "title": "Statistika",
@@ -1030,6 +1045,18 @@
       "b": "B",
       "c": "C",
       "d": "D"
+    },
+    "questionStatus": {
+      "draft": "Qoralama",
+      "published": "E’lon qilingan",
+      "archived": "Arxivda"
+    },
+    "preview": {
+      "points": "{points} ball",
+      "image": "Savol rasmi",
+      "correct": "To‘g‘ri: {letter}",
+      "explanation": "Izoh",
+      "adminOnly": "To‘g‘ri javob va izoh talabalarga faqat testni topshirgandan keyin ko‘rsatiladi."
     }
   },
   "states": {

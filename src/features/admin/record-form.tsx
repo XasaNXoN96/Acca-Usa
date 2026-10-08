@@ -82,7 +82,7 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
               <Controller key={f.name} control={form.control} name={f.name}
                 render={({ field }) => (
                   <Field label={f.label} htmlFor={id} error={error} required={f.required}>
-                    <FileField id={id} materialKind={String(values.kind ?? "")} value={String(field.value ?? "")} initialFile={initialFile}
+                    <FileField id={id} materialKind={f.fileKind ?? String(values.kind ?? "")} value={String(field.value ?? "")} initialFile={initialFile}
                       onChange={field.onChange} invalid={!!error} describedBy={error ? `${id}-error` : undefined} />
                   </Field>
                 )} />

@@ -10,6 +10,7 @@ import { resourceConfig, type ResourceKey } from "./resources";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
 import { can } from "@/lib/permissions";
 
+const hintKey: Record<string, string> = { password: "passwordHint", published: "publishedHint", tags: "tagsHint" };
 const numeric = new Set(["amount", "topics", "tests", "questions", "levels", "subjects", "points", "order", "duration", "passMark"]);
 
 /** Server component: authorises, loads rows through the services, hands plain data to the client table. */
@@ -42,7 +43,7 @@ export async function AdminResourcePage({ resource }: { resource: ResourceKey })
   const fields: ResolvedField[] = cfg.fields.map((f) => ({
     ...f,
     label: label(`${resource}.fields.${f.name}`),
-    hint: f.name === "password" || f.name === "published" ? label(`${resource}.fields.${f.name === "password" ? "passwordHint" : "publishedHint"}`) : undefined,
+    hint: hintKey[f.name] ? label(`${resource}.fields.${hintKey[f.name]}`) : undefined,
     options: built.options[f.name],
   }));
   const filters: FilterDef[] = cfg.filters.map((name) => ({ name, label: label(`${resource}.filters.${name}`), options: built.filters[name] ?? [] }));

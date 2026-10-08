@@ -759,7 +759,10 @@
       "filterAll": "All",
       "selectPlaceholder": "Select…",
       "createTitle": "New record",
-      "editTitle": "Edit record"
+      "editTitle": "Edit record",
+      "preview": "Preview",
+      "previewTitle": "Question preview",
+      "previewText": "How the question looks to a student, with the answer key (admin only)."
     },
     "roles": {
       "STUDENT": "Student",
@@ -856,7 +859,7 @@
       },
       "question-bank": {
         "title": "Question bank",
-        "description": "Questions with four options, a correct answer, explanation, points and difficulty.",
+        "description": "Questions with four options, a correct answer, explanation, points, difficulty, topic and tags.",
         "add": "Add question",
         "columns": {
           "id": "ID",
@@ -865,7 +868,10 @@
           "subject": "Subject",
           "difficulty": "Difficulty",
           "points": "Points",
-          "answer": "Correct"
+          "answer": "Correct",
+          "topic": "Topic",
+          "status": "Status",
+          "updated": "Updated"
         },
         "fields": {
           "text": "Question text",
@@ -877,11 +883,19 @@
           "optionD": "Option D",
           "correct": "Correct answer",
           "points": "Points",
-          "difficulty": "Difficulty"
+          "difficulty": "Difficulty",
+          "topic": "Topic (optional)",
+          "imageId": "Image (optional)",
+          "status": "Status",
+          "tags": "Tags",
+          "tagsHint": "Comma-separated, up to 10 tags."
         },
         "filters": {
           "subject": "Subject",
-          "difficulty": "Difficulty"
+          "difficulty": "Difficulty",
+          "platform": "Platform",
+          "topic": "Topic",
+          "status": "Status"
         }
       },
       "tests": {
@@ -991,7 +1005,8 @@
       "fileType": "The uploaded file does not match the material type.",
       "notFound": "The record was not found.",
       "generic": "Could not save. Please check the form.",
-      "forbidden": "You do not have permission for this action."
+      "forbidden": "You do not have permission for this action.",
+      "tagsInvalid": "Use up to 10 tags, each at most 30 characters."
     },
     "statistics": {
       "title": "Statistics",
@@ -1030,6 +1045,18 @@
       "b": "B",
       "c": "C",
       "d": "D"
+    },
+    "questionStatus": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "preview": {
+      "points": "{points, plural, one {# point} other {# points}}",
+      "image": "Question image",
+      "correct": "Correct: {letter}",
+      "explanation": "Explanation",
+      "adminOnly": "The correct answer and explanation are shown to students only after they submit a test."
     }
   },
   "states": {

@@ -95,9 +95,21 @@ export interface QuestionOption {
 }
 
 /** Admin view of a bank question — includes the answer. Never sent to students before submission. */
+export const questionStatuses = ["draft", "published", "archived"] as const;
+export type QuestionStatus = (typeof questionStatuses)[number];
+
 export interface BankQuestion {
   id: string;
   subjectSlug: string;
+  /** optional: a question may belong to a whole subject or to one topic */
+  topicId?: string;
+  tags: string[];
+  /** Storage file id of an optional illustration (served through /api/files/[id]). */
+  imageId?: string;
+  /** "archived" = soft-deleted; drafts can be edited freely but are not selectable for tests. */
+  status: QuestionStatus;
+  createdAt: string;
+  updatedAt: string;
   text: string;
   options: QuestionOption[];
   correctOptionId: string;

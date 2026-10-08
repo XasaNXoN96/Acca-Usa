@@ -81,7 +81,9 @@ export async function saveResourceAction(resource: string, id: string | null, ra
     }
     case "question-bank": {
       const input = {
-        subjectSlug: String(d.subject), text: String(d.text),
+        subjectSlug: String(d.subject), topicId: d.topic ? String(d.topic) : undefined, text: String(d.text),
+        imageId: d.imageId ? String(d.imageId) : undefined, status: d.status as "draft" | "published",
+        tags: String(d.tags ?? "").split(",").map((x) => x.trim()).filter(Boolean),
         options: [String(d.optionA), String(d.optionB), String(d.optionC), String(d.optionD)] as [string, string, string, string],
         correctIndex: (["a", "b", "c", "d"].indexOf(String(d.correct)) as 0 | 1 | 2 | 3),
         explanation: String(d.explanation), points: Number(d.points), difficulty: d.difficulty as never,
