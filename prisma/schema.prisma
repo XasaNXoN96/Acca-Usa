@@ -197,6 +197,8 @@ model Subject {
   code      String
   name      String
   levelId   String
+  /// display order inside the level (admin-created subjects are appended)
+  position  Int       @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

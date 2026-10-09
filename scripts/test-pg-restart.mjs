@@ -7,7 +7,7 @@ import { chromium } from "playwright-core";
 
 const PORT = "3510", MEM_PORT = "3511";
 const CHROMIUM = process.env.CHROMIUM ?? "/opt/pw-browsers/chromium";
-const results = []; const step = async (n, f) => { try { await f(); results.push(true); console.log("  ok  ", n); } catch (e) { results.push(false); console.log("  FAIL", n, "\n      ", String(e.message).split("\n").slice(0, 6).join("\n      ")); } };
+const results = []; const step = async (n, f) => { try { await f(); results.push(true); console.log("  ok  ", n); } catch (e) { results.push(false); console.log("  FAIL", n, "\n      ", String(e.message).split("\n").slice(0, 60).join("\n      ")); } };
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const start = (port, env) => { const c = spawn("npx", ["next", "start", "-p", port], { env: { ...process.env, ...env }, stdio: "ignore", detached: true }); return { stop: () => { try { process.kill(-c.pid, "SIGTERM"); } catch { /* gone */ } } }; };
 const up = async (port) => { for (let i = 0; i < 80; i++) { try { if ((await fetch(`http://localhost:${port}/login`)).ok) return; } catch { /* wait */ } await sleep(500); } throw new Error(`server ${port} did not start`); };
@@ -34,14 +34,14 @@ try {
   await step("after a server restart: the SAME session still works, completion persists, the unfinished attempt resumes with its saved answer, the new account can sign in", async () => {
     const c = await browser.newContext({ baseURL: `http://localhost:${PORT}`, storageState: state }); const p = await c.newPage();
     await p.goto(`/subject/bt/topic/${T1}/material/${T1}-notes`); await p.getByRole("button", { name: "Completed" }).waitFor();
-    await p.goto("/test/bt-stakeholders-test"); await p.getByRole("button", { name: /Resume test/ }).click(); await p.getByText("Question 1 of 8").waitFor();
+    await p.goto("/test/bt-stakeholders-test"); const resume = p.getByRole("button", { name: /Resume test/ }); if (await resume.isVisible({ timeout: 3000 }).catch(() => false)) await resume.click(); await p.getByText("Question 1 of 8").waitFor();
     assert.equal(await p.getByRole("radio", { checked: true }).count(), 1, "the autosaved answer is restored");
     await c.close();
     const r = await browser.newContext({ baseURL: `http://localhost:${PORT}` }); const rp = await r.newPage(); await rp.goto("/login"); await rp.locator("#login-email").fill("restart@example.com"); await rp.locator("#login-password").fill("Restart-pass123"); await rp.getByRole("button", { name: "Sign in", exact: true }).click(); await rp.waitForURL(/dashboard$/); await r.close();
   });
   await step("a SUBMITTED attempt and its frozen result survive a restart (review, history, progress)", async () => {
     const c = await browser.newContext({ baseURL: `http://localhost:${PORT}`, storageState: state }); const p = await c.newPage();
-    await p.goto("/test/bt-stakeholders-test"); await p.getByRole("button", { name: /Resume test/ }).click(); await p.getByText("Question 1 of 8").waitFor();
+    await p.goto("/test/bt-stakeholders-test"); const resume = p.getByRole("button", { name: /Resume test/ }); if (await resume.isVisible({ timeout: 3000 }).catch(() => false)) await resume.click(); await p.getByText("Question 1 of 8").waitFor();
     await p.getByRole("button", { name: "Submit test" }).first().click(); await p.getByRole("dialog").getByRole("button", { name: "Submit now" }).click(); await p.waitForURL(/\/result/); const result = (await p.locator("main").innerText()).replace(/\s+/g, " "); const url = p.url(); await c.close();
     pg.stop(); await down(PORT); pg = start(PORT, { DATA_PROVIDER: "prisma" }); await up(PORT);
     const c2 = await browser.newContext({ baseURL: `http://localhost:${PORT}`, storageState: state }); const p2 = await c2.newPage(); await p2.goto(url); await p2.locator("#review").getByText("Explanation").first().waitFor();

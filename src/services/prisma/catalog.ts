@@ -67,13 +67,13 @@ const toSubject = (s: SubjectRow): Subject => ({
 
 export const subjectService: SubjectService = {
   async list() {
-    return (await getPrisma().subject.findMany({ where: visibleSubjectWhere, include: subjectInclude, orderBy: [{ level: { platformSlug: "asc" } }, { level: { order: "asc" } }, { code: "asc" }] })).map(toSubject);
+    return (await getPrisma().subject.findMany({ where: visibleSubjectWhere, include: subjectInclude, orderBy: [{ level: { platformSlug: "asc" } }, { level: { order: "asc" } }, { position: "asc" }, { code: "asc" }] })).map(toSubject);
   },
   async listAll() {
-    return (await getPrisma().subject.findMany({ include: subjectInclude, orderBy: [{ level: { platformSlug: "asc" } }, { level: { order: "asc" } }, { code: "asc" }] })).map(toSubject);
+    return (await getPrisma().subject.findMany({ include: subjectInclude, orderBy: [{ level: { platformSlug: "asc" } }, { level: { order: "asc" } }, { position: "asc" }, { code: "asc" }] })).map(toSubject);
   },
   async listByPlatform(slug) {
-    return (await getPrisma().subject.findMany({ where: { ...visibleSubjectWhere, level: { platformSlug: slug, platform: { deletedAt: null } } }, include: subjectInclude, orderBy: [{ level: { order: "asc" } }, { code: "asc" }] })).map(toSubject);
+    return (await getPrisma().subject.findMany({ where: { ...visibleSubjectWhere, level: { platformSlug: slug, platform: { deletedAt: null } } }, include: subjectInclude, orderBy: [{ level: { order: "asc" } }, { position: "asc" }, { code: "asc" }] })).map(toSubject);
   },
   async getBySlug(slug) {
     const s = await getPrisma().subject.findFirst({ where: { slug, ...visibleSubjectWhere }, include: subjectInclude });
@@ -86,7 +86,8 @@ export const subjectService: SubjectService = {
     const base = slugify(input.code);
     let slug = base;
     for (let n = 2; await prisma.subject.findUnique({ where: { slug } }); n++) slug = `${base}-${n}`;
-    const s = await prisma.subject.create({ data: { slug, code: input.code.trim(), name: input.name.trim(), levelId: input.levelId }, include: subjectInclude });
+    const last = await prisma.subject.aggregate({ _max: { position: true } });
+    const s = await prisma.subject.create({ data: { slug, code: input.code.trim(), name: input.name.trim(), levelId: input.levelId, position: (last._max.position ?? 0) + 1 }, include: subjectInclude });
     return { ok: true, data: toSubject(s) };
   },
   async update(slug, input) {

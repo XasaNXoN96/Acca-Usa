@@ -27,7 +27,7 @@ export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
   const [platforms, levels, subjects, topics, materials, questions, tests, enrollments, topicProgress, materialProgress, attempts] = await Promise.all([
     prisma.platform.findMany(),
     prisma.level.findMany(),
-    prisma.subject.findMany(),
+    prisma.subject.findMany({ orderBy: [{ position: "asc" }, { code: "asc" }] }),
     prisma.topic.findMany(),
     prisma.material.findMany({ select: { id: true, topicId: true, deletedAt: true } }),
     prisma.question.findMany({ select: { id: true, status: true, deletedAt: true } }),

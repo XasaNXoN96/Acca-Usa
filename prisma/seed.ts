@@ -23,7 +23,7 @@ const day = 86_400_000;
 async function main() {
   await prisma.platform.createMany({ data: platforms.map((p) => ({ slug: p.slug, name: p.name, fullName: p.fullName, priceCents: p.priceCents })), skipDuplicates: true });
   await prisma.level.createMany({ data: platforms.flatMap((p) => p.levels.map((l) => ({ id: l.id, platformSlug: p.slug, name: l.name, order: l.order }))), skipDuplicates: true });
-  await prisma.subject.createMany({ data: subjects.map((s) => ({ slug: s.slug, code: s.code, name: s.name, levelId: s.levelId, createdAt: created })), skipDuplicates: true });
+  await prisma.subject.createMany({ data: subjects.map((s, i) => ({ slug: s.slug, code: s.code, name: s.name, levelId: s.levelId, position: i + 1, createdAt: created })), skipDuplicates: true });
   await prisma.topic.createMany({
     data: allTopics.map((t) => ({
       id: t.id, subjectSlug: t.subjectSlug, order: t.order, title: t.title, description: t.description, keyPoints: t.keyPoints,
