@@ -74,7 +74,7 @@ export const payments: Payment[] = [
 
 export const exams: Exam[] = [
   { id: "ex-ma-1", title: "ACCA MA — Mock Exam 1", platform: "acca", subjectSlug: "ma", startsAt: daysFromNow(3, 10), durationMinutes: 120, status: "scheduled" },
-  { id: "ex-bt-1", title: "ACCA BT — Mock Exam 1", platform: "acca", subjectSlug: "bt", startsAt: daysFromNow(-20, 10), durationMinutes: 120, status: "completed", score: 76 },
+  { id: "ex-bt-1", title: "ACCA BT — Mock Exam 1", platform: "acca", subjectSlug: "bt", startsAt: daysFromNow(-20, 10), durationMinutes: 120, status: "completed" },
   { id: "ex-fa-1", title: "ACCA FA — Mock Exam 1", platform: "acca", subjectSlug: "fa", startsAt: daysFromNow(10, 10), durationMinutes: 120, status: "scheduled" },
 ];
 

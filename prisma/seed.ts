@@ -32,9 +32,9 @@ async function main() {
     skipDuplicates: true,
   });
   await prisma.material.createMany({
-    data: materials.map((m) => ({
+    data: materials.map((m, i) => ({
       id: m.id, subjectSlug: m.subjectSlug, topicId: m.topicId ?? null, kind: m.kind, title: m.title, fileId: m.fileId ?? null,
-      fileMime: m.fileMime ?? null, body: m.body ?? null, createdAt: new Date(m.createdAt),
+      fileMime: m.fileMime ?? null, body: m.body ?? null, createdAt: new Date(new Date(m.createdAt).getTime() + i), // +i ms keeps the catalogue order stable
     })),
     skipDuplicates: true,
   });
@@ -46,23 +46,23 @@ async function main() {
   };
   await prisma.question.createMany({
     data: [
-      ...questionBank.map((q) => ({
+      ...questionBank.map((q, i) => ({
         id: q.id, subjectSlug: "ma", text: q.text, options: q.options as Prisma.InputJsonValue, correctOptionId: q.correctOptionId,
-        explanation: q.explanation, points: q.id === "q-total-cost" ? 2 : 1, difficulty: difficultyById[q.id] ?? "easy", tags: [], status: "published" as const, createdAt: created,
+        explanation: q.explanation, points: q.id === "q-total-cost" ? 2 : 1, difficulty: difficultyById[q.id] ?? "easy", tags: [], status: "published" as const, createdAt: new Date(created.getTime() + i),
       })),
-      ...btQuestions.map((q) => ({
+      ...btQuestions.map((q, i) => ({
         id: q.id, subjectSlug: "bt", topicId: q.topicId, text: q.text, options: q.options as Prisma.InputJsonValue, correctOptionId: q.correctOptionId,
-        explanation: q.explanation, points: 1, difficulty: q.difficulty, tags: q.tags, status: "published" as const, createdAt: created,
+        explanation: q.explanation, points: 1, difficulty: q.difficulty, tags: q.tags, status: "published" as const, createdAt: new Date(created.getTime() + 100 + i),
       })),
     ],
     skipDuplicates: true,
   });
-  for (const t of testRecords) {
+  for (const [i, t] of testRecords.entries()) {
     if (await prisma.test.findUnique({ where: { id: t.id } })) continue;
     await prisma.test.create({
       data: {
         id: t.id, subjectSlug: t.subjectSlug, topicId: t.topicId ?? null, title: t.title, durationMinutes: t.durationMinutes, passMark: t.passMark,
-        published: true, publishedAt: created, createdAt: created,
+        published: true, publishedAt: created, createdAt: new Date(created.getTime() + i),
         questions: { create: t.questionIds.map((questionId, position) => ({ questionId, position })) },
       },
     });
