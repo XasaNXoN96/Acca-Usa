@@ -1,9 +1,9 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { serverEnv } from "@/lib/env";
+import { stripeApiBase } from "@/lib/stripe-mode";
 import type { CheckoutRequest, CheckoutSession, PaymentProvider, ProviderEvent, WebhookVerification } from "./contracts";
 
-const API = "https://api.stripe.com/v1";
 const TOLERANCE_SECONDS = 300;
 
 /** Stripe-Signature: `t=<unix>,v1=<hex hmac of "t.payload">[,v1=…]` — constant-time compare, 5-minute replay window. */
@@ -75,13 +75,18 @@ export class StripePaymentProvider implements PaymentProvider {
       "line_items[0][price_data][unit_amount]": String(r.amountCents),
       "line_items[0][price_data][product_data][name]": r.description,
     });
-    const res = await this.fetchImpl(`${API}/checkout/sessions`, {
+    const key = serverEnv.payment().secretKey;
+    const res = await this.fetchImpl(`${stripeApiBase(key, process.env.STRIPE_API_BASE)}/checkout/sessions`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${serverEnv.payment().secretKey}`, "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": r.paymentId },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": r.paymentId },
       body,
     });
     const json = (await res.json().catch(() => ({}))) as { id?: string; url?: string };
     if (!res.ok || !json.id || !json.url) throw new Error(`Stripe checkout failed (${res.status})`);
+    // The browser is sent to this URL: it must be https (or http only against the test-key API override).
+    let target: URL;
+    try { target = new URL(json.url); } catch { throw new Error("Stripe checkout returned an invalid URL"); }
+    if (target.protocol !== "https:" && !(process.env.STRIPE_API_BASE && target.protocol === "http:")) throw new Error("Stripe checkout returned a non-https URL");
     return { providerPaymentId: json.id, checkoutUrl: json.url };
   }
 

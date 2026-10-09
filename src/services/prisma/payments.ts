@@ -14,7 +14,7 @@ import { notifyUser } from "./events";
 const status = { PAID: "paid", PENDING: "pending", FAILED: "failed", CANCELLED: "cancelled", REFUNDED: "refunded" } as const;
 const toPayment = (p: DbPayment & { user?: Pick<DbUser, "name"> }): Payment => ({
   id: p.id, description: p.description, amountCents: p.amountCents, currency: "USD", status: status[p.status],
-  createdAt: p.createdAt.toISOString(), studentName: p.user?.name,
+  createdAt: p.createdAt.toISOString(), studentName: p.user?.name, platform: p.platformSlug as PlatformSlug, provider: p.provider,
 });
 const toRec = (p: DbPayment): PaymentRec => ({
   id: p.id, userId: p.userId, platform: p.platformSlug as PlatformSlug, description: p.description, amountCents: p.amountCents, currency: p.currency,

@@ -295,13 +295,14 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
     case "payments": {
       const [payments, ps] = await Promise.all([services.payments.listAll(), getTranslations("payments")]);
       const variant = { paid: "success", pending: "warning", refunded: "neutral", failed: "destructive", cancelled: "neutral" } as const;
+      const statusOptions: Option[] = (["paid", "pending", "failed", "cancelled", "refunded"] as const).map((x) => ({ value: x, label: ps(`status.${x}`) }));
       return {
-        options: {}, filters: {},
+        options: {}, filters: { status: statusOptions, platform: platformOptions },
         rows: payments.map((p) =>
           mk(p.id, {
             student: bold(p.studentName ?? "—"), description: p.description, amount: formatMoney(p.amountCents, p.currency, locale),
-            status: <Badge variant={variant[p.status]}>{ps(`status.${p.status}`)}</Badge>, date: formatDate(p.createdAt, locale),
-          }, {}, [p.studentName ?? "", p.description, p.status], p.description, false),
+            status: <Badge variant={variant[p.status]}>{ps(`status.${p.status}`)}</Badge>, provider: p.provider ?? "—", date: formatDate(p.createdAt, locale),
+          }, {}, [p.studentName ?? "", p.description, p.status, p.id], p.description, false, { status: p.status, platform: p.platform ?? "" }),
         ),
       };
     }

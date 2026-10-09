@@ -126,7 +126,7 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
     columns: ["number", "student", "platform", "subject", "issued", "status"],
     fields: [{ name: "student", kind: "select", required: true }, { name: "subject", kind: "select", required: true }],
   },
-  payments: { permission: "manage_payments", canCreate: false, filters: [], columns: ["student", "description", "amount", "status", "date"], fields: [] },
+  payments: { permission: "manage_payments", canCreate: false, filters: ["status", "platform"], columns: ["student", "description", "amount", "status", "provider", "date"], fields: [] },
 };
 
 export const isEditable = (r: ResourceKey): r is EditableResource & ResourceKey => !!resourceConfig[r].editPermission;

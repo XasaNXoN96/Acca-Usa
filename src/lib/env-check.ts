@@ -5,6 +5,8 @@
  *  • demo mode        nothing is required; it runs standalone on demo data.
  *  • production mode  every real provider must be configured, and no demo behaviour may remain enabled.
  */
+import { stripeMode } from "./stripe-mode";
+
 export interface EnvIssue { name: string; reason: string }
 
 type Env = Record<string, string | undefined>;
@@ -39,6 +41,9 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
 
   need("PAYMENT_SECRET_KEY", "required in production (payments)");
   need("PAYMENT_WEBHOOK_SECRET", "required in production (payment webhooks)");
+  if (has(env.PAYMENT_SECRET_KEY) && stripeMode(env.PAYMENT_SECRET_KEY) === "invalid") issues.push({ name: "PAYMENT_SECRET_KEY", reason: "must be a Stripe secret key (sk_test_… or sk_live_…)" });
+  if (has(env.PAYMENT_WEBHOOK_SECRET) && !/^whsec_/.test(env.PAYMENT_WEBHOOK_SECRET!)) issues.push({ name: "PAYMENT_WEBHOOK_SECRET", reason: "must be a Stripe webhook signing secret (whsec_…)" });
+  if (has(env.STRIPE_API_BASE) && stripeMode(env.PAYMENT_SECRET_KEY) !== "test") issues.push({ name: "STRIPE_API_BASE", reason: "may only be set together with a Stripe TEST key (sk_test_…)" });
 
   if (env.DEMO_LOGIN === "1") issues.push({ name: "DEMO_LOGIN", reason: "demo logins must be disabled in production" });
   return { mode, issues };

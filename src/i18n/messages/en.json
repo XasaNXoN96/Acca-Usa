@@ -1210,13 +1210,25 @@
           "description": "Description",
           "amount": "Amount",
           "status": "Status",
-          "date": "Date"
+          "date": "Date",
+          "provider": "Provider"
         },
         "fields": {
           "student": "Student",
           "amount": "Amount (USD)"
         },
-        "descriptionLive": "Payments confirmed by the payment provider. Read-only ledger."
+        "descriptionLive": "Payments confirmed by the payment provider's signed webhook. Read-only ledger: there is no manual “mark as paid”; refunds are issued in the provider dashboard and arrive as signed events.",
+        "filters": {
+          "status": "Status",
+          "platform": "Platform"
+        },
+        "mode": {
+          "demo": "Demo simulation (no real payments)",
+          "test": "Stripe TEST mode (no real charges)",
+          "live": "Stripe LIVE mode",
+          "invalid": "Payment key is not a Stripe key",
+          "missing": "Payments not configured"
+        }
       },
       "certificates": {
         "title": "Certificates",

@@ -1210,13 +1210,25 @@
           "description": "Tavsif",
           "amount": "Summa",
           "status": "Holat",
-          "date": "Sana"
+          "date": "Sana",
+          "provider": "Provayder"
         },
         "fields": {
           "student": "Talaba",
           "amount": "Summa (USD)"
         },
-        "descriptionLive": "To‘lov provayderi tasdiqlagan to‘lovlar. Faqat o‘qish uchun jurnal."
+        "descriptionLive": "To‘lov provayderining imzolangan webhook'i tasdiqlagan to‘lovlar. Faqat o‘qish uchun jurnal: qo‘lda «to‘langan» belgisi yo‘q; qaytarishlar provayder kabinetida rasmiylashtiriladi va imzolangan hodisalar sifatida keladi.",
+        "filters": {
+          "status": "Holat",
+          "platform": "Platforma"
+        },
+        "mode": {
+          "demo": "Demo-simulyatsiya (haqiqiy to‘lovlar yo‘q)",
+          "test": "Stripe TEST rejimi (haqiqiy yechib olish yo‘q)",
+          "live": "Stripe LIVE rejimi",
+          "invalid": "To‘lov kaliti Stripe kaliti emas",
+          "missing": "To‘lovlar sozlanmagan"
+        }
       },
       "certificates": {
         "title": "Sertifikatlar",

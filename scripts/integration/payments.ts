@@ -54,6 +54,12 @@ async function main() {
   assert.equal(s.payments.get("pay-1")!.status, "PENDING");
   assert.equal(s.access.size, 0, "mismatched amount grants nothing");
 
+  // ── a real provider's paid event WITHOUT amount or currency never grants access (only the demo simulation may omit them)
+  s = fakeStore([pending()]);
+  assert.equal(await applyProviderEvent(s.store, "stripe", paid({ amountCents: undefined }), notify), "ignored", "missing amount");
+  assert.equal(await applyProviderEvent(s.store, "stripe", paid({ eventId: "evt_nc", currency: undefined }), notify), "ignored", "missing currency");
+  assert.equal(s.access.size, 0);
+
   // ── unknown payment / wrong provider
   assert.equal(await applyProviderEvent(s.store, "stripe", paid({ paymentId: "nope", providerPaymentId: "nope" }), notify), "ignored");
   assert.equal(await applyProviderEvent(s.store, "demo", paid({ eventId: "evt_d" }), notify), "ignored", "an event from another provider cannot touch this payment");
@@ -104,6 +110,14 @@ async function main() {
   assert.equal(verifyStripeSignature(body, "t=abc,v1=zz", secret), false, "garbage header");
   assert.equal(verifyStripeSignature(body, sig(t), ""), false, "no configured secret never verifies");
   assert.equal(verifyStripeSignature(body, `${sig(t)},v1=${"0".repeat(64)}`, secret), true, "any matching v1 entry is enough");
+
+  // ── Stripe mode from the key prefix; the API base can be redirected only for TEST keys
+  const { stripeMode, stripeApiBase, STRIPE_API } = await import("../../src/lib/stripe-mode");
+  assert.deepEqual(["sk_test_1", "rk_test_1", "sk_live_1", "rk_live_1", "whsec_x", "", undefined].map(stripeMode), ["test", "test", "live", "live", "invalid", "missing", "missing"]);
+  assert.equal(stripeApiBase("sk_test_1", "http://127.0.0.1:9/v1/"), "http://127.0.0.1:9/v1");
+  assert.equal(stripeApiBase("sk_live_1", "http://127.0.0.1:9/v1"), STRIPE_API, "a live key can never be redirected");
+  assert.equal(stripeApiBase("sk_test_1", "javascript:alert(1)"), STRIPE_API, "non-http override ignored");
+  assert.equal(stripeApiBase("sk_test_1", undefined), STRIPE_API);
 
   // ── event mapping
   assert.deepEqual(mapStripeEvent(JSON.parse(body)), { eventId: "evt_1", type: "paid", paymentId: "pay-1", providerPaymentId: "cs_1", amountCents: 14900, currency: "usd" });

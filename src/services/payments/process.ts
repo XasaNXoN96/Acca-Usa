@@ -39,8 +39,10 @@ export async function applyProviderEvent(store: PaymentStore, provider: PaymentP
     if (!allowed[event.type].includes(payment.status)) return "ignored";
 
     if (event.type === "paid") {
-      const amountOk = event.amountCents === undefined || event.amountCents === payment.amountCents;
-      const currencyOk = !event.currency || event.currency.toUpperCase() === payment.currency.toUpperCase();
+      // A real provider must state what was paid: an event WITHOUT amount / currency never grants access.
+      const strict = provider !== "demo";
+      const amountOk = event.amountCents === undefined ? !strict : event.amountCents === payment.amountCents;
+      const currencyOk = !event.currency ? !strict : event.currency.toUpperCase() === payment.currency.toUpperCase();
       if (!amountOk || !currencyOk) {
         logEvent("error", "payment.amount_mismatch", { provider, paymentId: payment.id });
         return "ignored"; // never grant access for an amount we did not ask for

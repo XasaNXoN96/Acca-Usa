@@ -12,7 +12,7 @@ import { getDb, nowIso, pushNotification } from "./db";
 const toPayment = (p: PaymentRec, studentName?: string): Payment => ({
   id: p.id, description: p.description, amountCents: p.amountCents, currency: "USD",
   status: ({ PAID: "paid", PENDING: "pending", FAILED: "failed", CANCELLED: "cancelled", REFUNDED: "refunded" } as const)[p.status],
-  createdAt: p.createdAt, studentName,
+  createdAt: p.createdAt, studentName, platform: p.platform, provider: p.provider,
 });
 
 const store: PaymentStore = {

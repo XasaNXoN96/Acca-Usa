@@ -3,6 +3,7 @@
 // Creates a throw-away database (acca_prod_test_<ts>) and drops it afterwards. Needs: psql, chromium, a local PostgreSQL.
 import { spawn, spawnSync } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
+import http from "node:http";
 import net from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
 import { chromium } from "playwright-core";
@@ -13,6 +14,7 @@ const DB_URL = ADMIN_URL.replace(/\/[^/?]+(\?|$)/, `/${DB}$1`) + (ADMIN_URL.incl
 const PORT = "3102";
 const BASE = `http://localhost:${PORT}`;
 const SMTP_PORT = 2525;
+const STRIPE_PORT = 12111;
 const CHROMIUM = process.env.CHROMIUM ?? "/opt/pw-browsers/chromium";
 const results = [];
 const step = async (n, f) => { try { await f(); results.push([n, true]); console.log("  ok  ", n); } catch (e) { results.push([n, false]); console.log("  FAIL", n, "\n      ", String(e.message).split("\n").slice(0, 3).join("\n      ")); } };
@@ -44,12 +46,25 @@ const sink = net.createServer((sock) => {
 const decodeQp = (s) => s.replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
 const lastMail = async (containing) => { for (let i = 0; i < 40; i++) { const m = [...mails].reverse().find((x) => decodeQp(x).includes(containing)); if (m) return decodeQp(m); await sleep(250); } throw new Error(`no mail containing "${containing}"`); };
 
+// ── a local TEST DOUBLE of the Stripe REST API (NOT Stripe): records what the server sends, returns a checkout session
+const stripeCalls = [];
+const fakeStripe = http.createServer((req, res) => {
+  let body = ""; req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    if (req.method === "POST" && req.url === "/v1/checkout/sessions") {
+      stripeCalls.push({ auth: req.headers.authorization, idem: req.headers["idempotency-key"], params: Object.fromEntries(new URLSearchParams(body)) });
+      const id = `cs_test_${stripeCalls.length}`; res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ id, url: `http://127.0.0.1:${STRIPE_PORT}/pay/${id}` }));
+    } else if (req.method === "GET" && req.url?.startsWith("/pay/")) { res.setHeader("content-type", "text/html"); res.end("<title>Test double of Stripe Checkout</title><p>This is a local test double, not Stripe.</p>"); }
+    else { res.statusCode = 404; res.end(); }
+  });
+});
+
 const baseEnv = {
   NEXT_PUBLIC_APP_MODE: "production", NODE_ENV: "production", PORT,
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
   SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
-  PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test",
+  PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
 };
 const startServer = (env) => {
   const child = spawn("npx", ["next", "start", "-p", PORT], { env: { ...process.env, NEXT_DIST_DIR: ".next-prod", ...env }, stdio: ["ignore", "pipe", "pipe"], detached: true });
@@ -66,6 +81,7 @@ try {
   sh("npx", ["tsx", "prisma/bootstrap.ts"], { DATABASE_URL: DB_URL });
   sh("npx", ["tsx", "scripts/create-admin.ts"], { DATABASE_URL: DB_URL, ADMIN_EMAIL: "owner@acca.example", ADMIN_NAME: "Site Owner", ADMIN_PASSWORD: "Owner-pass-12345" });
   await new Promise((r) => sink.listen(SMTP_PORT, "127.0.0.1", r));
+  await new Promise((r) => fakeStripe.listen(STRIPE_PORT, "127.0.0.1", r));
 
   await step("startup validation: a production server with missing configuration refuses to start and names the variables (never values)", async () => {
     const blank = Object.fromEntries(Object.keys(baseEnv).map((k) => [k, ""]));
@@ -158,12 +174,84 @@ try {
     assert((await (await post(ref)).json()).outcome === "applied", "refund applied"); assert((await access())?.status === "REVOKED", "enrollment not revoked");
     await studentPage.goto("/platform/acca"); await studentPage.getByText(/Enroll to access/).waitFor();
   });
+
+  // ── full purchase through the Stripe REST adapter (against the local test double) and the signed webhook
+  await db.platform.update({ where: { slug: "fia" }, data: { priceCents: 2900 } });
+  const fiaAccess = async () => db.enrollment.findUnique({ where: { userId_platformSlug: { userId: user.id, platformSlug: "fia" } } });
+  const paymentsOf = async () => db.payment.findMany({ where: { userId: user.id, platformSlug: "fia" }, orderBy: { createdAt: "asc" } });
+  const evt = (type, paymentId, object = {}) => ({ id: `evt_${type}_${Math.random().toString(36).slice(2, 9)}`, type, data: { object: { id: `cs_for_${paymentId}`, metadata: { paymentId }, ...object } } });
+  const sessionPaid = (paymentId, o = {}) => evt("checkout.session.completed", paymentId, { payment_status: "paid", amount_total: 2900, currency: "usd", ...o });
+  const outcome = async (e, opts) => { const r = await post(e, opts); return r.status === 200 ? (await r.json()).outcome : `http ${r.status}`; };
+  let p1;
+
+  await step("checkout (Stripe adapter vs test double): one session per purchase attempt, price from the database, double click reuses it, nothing is unlocked", async () => {
+    await studentPage.goto("/platform/fia"); const buy = studentPage.getByRole("button", { name: /Buy access — \$29\.00/ });
+    await buy.click(); await studentPage.waitForURL(/127\.0\.0\.1:12111\/pay\//); await studentPage.getByText(/not Stripe/).waitFor();
+    assert(stripeCalls.length === 1, `stripe calls ${stripeCalls.length}`);
+    const c = stripeCalls[0]; assert(c.auth === "Bearer sk_test_x", "bearer key"); const [pay] = await paymentsOf(); p1 = pay;
+    assert(pay.status === "PENDING" && pay.amountCents === 2900 && pay.currency === "USD" && pay.provider === "stripe" && pay.providerPaymentId === "cs_test_1", `payment ${JSON.stringify(pay)}`);
+    assert(c.idem === pay.id, "Idempotency-Key is the payment id"); assert(c.params["line_items[0][price_data][unit_amount]"] === "2900" && c.params["line_items[0][price_data][currency]"] === "usd", "amount / currency sent to Stripe");
+    assert(c.params["metadata[paymentId]"] === pay.id && c.params.client_reference_id === pay.id && c.params.customer_email === studentEmail, "metadata / reference / customer");
+    assert(c.params.success_url.startsWith("https://acca.example/payments?paid=") && c.params.cancel_url.startsWith("https://acca.example/payments?cancelled="), "return URLs use APP_URL");
+    assert(!JSON.stringify(c.params).includes("sk_test"), "secret key inside the request body");
+    // second click (another tab / double click) → the same open checkout, no second Stripe session
+    await studentPage.goto("/platform/fia"); await studentPage.getByRole("button", { name: /Buy access/ }).click(); await studentPage.waitForURL(/127\.0\.0\.1:12111\/pay\//);
+    assert(stripeCalls.length === 1 && (await paymentsOf()).length === 1, "a second checkout was created");
+    assert(!(await fiaAccess()), "access before the webhook");
+    // returning from the checkout proves nothing
+    await studentPage.goto(`/payments?paid=${p1.id}`); await studentPage.getByText(/waiting|confirm/i).first().waitFor(); await studentPage.goto("/platform/fia"); await studentPage.getByText(/Enroll to access/).waitFor();
+  });
+  await step("webhook edge cases: wrong currency, missing amount, unpaid session, unknown payment — all ignored, nothing unlocked", async () => {
+    assert((await outcome(sessionPaid(p1.id, { currency: "eur" }))) === "ignored", "wrong currency");
+    assert((await outcome(sessionPaid(p1.id, { amount_total: undefined }))) === "ignored", "missing amount");
+    assert((await outcome(sessionPaid(p1.id, { currency: undefined }))) === "ignored", "missing currency");
+    assert((await outcome(sessionPaid(p1.id, { payment_status: "unpaid" }))) === "ignored", "completed but unpaid");
+    assert((await outcome(sessionPaid("pay-does-not-exist"))) === "ignored", "unknown payment");
+    assert((await outcome(evt("customer.created", p1.id))) === "ignored", "unrelated event type");
+    assert(!(await fiaAccess()) && (await db.payment.findUnique({ where: { id: p1.id } })).status === "PENDING", "state changed by an invalid event");
+  });
+  await step("webhook: the correct event is applied exactly once even when delivered 6 times in parallel; a partial refund keeps access", async () => {
+    const paid = sessionPaid(p1.id);
+    const outcomes = await Promise.all(Array.from({ length: 6 }, () => outcome(paid)));
+    assert(outcomes.filter((o) => o === "applied").length === 1 && outcomes.filter((o) => o === "duplicate").length === 5, `outcomes ${outcomes}`);
+    const e = await fiaAccess(); assert(e?.status === "ACTIVE" && e.source === "payment" && e.paymentId === p1.id, "enrollment");
+    assert((await db.notification.count({ where: { userId: user.id, code: "payment_received" } })) === 2, "one new notification only");
+    await studentPage.goto("/platform/fia"); await studentPage.waitForLoadState("networkidle"); assert((await studentPage.getByText(/Enroll to access/).count()) === 0, "platform gated after payment");
+    assert((await outcome(evt("charge.refunded", p1.id, { amount: 2900, amount_refunded: 1000 }))) === "ignored", "partial refund");
+    assert((await fiaAccess())?.status === "ACTIVE", "a partial refund must not revoke access");
+  });
+  await step("webhook: a full refund → REFUNDED and access REVOKED; later paid / refund events change nothing; the learner can buy again", async () => {
+    assert((await outcome(evt("charge.refunded", p1.id, { amount: 2900, amount_refunded: 2900 }))) === "applied", "refund");
+    assert((await db.payment.findUnique({ where: { id: p1.id } })).status === "REFUNDED" && (await fiaAccess())?.status === "REVOKED", "refund state");
+    assert((await outcome(sessionPaid(p1.id))) === "ignored", "paid after refund"); assert((await outcome(evt("charge.refunded", p1.id, { amount: 2900, amount_refunded: 2900 }))) === "ignored", "second refund");
+    assert((await fiaAccess())?.status === "REVOKED", "re-granted by a late event");
+    await studentPage.goto("/platform/fia"); await studentPage.getByRole("button", { name: /Buy access/ }).click(); await studentPage.waitForURL(/127\.0\.0\.1:12111\/pay\//);
+    const all = await paymentsOf(); assert(all.length === 2 && all[1].status === "PENDING" && stripeCalls.length === 2, `second purchase: ${all.length} payments, ${stripeCalls.length} stripe calls`);
+  });
+  await step("expired / failed checkouts: CANCELLED / FAILED notify nothing false; a cancelled checkout cannot be paid later", async () => {
+    const p2 = (await paymentsOf())[1];
+    assert((await outcome(evt("checkout.session.expired", p2.id))) === "applied", "expired"); assert((await db.payment.findUnique({ where: { id: p2.id } })).status === "CANCELLED", "cancelled");
+    assert((await outcome(sessionPaid(p2.id, { id: "cs_test_2" }))) === "ignored", "paid after cancel"); assert((await fiaAccess())?.status === "REVOKED", "access after a cancelled checkout");
+    await studentPage.goto("/platform/fia"); await studentPage.getByRole("button", { name: /Buy access/ }).click(); await studentPage.waitForURL(/127\.0\.0\.1:12111\/pay\//);
+    const p3 = (await paymentsOf())[2]; assert(p3 && p3.status === "PENDING", "third purchase");
+    assert((await outcome(evt("checkout.session.async_payment_failed", p3.id))) === "applied", "failed"); assert((await db.payment.findUnique({ where: { id: p3.id } })).status === "FAILED", "failed state");
+    const mail = await lastMail("could not be completed").catch(() => ""); assert(!mail || !/Payment received/.test(mail), "a failed payment produced a success mail");
+    assert((await db.payment.count({ where: { userId: user.id, status: "PAID" } })) === 0 && (await db.payment.count({ where: { userId: user.id, status: "REFUNDED" } })) === 2, "ledger: two refunded payments keep their history, none is PAID");
+  });
+  await step("payments admin: ledger shows the real payments with provider and mode badge (TEST), filters work, no secrets, no manual paid action", async () => {
+    const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin/);
+    await p.goto("/admin/payments"); await p.locator("[data-payment-mode='test']").waitFor(); const html = await p.content();
+    assert(!/sk_test|whsec_|PAYMENT_SECRET|cs_test_1/.test(html), "a secret or a provider session id is rendered");
+    assert((await p.getByRole("row").count()) >= 5, "ledger rows"); assert(/Refunded/.test(await p.locator("main").innerText()), "refunded payment missing");
+    assert((await p.getByRole("button", { name: /mark as paid|set paid|simulate/i }).count()) === 0, "a manual paid control exists");
+    await c.close();
+  });
   await db.$disconnect();
 } catch (e) {
   results.push(["setup / fatal", false]); console.log("  FATAL", e.message);
 } finally {
   if (browser) await browser.close();
-  server?.stop(); sink.close(); await waitDown();
+  server?.stop(); sink.close(); fakeStripe.close(); await waitDown();
   try { sh("psql", [ADMIN_URL, "-c", `DROP DATABASE IF EXISTS ${DB}`]); } catch { /* best effort */ }
 }
 const failed = results.filter((r) => !r[1]).length;

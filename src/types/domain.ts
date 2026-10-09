@@ -459,6 +459,9 @@ export interface Payment {
   status: "paid" | "pending" | "refunded" | "failed" | "cancelled";
   createdAt: string;
   studentName?: string;
+  /** admin ledger only */
+  platform?: PlatformSlug;
+  provider?: string;
 }
 
 export interface Exam {
