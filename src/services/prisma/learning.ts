@@ -49,7 +49,11 @@ export const progressService: ProgressService = {
   },
   async touchMaterial(userId, materialId) {
     const m = await getPrisma().material.findFirst({ where: { id: materialId, deletedAt: null, published: true, OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }], topicId: { not: null } }, select: { id: true } });
-    if (m) await getPrisma().lastMaterial.upsert({ where: { userId }, create: { userId, materialId }, update: { materialId, at: new Date() } });
+    if (!m) return;
+    await getPrisma().lastMaterial.upsert({ where: { userId }, create: { userId, materialId }, update: { materialId, at: new Date() } });
+    // analytics: one real view per student and material per 30 minutes
+    const recent = await getPrisma().materialView.findFirst({ where: { userId, materialId, at: { gt: new Date(Date.now() - 30 * 60_000) } }, select: { id: true } });
+    if (!recent) await getPrisma().materialView.create({ data: { userId, materialId } });
   },
   async listCompletedMaterials(userId, materialIds) {
     if (!materialIds.length) return [];

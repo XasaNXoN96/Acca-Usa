@@ -8,3 +8,4 @@ export { certificateService, examService, progressService, rankingService } from
 export { statsService } from "./stats";
 export { mediaTextService } from "./media-text";
 export { materialVersionService } from "./material-versions";
+export { materialStatsService } from "./material-stats";

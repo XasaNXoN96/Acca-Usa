@@ -129,6 +129,7 @@ model User {
   topicProgress    TopicProgress[]
   materialProgress MaterialProgress[]
   lastMaterial     LastMaterial?
+  materialViews    MaterialView[]
   attempts         TestAttempt[]
   payments         Payment[]
   certificates     Certificate[]
@@ -261,10 +262,25 @@ model Material {
   transcript Transcript?
   subtitles  Subtitle[]
   versions   MaterialVersion[]
+  views      MaterialView[]
 
   @@index([subjectSlug])
   @@index([topicId])
   @@index([fileId])
+}
+
+/// One student opening a material (at most one per student and material per 30 minutes). Real events only.
+model MaterialView {
+  id         String   @id @default(cuid())
+  materialId String
+  userId     String
+  at         DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([materialId, at])
+  @@index([userId, materialId, at])
 }
 
 /// A PREVIOUS state of a material (file / text), kept when the file is replaced so it can be restored. The current

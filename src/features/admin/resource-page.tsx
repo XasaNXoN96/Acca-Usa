@@ -54,7 +54,7 @@ export async function AdminResourcePage({ resource }: { resource: ResourceKey })
 
   return (
     <>
-      <PageHeader title={title} description={!isDemoMode && (resource === "exams" || resource === "payments") ? t(`${resource}.descriptionLive`) : t(`${resource}.description`)} actions={<>{resource === "materials" && canEdit ? <Button asChild variant="outline"><Link href="/admin/materials/bulk"><UploadCloud aria-hidden />{(await getTranslations("admin.bulk"))("link")}</Link></Button> : null}<DemoBadge /></>} />
+      <PageHeader title={title} description={!isDemoMode && (resource === "exams" || resource === "payments") ? t(`${resource}.descriptionLive`) : t(`${resource}.description`)} actions={<>{resource === "materials" ? <Button asChild variant="outline"><Link href="/admin/materials/analytics">{(await getTranslations("admin.materialStats"))("link")}</Link></Button> : null}{resource === "materials" && canEdit ? <Button asChild variant="outline"><Link href="/admin/materials/bulk"><UploadCloud aria-hidden />{(await getTranslations("admin.bulk"))("link")}</Link></Button> : null}<DemoBadge /></>} />
       <AdminResourceTable
         resource={resource}
         columns={columns}

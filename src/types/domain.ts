@@ -476,3 +476,31 @@ export interface StoredFile {
   size: number;
   createdAt: string;
 }
+
+export interface MaterialStatsRow {
+  materialId: string;
+  title: string;
+  kind: MaterialKind;
+  subjectCode: string;
+  topicTitle?: string;
+  visibility: "draft" | "scheduled" | "published";
+  /** Student opens in the range (one per student per 30 min). */
+  views: number;
+  uniqueViewers: number;
+  /** Students who marked the material completed in the range (an undone completion is not counted). */
+  completions: number;
+  /** completions / uniqueViewers, 0–100; null = nobody viewed it in the range (nothing to divide). */
+  completionRate: number | null;
+  /** Media pipeline state of the file (video / audio / any upload); FAILED and REJECTED are processing errors. */
+  fileStatus?: "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
+  errorCode?: string;
+  /** Submitted attempts in the range on the topic's tests (the topic, not this material, is what a test belongs to). */
+  topicTestAttempts: number;
+  topicTestAvgScore: number | null;
+}
+
+export interface MaterialStats {
+  filter: StatsFilter;
+  totals: { materials: number; views: number; uniqueViewers: number; completions: number; processingErrors: number };
+  rows: MaterialStatsRow[];
+}

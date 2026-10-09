@@ -1527,6 +1527,43 @@
       "notReady": "The file of this version is not ready.",
       "limit": "The latest {count} versions are kept.",
       "link": "Versions"
+    },
+    "materialStats": {
+      "title": "Material analytics",
+      "description": "What students actually did with each material in the selected period. Only recorded events are counted — an empty period shows zeros.",
+      "back": "Back to materials",
+      "link": "Analytics",
+      "period": "Period: {from} – {to}",
+      "empty": "No materials match the filters.",
+      "cards": {
+        "materials": "Materials",
+        "views": "Views",
+        "viewers": "Students who viewed",
+        "completions": "Completions",
+        "errors": "Processing errors"
+      },
+      "columns": {
+        "material": "Material",
+        "views": "Views",
+        "viewers": "Viewers",
+        "completions": "Completed",
+        "rate": "Completion rate",
+        "file": "File",
+        "tests": "Topic test attempts · avg score"
+      },
+      "visibility": {
+        "published": "Published",
+        "draft": "Draft",
+        "scheduled": "Scheduled"
+      },
+      "fileStatus": {
+        "READY": "Ready",
+        "UPLOADED": "Queued",
+        "PROCESSING": "Processing",
+        "FAILED": "Failed",
+        "REJECTED": "Rejected"
+      },
+      "notes": "A view is a student opening the material (counted at most once per 30 minutes per student). Completion = students who marked it completed in the period (an undone mark is not counted); the rate is completions ÷ viewers, shown as — when nobody viewed it. Tests belong to a topic, so the test column shows attempts on the topic's tests, not on this material alone. Administrators' own opens are not counted."
     }
   },
   "states": {

@@ -1527,6 +1527,43 @@
       "notReady": "Bu versiya fayli tayyor emas.",
       "limit": "Oxirgi {count} ta versiya saqlanadi.",
       "link": "Versiyalar"
+    },
+    "materialStats": {
+      "title": "Materiallar tahlili",
+      "description": "Tanlangan davrda talabalar har bir material bilan aslida nima qilgani. Faqat qayd etilgan hodisalar sanaladi — bo‘sh davrda nollar ko‘rsatiladi.",
+      "back": "Materiallarga qaytish",
+      "link": "Tahlil",
+      "period": "Davr: {from} – {to}",
+      "empty": "Filtrlarga mos material yo‘q.",
+      "cards": {
+        "materials": "Materiallar",
+        "views": "Ko‘rishlar",
+        "viewers": "Ko‘rgan talabalar",
+        "completions": "Tugallanganlar",
+        "errors": "Qayta ishlash xatolari"
+      },
+      "columns": {
+        "material": "Material",
+        "views": "Ko‘rishlar",
+        "viewers": "Ko‘ruvchilar",
+        "completions": "O‘tilgan",
+        "rate": "Tugallash ulushi",
+        "file": "Fayl",
+        "tests": "Mavzu testi urinishlari · o‘rtacha ball"
+      },
+      "visibility": {
+        "published": "Nashr etilgan",
+        "draft": "Qoralama",
+        "scheduled": "Rejalashtirilgan"
+      },
+      "fileStatus": {
+        "READY": "Tayyor",
+        "UPLOADED": "Navbatda",
+        "PROCESSING": "Qayta ishlanmoqda",
+        "FAILED": "Xatolik",
+        "REJECTED": "Rad etilgan"
+      },
+      "notes": "Ko‘rish — talabaning materialni ochishi (bir talaba uchun 30 daqiqada ko‘pi bilan bir marta sanaladi). Tugallash — davr ichida materialni o‘tilgan deb belgilagan talabalar (bekor qilingan belgi sanalmaydi); ulush = tugallashlar ÷ ko‘ruvchilar, hech kim ko‘rmagan bo‘lsa «—». Testlar mavzuga tegishli, shu sababli test ustunida faqat shu material emas, mavzu testlari bo‘yicha urinishlar ko‘rsatiladi. Administratorlarning o‘z ochishlari sanalmaydi."
     }
   },
   "states": {

@@ -42,3 +42,13 @@ referenced) are removed.
 * **Safe replacement:** a replacement file must be `READY`. A video that is still processing, failed or rejected cannot be
   saved over a working one — students keep the old video until the new one is ready.
 * Title, visibility and position changes are not versioned.
+
+## Analytics (Admin → Materials → Analytics)
+
+`MaterialView` records one row each time a **student** opens a material (at most one per student and material per 30
+minutes; administrators' opens are not recorded). Per material and period the page shows views, distinct viewers,
+completions (`MaterialProgress.completedAt` in the period — an undone completion is gone), completion rate
+(completions ÷ viewers, `—` when nobody viewed it), the media-pipeline state of the file with the error reason for FAILED /
+REJECTED files, and attempts + average score of the **topic's** tests (a test belongs to a topic, not to one material).
+Both providers load raw records and call the same pure function (`domain/material-stats.ts`), so the numbers cannot drift.
+Empty periods show zeros; there are no estimated or sample figures. Views before this feature existed are unknown (0).

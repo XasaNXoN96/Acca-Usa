@@ -45,6 +45,10 @@ export const progressService: ProgressService = {
     const db = getDb();
     const m = db.materials.find((x) => x.id === materialId && materialLive(x));
     if (m?.topicId) db.lastMaterial.set(userId, { materialId, at: nowIso() });
+    // analytics: one real view per student and material per 30 minutes
+    if (m && !db.materialViews.some((v) => v.userId === userId && v.materialId === materialId && Date.now() - new Date(v.at).getTime() < 30 * 60_000)) {
+      db.materialViews.push({ materialId, userId, at: nowIso() });
+    }
   },
   async listCompletedMaterials(userId, materialIds) {
     const wanted = new Set(materialIds);

@@ -3,6 +3,7 @@ import type {
   RankingResult,
   ActivityItem,
   AdminStats,
+  MaterialStats,
   IssuedCertificate,
   StatsFilter,
   AnswerMap,
@@ -397,6 +398,11 @@ export interface StatsService {
   getAdminStats(filter: StatsFilter): Promise<AdminStats>;
 }
 
+/** Admin analytics of materials: real events only (views, completions, processing errors, topic test attempts). */
+export interface MaterialStatsService {
+  get(filter: StatsFilter): Promise<MaterialStats>;
+}
+
 export interface DashboardService {
   getOverview(userId: string): Promise<DashboardOverview>;
 }
@@ -421,6 +427,7 @@ export interface Services {
   materials: MaterialService;
   mediaText: MediaTextService;
   materialVersions: MaterialVersionService;
+  materialStats: MaterialStatsService;
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;
