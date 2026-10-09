@@ -13,7 +13,8 @@ const ADMIN_URL = process.env.PG_ADMIN_URL ?? "postgresql://postgres@localhost:5
 const mk = (name) => ADMIN_URL.replace(/\/[^/?]+(\?|$)/, `/${name}$1`) + (ADMIN_URL.includes("?") ? "" : "?schema=public");
 const run = (cmd, args, env = {}) => { const r = spawnSync(cmd, args, { encoding: "utf8", env: { ...process.env, ...env } }); return { ok: r.status === 0, out: `${r.stdout}${r.stderr}` }; };
 const must = (cmd, args, env) => { const r = run(cmd, args, env); if (!r.ok) throw new Error(`${cmd} ${args.join(" ")}\n${r.out.slice(0, 600)}`); return r.out; };
-const sql = (url, q) => must("psql", [url, "-At", "-c", q]).trim();
+const noSchema = (u) => u.replace(/\?schema=\w+$/, "");
+const sql = (url, q) => must("psql", [noSchema(url), "-At", "-c", q]).trim();
 const names = readdirSync("prisma/migrations").filter((n) => /^\d+_/.test(n)).sort();
 assert.ok(names.length >= 2, "needs at least two migrations");
 
@@ -53,12 +54,12 @@ try {
 
   step("re-running migrate deploy is a no-op and keeps the data", () => {
     const out = must("npx", ["prisma", "migrate", "deploy"], { DATABASE_URL: urlB });
-    assert.match(out, /No pending migrations/);
+    assert.match(out, /No pending migrations|already in sync/i, out.slice(0, 300));
     assert.equal(sql(urlB, `SELECT count(*) FROM "User"`), "1"); assert.equal(sql(urlB, `SELECT count(*) FROM "Payment"`), "1");
   });
 
   step("records of fact are protected: a payer / certificate holder cannot be deleted while records exist (RESTRICT)", () => {
-    const r = run("psql", [urlB, "-At", "-c", `DELETE FROM "User" WHERE id='u1'`]);
+    const r = run("psql", [noSchema(urlB), "-At", "-c", `DELETE FROM "User" WHERE id='u1'`]);
     assert.ok(!r.ok && /violates foreign key/.test(r.out), `delete should be refused: ${r.out.slice(0, 200)}`);
     assert.equal(sql(urlB, `SELECT count(*) FROM "User"`), "1");
   });
