@@ -15,6 +15,13 @@ if (process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_APP_MODE ==
   console.error("prisma/seed.ts is for development / demo databases only. Refusing to run in production.");
   process.exit(1);
 }
+// The demo accounts have PUBLIC passwords. Even without the production flags, never seed a database that is not on this machine
+// (for example a production DATABASE_URL pulled into a developer shell).
+const seedHost = (() => { try { return new URL(process.env.DATABASE_URL ?? "").hostname; } catch { return ""; } })();
+if (!["localhost", "127.0.0.1", "::1"].includes(seedHost)) {
+  console.error("prisma/seed.ts only seeds a LOCAL database (it creates demo accounts with public passwords). Refusing.");
+  process.exit(1);
+}
 
 const prisma = new PrismaClient();
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
