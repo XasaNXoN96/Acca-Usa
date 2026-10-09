@@ -125,8 +125,51 @@ try {
     const oldSession = await studentPage.goto("/dashboard"); assert(/login/.test(studentPage.url()), `old session still valid after the reset (${oldSession?.status()} ${studentPage.url()})`);
     await c.close();
   });
-  await step("admin created with admin:create can sign in; settings / statistics show no demo wording", async () => {
-    const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin$/);
+  // ── administrator second factor (mandatory in production mode)
+  const { PrismaClient } = await import("@prisma/client");
+  const db = new PrismaClient({ datasources: { db: { url: DB_URL } } });
+  const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const b32 = (s) => { let bits = 0, v = 0; const out = []; for (const ch of s) { v = (v << 5) | B32.indexOf(ch); bits += 5; if (bits >= 8) { out.push((v >>> (bits - 8)) & 255); bits -= 8; } } return Buffer.from(out); };
+  const hotpAt = (secret, stepNo) => { const ctr = Buffer.alloc(8); ctr.writeBigUInt64BE(BigInt(stepNo)); const h = createHmac("sha1", b32(secret)).update(ctr).digest(); const o = h[19] & 15; return String(((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000)).padStart(6, "0"); };
+  let mfaSecret = null; let mfaLastStep = 0; let mfaRecovery = [];
+  /** A code for the smallest accepted 30-second step that has not been used yet (the server rejects replays). */
+  const freshCode = async () => { for (;;) { const now = Math.floor(Date.now() / 30000); for (let s = Math.max(now - 1, mfaLastStep + 1); s <= now + 1; s++) { mfaLastStep = s; return hotpAt(mfaSecret, s); } await sleep(1000); } };
+  let adminIp = 0; // own client address per sign-in so the per-client login limit (8 / 10 min) does not mask what is tested
+  const adminLogin = async () => {
+    const c = await browser.newContext({ baseURL: BASE, viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { "x-forwarded-for": `10.8.0.${++adminIp}` } }); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345");
+    await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin|login\/mfa/);
+    if (p.url().includes("/login/mfa")) { await p.locator("#mfa-code").fill(await freshCode()); await p.getByRole("button", { name: "Verify" }).click(); await p.waitForURL(/admin/); }
+    return { c, p };
+  };
+  await step("production: a new administrator gets NOTHING under /admin except mandatory two-step enrolment; after it, sign-in needs the code", async () => {
+    const { c, p } = await adminLogin();
+    for (const path of ["/admin", "/admin/payments", "/admin/settings", "/admin/students"]) {
+      await p.goto(path); await p.getByRole("heading", { name: "Set up two-step verification" }).waitFor();
+      assert((await p.locator("[data-payment-mode], [data-stats-cards], table").count()) === 0, `${path} rendered admin content before MFA`);
+      assert((await p.locator("nav a[href^='/admin/']").count()) === 0, `${path} shows admin navigation before MFA`);
+    }
+    mfaSecret = (await p.getByTestId("mfa-secret").innerText()).trim();
+    await p.locator("#mfa-confirm").fill(await freshCode()); await p.getByRole("button", { name: "Confirm and enable" }).click();
+    await p.getByTestId("recovery-codes").waitFor(); mfaRecovery = (await p.getByTestId("recovery-codes").locator("li").allInnerTexts()).map((s) => s.trim()); assert(mfaRecovery.length === 10, "recovery codes");
+    await p.getByRole("button", { name: /continue/ }).click(); await p.goto("/admin/security"); await p.getByRole("heading", { name: "Two-step verification is on" }).waitFor();
+    const row = await db.user.findUnique({ where: { email: "owner@acca.example" } });
+    assert(row.mfaEnabledAt && row.mfaSecretEnc && !row.mfaSecretEnc.includes(mfaSecret), "TOTP secret stored in clear");
+    const hashes = await db.mfaRecoveryCode.findMany({ where: { userId: row.id } }); assert(hashes.length === 10 && hashes.every((h) => !mfaRecovery.some((r) => h.codeHash.includes(r.replace(/-/g, "")))), "recovery codes stored in clear");
+    await c.close();
+  });
+  await step("admin:mfa-reset (operator CLI) removes the second factor and revokes sessions; the administrator is forced to enrol again", async () => {
+    const live = await adminLogin(); // a verified session that must die with the reset
+    const r = spawnSync("npx", ["tsx", "scripts/mfa-reset.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ADMIN_EMAIL: "owner@acca.example" }, encoding: "utf8" });
+    assert(r.status === 0 && /Second factor removed/.test(r.stdout), `reset failed: ${r.stdout}${r.stderr}`);
+    const bad = spawnSync("npx", ["tsx", "scripts/mfa-reset.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ADMIN_EMAIL: studentEmail }, encoding: "utf8" }); assert(bad.status !== 0, "mfa-reset accepted a student account");
+    await live.p.goto("/admin/payments"); assert(live.p.url().includes("/login"), `old verified session survived the reset (${live.p.url()})`); await live.c.close();
+    const row = await db.user.findUnique({ where: { email: "owner@acca.example" } }); assert(!row.mfaEnabledAt && !row.mfaSecretEnc && (await db.mfaRecoveryCode.count({ where: { userId: row.id } })) === 0, "MFA material left behind");
+    mfaSecret = null; mfaLastStep = 0;
+    const { c, p } = await adminLogin(); await p.getByRole("heading", { name: "Set up two-step verification" }).waitFor();
+    mfaSecret = (await p.getByTestId("mfa-secret").innerText()).trim(); await p.locator("#mfa-confirm").fill(await freshCode()); await p.getByRole("button", { name: "Confirm and enable" }).click(); await p.getByTestId("recovery-codes").waitFor(); await c.close();
+  });
+  await step("admin created with admin:create can sign in with password + code; settings / statistics show no demo wording", async () => {
+    const { c, p } = await adminLogin();
     assert(!/demo/i.test(await p.locator("main").innerText()), "demo wording on the admin dashboard");
     await p.goto("/admin/settings"); await p.getByText("Settings are configured by the deployment").waitFor(); await p.goto("/admin/statistics"); await p.locator("[data-stats-cards]").waitFor();
     assert(!/demo/i.test(await p.locator("main").innerText()), "demo wording on statistics"); await c.close();
@@ -138,8 +181,6 @@ try {
   });
 
   // ── real signed webhook path against the real database
-  const { PrismaClient } = await import("@prisma/client");
-  const db = new PrismaClient({ datasources: { db: { url: DB_URL } } });
   const user = await db.user.findUnique({ where: { email: studentEmail } });
 
   const adminCli = (env) => { const r = spawnSync("npx", ["tsx", "scripts/create-admin.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ...env }, encoding: "utf8" }); return { code: r.status, out: `${r.stdout}${r.stderr}` }; };
@@ -257,7 +298,7 @@ try {
     assert((await db.payment.count({ where: { userId: user.id, status: "PAID" } })) === 0 && (await db.payment.count({ where: { userId: user.id, status: "REFUNDED" } })) === 2, "ledger: two refunded payments keep their history, none is PAID");
   });
   await step("payments admin: ledger shows the real payments with provider and mode badge (TEST), filters work, no secrets, no manual paid action", async () => {
-    const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin/);
+    const { c, p } = await adminLogin();
     await p.goto("/admin/payments"); await p.locator("[data-payment-mode='test']").waitFor(); const html = await p.content();
     assert(!/sk_test|whsec_|PAYMENT_SECRET|cs_test_1/.test(html), "a secret or a provider session id is rendered");
     assert((await p.getByRole("row").count()) >= 5, "ledger rows"); assert(/Refunded/.test(await p.locator("main").innerText()), "refunded payment missing");
@@ -266,7 +307,6 @@ try {
   });
 
   // ── e-mail: real test message, counters, outage handling, no secrets
-  const adminLogin = async () => { const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin/); return { c, p }; };
   await step("e-mail: Admin → Settings sends ONE real test message to the admin's own address over SMTP; status shows SMTP host/sender but never the credentials", async () => {
     const { c, p } = await adminLogin(); await p.goto("/admin/settings"); await p.locator("[data-email-status='smtp']").waitFor();
     const status = await p.locator("[data-email-card]").innerText(); assert(status.includes("127.0.0.1:2525") && status.includes("no-reply@acca.example"), `status: ${status}`);

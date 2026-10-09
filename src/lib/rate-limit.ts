@@ -45,3 +45,14 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
     return memoryLimit(key, limit, windowMs);
   }
 }
+
+/** Forgets a counter after a SUCCESS (so only failed attempts count towards a lockout). */
+export async function rateLimitClear(key: string): Promise<void> {
+  hits.delete(key);
+  if (DATA_PROVIDER !== "prisma") return;
+  try {
+    await getPrisma().rateLimit.deleteMany({ where: { key } });
+  } catch {
+    /* the counter simply expires with its window */
+  }
+}

@@ -11,6 +11,7 @@ export const routes = {
   forums: "/forums",
   search: (q?: string) => (q ? `/search?q=${encodeURIComponent(q)}` : "/search"),
   login: "/login",
+  loginMfa: "/login/mfa",
   register: "/register",
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
@@ -61,7 +62,8 @@ export const routes = {
       | "certificates"
       | "payments"
       | "statistics"
-      | "settings",
+      | "settings"
+      | "security",
   ) => `/admin/${section}` as const,
 } as const;
 

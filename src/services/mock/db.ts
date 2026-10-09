@@ -44,6 +44,7 @@ export interface Db {
   notifications: Map<string, AppNotification[]>;
   activity: ActivityRec[];
   resetTokens: ResetTokenRec[];
+  mfaRecovery: { userId: string; codeHash: string; usedAt?: string }[];
   transcripts: import("../contracts").TranscriptRecord[];
   subtitles: import("../contracts").SubtitleRecord[];
   materialVersions: MaterialVersionRec[];
@@ -120,6 +121,7 @@ function seed(): Db {
     notifications: new Map(),
     activity: [],
     resetTokens: [],
+    mfaRecovery: [],
     transcripts: [],
     subtitles: [],
     materialVersions: [],

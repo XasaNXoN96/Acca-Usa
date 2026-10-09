@@ -31,7 +31,7 @@ export default async function AdminHome() {
   const titles: Record<string, string> = {
     platforms: r("platforms.title"), subjects: r("subjects.title"), topics: r("topics.title"), materials: r("materials.title"),
     "question-bank": r("question-bank.title"), tests: r("tests.title"), exams: r("exams.title"), students: r("students.title"), access: r("access.title"), certificates: r("certificates.title"),
-    payments: r("payments.title"), statistics: ts("statistics.title"), settings: ts("settings.title"),
+    payments: r("payments.title"), statistics: ts("statistics.title"), settings: ts("settings.title"), security: ts("security.title"),
   };
   return (
     <>

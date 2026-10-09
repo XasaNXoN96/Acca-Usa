@@ -343,6 +343,15 @@
       "invalidText": "Request a new link to continue.",
       "requestNew": "Request a new link",
       "success": "Password updated. Sign in with your new password."
+    },
+    "mfa": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
+      "code": "Verification code",
+      "recoveryHint": "Lost your device? Enter a recovery code instead (each works once).",
+      "submit": "Verify",
+      "cancel": "Back to sign in",
+      "invalid": "That code is not valid."
     }
   },
   "student": {
@@ -1654,6 +1663,30 @@
         "REJECTED": "Rejected"
       },
       "notes": "A view is a student opening the material (counted at most once per 30 minutes per student). Completion = students who marked it completed in the period (an undone mark is not counted); the rate is completions ÷ viewers, shown as — when nobody viewed it. Tests belong to a topic, so the test column shows attempts on the topic's tests, not on this material alone. Administrators' own opens are not counted."
+    },
+    "security": {
+      "title": "Security",
+      "description": "Two-step verification protects the administrator account.",
+      "setupTitle": "Set up two-step verification",
+      "required": "Two-step verification is required for administrators. Nothing else in the admin area is available until it is set up.",
+      "step1": "Install an authenticator app (any TOTP app).",
+      "step2": "Scan the QR code, or type the key manually.",
+      "step3": "Enter the 6-digit code the app shows to confirm.",
+      "qrAlt": "QR code for the authenticator app",
+      "manualKey": "Or enter this key manually",
+      "codeLabel": "6-digit code",
+      "confirm": "Confirm and enable",
+      "invalidCode": "That code is not valid. Check the time on your device and try again.",
+      "rateLimited": "Too many attempts. Try again in {minutes} min.",
+      "failed": "Could not complete the setup. Try again.",
+      "confirmed": "Two-step verification is on.",
+      "recoveryTitle": "Recovery codes",
+      "recoveryText": "Save these codes somewhere safe. Each one works once if you lose your device. They are shown only now.",
+      "savedContinue": "I saved them — continue",
+      "enabledTitle": "Two-step verification is on",
+      "enabledText": "A code is required at every sign-in.",
+      "recoveryLeft": "Unused recovery codes: {count}.",
+      "lostDevice": "Lost your device and recovery codes? A server operator can reset it with the admin:mfa-reset command."
     }
   },
   "states": {

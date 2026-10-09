@@ -343,6 +343,15 @@
       "invalidText": "Davom etish uchun yangi havola so‘rang.",
       "requestNew": "Yangi havola so‘rash",
       "success": "Parol yangilandi. Yangi parol bilan kiring."
+    },
+    "mfa": {
+      "title": "Ikki bosqichli tekshiruv",
+      "subtitle": "Autentifikator ilovasidagi 6 xonali kodni yoki tiklash kodlaridan birini kiriting.",
+      "code": "Tasdiqlash kodi",
+      "recoveryHint": "Qurilmangizni yo‘qotdingizmi? Tiklash kodini kiriting (har biri bir marta ishlaydi).",
+      "submit": "Tasdiqlash",
+      "cancel": "Kirishga qaytish",
+      "invalid": "Kod yaroqsiz."
     }
   },
   "student": {
@@ -1654,6 +1663,30 @@
         "REJECTED": "Rad etilgan"
       },
       "notes": "Ko‘rish — talabaning materialni ochishi (bir talaba uchun 30 daqiqada ko‘pi bilan bir marta sanaladi). Tugallash — davr ichida materialni o‘tilgan deb belgilagan talabalar (bekor qilingan belgi sanalmaydi); ulush = tugallashlar ÷ ko‘ruvchilar, hech kim ko‘rmagan bo‘lsa «—». Testlar mavzuga tegishli, shu sababli test ustunida faqat shu material emas, mavzu testlari bo‘yicha urinishlar ko‘rsatiladi. Administratorlarning o‘z ochishlari sanalmaydi."
+    },
+    "security": {
+      "title": "Xavfsizlik",
+      "description": "Ikki bosqichli tekshiruv administrator hisobini himoya qiladi.",
+      "setupTitle": "Ikki bosqichli tekshiruvni sozlash",
+      "required": "Administratorlar uchun ikki bosqichli tekshiruv majburiy. U sozlanmaguncha admin panelning boshqa bo‘limlari mavjud emas.",
+      "step1": "Autentifikator ilovasini o‘rnating (istalgan TOTP ilovasi).",
+      "step2": "QR-kodni skanerlang yoki kalitni qo‘lda kiriting.",
+      "step3": "Tasdiqlash uchun ilovadagi 6 xonali kodni kiriting.",
+      "qrAlt": "Autentifikator ilovasi uchun QR-kod",
+      "manualKey": "Yoki bu kalitni qo‘lda kiriting",
+      "codeLabel": "6 xonali kod",
+      "confirm": "Tasdiqlash va yoqish",
+      "invalidCode": "Kod yaroqsiz. Qurilmadagi vaqtni tekshirib, qayta urinib ko‘ring.",
+      "rateLimited": "Juda ko‘p urinish. {minutes} daqiqadan keyin qayta urining.",
+      "failed": "Sozlashni yakunlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "confirmed": "Ikki bosqichli tekshiruv yoqildi.",
+      "recoveryTitle": "Tiklash kodlari",
+      "recoveryText": "Bu kodlarni xavfsiz joyda saqlang. Qurilmani yo‘qotsangiz, har biri bir marta ishlaydi. Ular faqat hozir ko‘rsatiladi.",
+      "savedContinue": "Saqladim — davom etish",
+      "enabledTitle": "Ikki bosqichli tekshiruv yoqilgan",
+      "enabledText": "Har safar kirishda kod talab qilinadi.",
+      "recoveryLeft": "Ishlatilmagan tiklash kodlari: {count}.",
+      "lostDevice": "Qurilma va tiklash kodlarini yo‘qotdingizmi? Server operatori admin:mfa-reset buyrug‘i bilan tiklashi mumkin."
     }
   },
   "states": {

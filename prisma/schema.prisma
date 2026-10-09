@@ -127,6 +127,11 @@ model User {
   locale       Locale     @default(en)
   /// bumped on password reset / suspension / role change → revokes every older session cookie
   tokenVersion Int        @default(0)
+  /// TOTP secret, AES-256-GCM encrypted (lib/auth/mfa-crypto). While mfaEnabledAt is null it is an enrolment still being confirmed.
+  mfaSecretEnc String?
+  mfaEnabledAt DateTime?
+  /// last accepted 30-second TOTP step — a code from this step or earlier can never be replayed
+  mfaLastStep  Int?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
@@ -144,8 +149,22 @@ model User {
   notifications    Notification[]
   activity         Activity[]
   resetTokens      ResetToken[]
+  mfaRecoveryCodes MfaRecoveryCode[]
 
   @@index([role, status])
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  /// HMAC-SHA-256 of the normalised code — the clear code is shown once, at enrolment
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
 }
 
 model ResetToken {

@@ -66,6 +66,21 @@ export interface AuthService {
   getSessionUser(userId: string, tokenVersion: number): Promise<User | null>;
 }
 
+/* ---------------- second factor (administrators) ---------------- */
+
+export interface MfaStatus { enabled: boolean; recoveryCodesLeft: number }
+export interface MfaService {
+  status(userId: string): Promise<MfaStatus>;
+  /** Starts (or resumes) enrolment: returns the Base32 secret to show once as QR / manual key. Fails ALREADY_ENABLED. */
+  beginEnrollment(userId: string): Promise<ServiceResult<{ secret: string }>>;
+  /** Confirms with a code from the app; on success MFA is on, older sessions are revoked and the recovery codes are returned ONCE. */
+  confirmEnrollment(userId: string, code: string): Promise<ServiceResult<{ recoveryCodes: string[]; tokenVersion: number }>>;
+  /** Login challenge: a TOTP code (replay-protected) or a single-use recovery code. */
+  verifyLogin(userId: string, code: string): Promise<{ ok: true; method: "totp" | "recovery" } | { ok: false }>;
+  /** Break-glass (CLI only): removes the second factor and revokes all sessions. */
+  reset(userId: string): Promise<ServiceResult>;
+}
+
 export interface UserInput {
   name: string;
   email: string;
@@ -465,6 +480,7 @@ export interface SearchService {
 
 export interface Services {
   auth: AuthService;
+  mfa: MfaService;
   users: UserService;
   platforms: PlatformService;
   subjects: SubjectService;

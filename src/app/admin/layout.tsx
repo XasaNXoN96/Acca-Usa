@@ -4,16 +4,23 @@ import { AppShell } from "@/components/layout/app-shell";
 import { adminNav } from "@/lib/navigation";
 import { can } from "@/lib/permissions";
 import { services } from "@/services";
-import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
+import { redirect } from "next/navigation";
+import { getSessionForMfaSetup } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
+import { RecoveryHost } from "@/features/admin/recovery-host";
+import { MfaSetup } from "@/features/admin/mfa-setup";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s | Admin | ACCA USA" } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [r, ts, session] = await Promise.all([
+  const [r, ts, loaded] = await Promise.all([
     getTranslations("admin.resources"),
     getTranslations("admin"),
-    requireSession(STAFF_ROLES),
+    getSessionForMfaSetup(),
   ]);
+  if (!loaded) redirect(routes.login);
+  const { session, setupRequired } = loaded;
+  if (session.user.role !== "ADMIN") redirect(routes.dashboard);
   const unread = await services.notifications.unreadCount(session.user.id);
   const labels: Record<string, string> = {
     overview: ts("overview.title"),
@@ -30,10 +37,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     payments: r("payments.title"),
     statistics: ts("statistics.title"),
     settings: ts("settings.title"),
+    security: ts("security.title"),
   };
   return (
-    <AppShell variant="admin" items={adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} unreadNotifications={unread} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>
-      {children}
+    <AppShell variant="admin" items={setupRequired ? [] : adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} unreadNotifications={unread} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>
+      {/* Mandatory second factor not set up yet: NOTHING else under /admin is rendered (pages, data and actions all fail closed). */}
+      <RecoveryHost>{setupRequired ? <MfaSetup user={session.user} required /> : children}</RecoveryHost>
     </AppShell>
   );
 }

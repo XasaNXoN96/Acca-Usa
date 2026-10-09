@@ -11,6 +11,10 @@ export interface UserRec {
   passwordHash: string | null;
   /** bumped on password reset / suspension / role change → revokes all older session tokens */
   tokenVersion: number;
+  /** AES-GCM encrypted TOTP secret; an enrolment is pending while mfaEnabledAt is unset */
+  mfaSecretEnc?: string;
+  mfaEnabledAt?: string;
+  mfaLastStep?: number;
   createdAt: string;
   deletedAt?: string;
 }

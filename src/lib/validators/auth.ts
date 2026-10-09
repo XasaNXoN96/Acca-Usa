@@ -26,6 +26,8 @@ export const loginSchema = z.object({
   email,
   password: z.string().min(1, "required"),
 });
+/** 6-digit authenticator code, or a recovery code (letters/digits, optionally grouped with dashes). */
+export const mfaCodeSchema = z.object({ code: z.string().trim().min(6).max(24).regex(/^[A-Za-z0-9 -]+$/) });
 export type LoginInput = z.infer<typeof loginSchema>;
 
 export const registerSchema = z
