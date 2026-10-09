@@ -1,9 +1,8 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { AuthService, ServiceResult, UserInput, UserService } from "../contracts";
-import type { PlatformSlug, StudentRecord, User } from "@/types";
+import type { StudentRecord, User } from "@/types";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { seedStudentSummary } from "@/data/mock/people";
 import { getDb, newId, notifyAdmins, nowIso, pushNotification, type UserRec } from "./db";
 import { activePlatformsOf, platformProgress } from "./calc";
 
@@ -86,13 +85,9 @@ export const userService: UserService = {
 
   async listStudents() {
     const db = getDb();
-    return db.users.map<StudentRecord>((u) => {
-      const enrolled = activePlatformsOf(db, u.id);
-      const seeded = seedStudentSummary[u.id];
-      const platforms: PlatformSlug[] = enrolled.length || !seeded ? enrolled : seeded.platforms;
-      const progress = enrolled.length
-        ? Math.round(enrolled.reduce((a, p) => a + platformProgress(db, u.id, p), 0) / enrolled.length)
-        : (seeded?.progress ?? 0);
+    return [...db.users].sort((a, b) => a.createdAt.localeCompare(b.createdAt)).map<StudentRecord>((u) => {
+      const platforms = activePlatformsOf(db, u.id);
+      const progress = platforms.length ? Math.round(platforms.reduce((a, p) => a + platformProgress(db, u.id, p), 0) / platforms.length) : 0;
       return { ...toUser(u), platforms, progress, archived: !!u.deletedAt };
     });
   },

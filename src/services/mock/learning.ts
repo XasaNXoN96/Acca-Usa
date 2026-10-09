@@ -190,6 +190,6 @@ export const certificateService: CertificateService = {
 
 export const examService: ExamService = {
   async list() {
-    return exams; // demo fixtures: illustrative only — never startable, scores are sample data
+    return [...exams].sort((a, b) => a.startsAt.localeCompare(b.startsAt)); // demo fixtures: illustrative only — never startable, scores are sample data
   },
 };

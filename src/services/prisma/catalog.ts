@@ -56,7 +56,7 @@ export const platformService: PlatformService = {
 
 const subjectInclude = {
   level: true,
-  _count: { select: { topics: { where: { deletedAt: null } }, tests: { where: { deletedAt: null, published: true } } } },
+  _count: { select: { topics: { where: { deletedAt: null } }, tests: { where: { deletedAt: null, published: true, kind: "topic_test" } } } },
 } satisfies Prisma.SubjectInclude;
 type SubjectRow = Prisma.SubjectGetPayload<{ include: typeof subjectInclude }>;
 
@@ -231,7 +231,7 @@ export const topicService: TopicService = {
     return { topic: current, subject: toSubject(subject), previous: list[idx - 1] ?? null, next: list[idx + 1] ?? null, materials: await Promise.all(mats.map(toMaterial)) };
   },
   async listAll() {
-    const rows = await getPrisma().topic.findMany({ orderBy: [{ subjectSlug: "asc" }, { order: "asc" }] });
+    const rows = await getPrisma().topic.findMany({ orderBy: [{ subject: { position: "asc" } }, { subject: { code: "asc" } }, { order: "asc" }] });
     return rows.map((t) => ({
       id: t.id, title: t.title, subjectSlug: t.subjectSlug, order: t.order, durationMinutes: t.durationMinutes,
       description: t.description, lessonCount: t.lessonCount, archived: !!t.deletedAt,

@@ -359,7 +359,7 @@ export const testService: TestService = {
     return rows.flatMap((a) => toListItem(a) ?? []);
   },
   async listAllForAdmin() {
-    const rows = await getPrisma().test.findMany({ include: testInclude, orderBy: { createdAt: "asc" } });
+    const rows = await getPrisma().test.findMany({ where: { kind: "topic_test" }, include: testInclude, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
     return (await summaries(rows)).map((s, i) => ({ ...s, questionIds: rows[i]!.questions.map((x) => x.questionId) }));
   },
   async create(input) {
