@@ -43,3 +43,13 @@ bucket and nothing else.
 signed requests, sanitised names, ranged reads, time-limited signed URLs (with disposition), replace / delete / garbage
 collection and orphan prevention. It has **not** been run against a real vendor bucket from this environment — do a smoke
 upload / download in staging before go-live.
+
+## File processing status & antivirus (architecture only)
+
+Every `StoredFile` has a `status` (`UPLOADED → PROCESSING → READY | FAILED | REJECTED`); `/api/files/[id]` serves only `READY`
+files (see `docs/MEDIA.md`). Video/audio are probed with ffprobe and converted with FFmpeg before they become `READY`.
+
+**No antivirus is connected.** The extension point is the same status machine: a scanner (e.g. ClamAV via `clamd`, or a
+bucket-event scanner) would run between `UPLOADED` and `READY` and set `REJECTED` (`statusCode: MALWARE`) on a detection.
+Until one is wired in, uploads are protected only by the extension allow-list, size caps, magic-byte checks, sanitised
+names, server-generated object keys, no executable/SVG/HTML types, and staff-only upload rights.
