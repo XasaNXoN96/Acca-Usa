@@ -621,7 +621,8 @@
     "attemptsLeft": "{left} ta urinish qoldi",
     "noAttemptsLeft": "Bu test uchun urinishlar qolmadi.",
     "history": "Urinishlaringiz",
-    "attemptN": "{n}-urinish"
+    "attemptN": "{n}-urinish",
+    "allMistakes": "Barcha xatolarim"
   },
   "exams": {
     "title": "Sinov imtihonlari",
@@ -1773,5 +1774,46 @@
     "noResults": "So‘rovingizga mos yozuv topilmadi.",
     "toCourses": "Kurslarga o‘tish",
     "unavailable": "Bu material hozir sizga mavjud emas."
+  },
+  "mistakes": {
+    "title": "Mening xatolarim",
+    "description": "Yuborilgan testlarda noto‘g‘ri javob bergan yoki o‘tkazib yuborgan savollaringiz, to‘g‘ri javob bilan. To‘g‘ri javob berguncha mashq qiling.",
+    "filters": "Xatolarni saralash",
+    "subject": "Fan",
+    "allSubjects": "Barcha fanlar",
+    "show": "Ko‘rsatish",
+    "onlyOpen": "Mashq kerak",
+    "everything": "Hammasi (tuzatilganlar bilan)",
+    "apply": "Qo‘llash",
+    "practice": {
+      "title": "Xatolarni mashq qilish",
+      "description": "Xato qilgan savollaringizga yana javob bering. Har bir javob serverda tekshiriladi.",
+      "progress": "{total} tadan {current}-savol",
+      "check": "Javobni tekshirish",
+      "next": "Keyingi savol",
+      "finish": "Yakunlash",
+      "correct": "To‘g‘ri!",
+      "wrong": "Unchalik emas.",
+      "correctAnswer": "To‘g‘ri javob: {answer}",
+      "failed": "Javobni tekshirib bo‘lmadi. Qayta urinib ko‘ring.",
+      "doneTitle": "Mashq yakunlandi",
+      "score": "{total} tadan {correct} tasi to‘g‘ri",
+      "backToMistakes": "Xatolarimga qaytish",
+      "nothingTitle": "Mashq qilishga hech narsa yo‘q",
+      "nothingText": "Sizda tuzatilmagan xato yo‘q."
+    },
+    "resolved": "Tuzatilgan",
+    "needsPractice": "Mashq kerak",
+    "wrongTimes": "{count} marta xato",
+    "correctAnswerTag": "To‘g‘ri javob",
+    "yourAnswerTag": "Sizning javobingiz",
+    "skipped": "Siz bu savolni o‘tkazib yuborgansiz.",
+    "explanation": "Izoh",
+    "emptyTitle": "Hali xato yo‘q",
+    "emptyText": "Noto‘g‘ri va o‘tkazib yuborilgan javoblar test yuborilgandan keyin shu yerda paydo bo‘ladi.",
+    "nothingOpenTitle": "Mashq qilishga hech narsa yo‘q",
+    "nothingOpenText": "Bu tanlovdagi barcha xatolar tuzatilgan. Ularni ko‘rish uchun filtrni o‘zgartiring.",
+    "toCourses": "Kurslarga o‘tish",
+    "practiceButton": "{count} ta xatoni mashq qilish"
   }
 }

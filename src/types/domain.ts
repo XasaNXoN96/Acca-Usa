@@ -504,3 +504,40 @@ export interface MaterialStats {
   totals: { materials: number; views: number; uniqueViewers: number; completions: number; processingErrors: number };
   rows: MaterialStatsRow[];
 }
+
+/** A question the learner got wrong (or skipped) in a real submitted attempt — frozen as they saw it. */
+export interface MistakeItem {
+  questionId: string;
+  subjectSlug: string;
+  subjectName: string;
+  testId: string;
+  testTitle: string;
+  attemptId: string;
+  /** when the (latest) wrong answer was submitted */
+  answeredAt: string;
+  text: string;
+  options: QuestionOption[];
+  selectedOptionId: string | null;
+  correctOptionId: string;
+  /** Only when the question really has one — never invented. */
+  explanation?: string;
+  /** In how many submitted attempts this question was answered wrongly or skipped. */
+  wrongCount: number;
+  practiceCount: number;
+  /** The latest outcome (a later test attempt or a practice answer) was correct. */
+  resolved: boolean;
+}
+
+/** A practice question: no answer key. */
+export interface PracticeQuestion {
+  id: string;
+  text: string;
+  imageId?: string;
+  options: QuestionOption[];
+}
+
+export interface PracticeCheck {
+  correct: boolean;
+  correctOptionId: string;
+  explanation?: string;
+}

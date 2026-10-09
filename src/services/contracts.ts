@@ -4,6 +4,9 @@ import type {
   ActivityItem,
   AdminStats,
   MaterialStats,
+  MistakeItem,
+  PracticeCheck,
+  PracticeQuestion,
   IssuedCertificate,
   StatsFilter,
   AnswerMap,
@@ -398,6 +401,16 @@ export interface StatsService {
   getAdminStats(filter: StatsFilter): Promise<AdminStats>;
 }
 
+/** Mistakes review and practice of one learner (real attempts only). */
+export interface MistakeService {
+  /** Every question the learner got wrong or skipped in a submitted attempt (resolved ones flagged), unresolved first. */
+  list(userId: string, filter?: { subjectSlug?: string }): Promise<MistakeItem[]>;
+  /** Up to `limit` unresolved mistakes as practice questions (no answer key). */
+  practiceSet(userId: string, opts: { subjectSlug?: string; limit: number }): Promise<PracticeQuestion[]>;
+  /** Grades one practice answer. Only questions the learner got wrong earlier can be checked (no answer-key lookup for others). */
+  checkPractice(userId: string, questionId: string, optionId: string): Promise<ServiceResult<PracticeCheck>>;
+}
+
 /** A student's private note. Every method is scoped by `userId`: another student's note is "not found". */
 export interface NoteView {
   id: string;
@@ -455,6 +468,7 @@ export interface Services {
   materialVersions: MaterialVersionService;
   materialStats: MaterialStatsService;
   notes: NoteService;
+  mistakes: MistakeService;
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;

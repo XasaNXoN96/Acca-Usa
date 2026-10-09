@@ -38,6 +38,8 @@ export const routes = {
   progress: "/progress",
   ranking: "/ranking",
   notes: "/notes",
+  mistakes: "/mistakes",
+  mistakesPractice: "/mistakes/practice",
   certificates: "/certificates",
   payments: "/payments",
   notifications: "/notifications",

@@ -10,3 +10,4 @@ export { mediaTextService } from "./media-text";
 export { materialVersionService } from "./material-versions";
 export { materialStatsService } from "./material-stats";
 export { noteService } from "./notes";
+export { mistakeService } from "./mistakes";

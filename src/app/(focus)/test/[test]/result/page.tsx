@@ -75,6 +75,9 @@ export default async function ResultPage({ params, searchParams }: { params: Par
             </Button>
           )}
         </div>
+        {result.incorrect + result.unanswered > 0 ? (
+          <p className="text-center"><Button asChild variant="ghost" size="sm"><Link href={routes.mistakes}>{t("allMistakes")}</Link></Button></p>
+        ) : null}
         {summary && summary.attemptsAllowed > 0 ? (
           <p className="text-center text-sm text-muted-foreground" data-attempts-note>
             {canRetake ? t("attemptsLeft", { left: summary.attemptsAllowed - (summary.attemptsUsed ?? 0) }) : t("noAttemptsLeft")}

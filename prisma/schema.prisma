@@ -131,6 +131,7 @@ model User {
   lastMaterial     LastMaterial?
   materialViews    MaterialView[]
   materialNotes    MaterialNote[]
+  practiceAnswers  PracticeAnswer[]
   attempts         TestAttempt[]
   payments         Payment[]
   certificates     Certificate[]
@@ -269,6 +270,20 @@ model Material {
   @@index([subjectSlug])
   @@index([topicId])
   @@index([fileId])
+}
+
+/// One answer given while practising a past mistake ("Practice your mistakes"). Ungraded: it never changes a test result,
+/// only whether the question still counts as an unresolved mistake. questionId is a plain reference (questions are soft-deleted).
+model PracticeAnswer {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  correct    Boolean
+  at         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, questionId, at])
 }
 
 /// A student's private note on a material, optionally anchored to a PDF page or a video / audio time. Only its owner

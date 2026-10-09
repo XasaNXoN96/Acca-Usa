@@ -621,7 +621,8 @@
     "attemptsLeft": "{left, plural, one {# attempt left} other {# attempts left}}",
     "noAttemptsLeft": "No attempts left for this test.",
     "history": "Your attempts",
-    "attemptN": "Attempt {n}"
+    "attemptN": "Attempt {n}",
+    "allMistakes": "Review all my mistakes"
   },
   "exams": {
     "title": "Mock Exams",
@@ -1773,5 +1774,46 @@
     "noResults": "No notes match your search.",
     "toCourses": "Go to courses",
     "unavailable": "This material is not available to you right now."
+  },
+  "mistakes": {
+    "title": "My mistakes",
+    "description": "Questions you answered wrongly or skipped in your submitted tests, with the correct answer. Practise them until you get them right.",
+    "filters": "Filter mistakes",
+    "subject": "Subject",
+    "allSubjects": "All subjects",
+    "show": "Show",
+    "onlyOpen": "Needs practice",
+    "everything": "Everything (including resolved)",
+    "apply": "Apply",
+    "practice": {
+      "title": "Practise your mistakes",
+      "description": "Answer again the questions you got wrong. Each answer is checked on the server.",
+      "progress": "Question {current} of {total}",
+      "check": "Check answer",
+      "next": "Next question",
+      "finish": "Finish",
+      "correct": "Correct!",
+      "wrong": "Not quite.",
+      "correctAnswer": "Correct answer: {answer}",
+      "failed": "Couldn’t check the answer. Please try again.",
+      "doneTitle": "Practice finished",
+      "score": "{correct} of {total} correct",
+      "backToMistakes": "Back to my mistakes",
+      "nothingTitle": "Nothing to practise",
+      "nothingText": "You have no unresolved mistakes."
+    },
+    "resolved": "Resolved",
+    "needsPractice": "Needs practice",
+    "wrongTimes": "Wrong {count} times",
+    "correctAnswerTag": "Correct answer",
+    "yourAnswerTag": "Your answer",
+    "skipped": "You skipped this question.",
+    "explanation": "Explanation",
+    "emptyTitle": "No mistakes yet",
+    "emptyText": "Your wrong and skipped answers appear here after you submit a test.",
+    "nothingOpenTitle": "Nothing to practise",
+    "nothingOpenText": "Every mistake in this selection has been resolved. Change the filter to see them.",
+    "toCourses": "Go to courses",
+    "practiceButton": "Practise {count} mistakes"
   }
 }

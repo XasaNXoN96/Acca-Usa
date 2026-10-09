@@ -38,3 +38,12 @@ and Range support are); page routes inside the authenticated groups render the n
 first) while public routes and API routes return real 404 / 401 / 403; certificate PDFs are generated on the server (`docs/CERTIFICATES.md`) and can also be printed.
 
 Keyboard / screen-reader pass is manual: mega menu, drawers, dialogs, test player, upload control.
+
+## Mistakes review and practice (phase 17)
+
+`/mistakes` lists the questions a learner answered wrongly or skipped in their **submitted** attempts, from the frozen review
+of each attempt (so later edits to the bank never rewrite history), with the correct answer and the explanation **only when the
+question has one**. A question is *resolved* when its latest outcome — a later test attempt or a practice answer — is correct.
+`/mistakes/practice` quizzes up to 10 unresolved mistakes; every answer is graded on the server (`PracticeAnswer`, ungraded,
+never changes a test result). The page never contains the answer key, and only questions the learner got wrong earlier can be
+checked. The logic is one pure module (`services/domain/mistakes.ts`) shared by both providers.
