@@ -104,6 +104,65 @@ async function main() {
     assert.ok((await services.mistakes.list(student.id)).some((m) => m.testId === later), "released review should appear in my mistakes");
   });
 
+  await step("security: getForAttempt carries no answer key / explanations; another user's attempt, draft, submit and result are unreachable", async () => {
+    const id = await make({ title: "Security exam", attemptsAllowed: 2 });
+    const other = (await services.users.listStudents()).filter((u) => u.role === "STUDENT" && u.status === "active" && !u.archived && u.id !== student.id)[0];
+    assert.ok(other, "needs a second student");
+    const shown = JSON.stringify(await services.tests.getForAttempt(id, student.id)); assert.ok(!/correctOptionId|explanation/.test(shown), "answer key in the attempt payload");
+    const a = await services.tests.startAttempt(student.id, id); assert.ok(a.ok);
+    const stolen = await services.tests.submit({ userId: other!.id, testId: id, answers: {}, flagged: [] }); assert.ok(!stolen.ok && stolen.code === "NO_ATTEMPT", "another user could submit");
+    const draft = await services.tests.saveDraft(other!.id, { testId: id, answers: {}, flagged: [], currentIndex: 0, elapsedSeconds: 0 }); assert.ok(!draft.ok, "another user could save a draft");
+    assert.equal(await services.tests.getActiveAttempt(other!.id, id), null);
+    assert.ok((await services.tests.submit(answerAll(id))).ok);
+    assert.equal(await services.tests.getResult(id, other!.id), null, "another user read the result");
+    const attemptId = (await services.tests.getResult(id, student.id))!.attemptId;
+    assert.equal(await services.tests.getResult(id, other!.id, attemptId), null, "another user read the result by attempt id");
+    assert.ok(!(await services.testResults.list(other!.id)).some((r) => r.testId === id) && (await services.testResults.attemptsForTest(other!.id, id)).length === 0);
+    assert.ok(!(await services.mistakes.list(other!.id)).some((m) => m.testId === id));
+    assert.deepEqual(await services.mistakes.checkPractice(other!.id, bank[0]!.id, "a"), { ok: false, code: "NOT_FOUND" }, "answer key reachable through practice");
+  });
+
+  await step("concurrency: simultaneous starts create ONE attempt, and parallel start+submit cannot exceed the attempt limit", async () => {
+    const id = await make({ title: "Race exam", attemptsAllowed: 1 });
+    const starts = await Promise.all([1, 2, 3, 4].map(() => services.tests.startAttempt(student.id, id)));
+    const ids = new Set(starts.filter((s) => s.ok).map((s) => (s as { ok: true; data: { attemptId: string } }).data.attemptId));
+    assert.equal(ids.size, 1, `${ids.size} attempts were created by simultaneous starts`);
+    const submits = await Promise.all([1, 2, 3].map(() => services.tests.submit(answerAll(id))));
+    assert.equal(submits.filter((s) => s.ok).length >= 1, true);
+    const exam = (await services.exams.list(student.id)).find((e) => e.id === id)!; assert.equal(exam.attemptsUsed, 1, `attempts used ${exam.attemptsUsed} with a limit of 1`);
+    assert.ok(!(await services.tests.startAttempt(student.id, id)).ok, "start allowed after the limit");
+  });
+
+  await step("deadline: after closing (+60 s grace) the saved draft is the answer — late answers and late autosaves are refused", async () => {
+    const id = await make({ title: "Deadline exam", opensAt: null, closesAt: iso(3_000), durationMinutes: 60, attemptsAllowed: 2 });
+    assert.ok((await services.tests.startAttempt(student.id, id)).ok);
+    const ids = (await services.tests.getForAttempt(id, student.id))!.questions;
+    const first = ids[0]!; const right = (await services.questions.list()).find((q) => q.id === first.id)!.correctOptionId;
+    assert.ok((await services.tests.saveDraft(student.id, { testId: id, answers: { [first.id]: right }, flagged: [], currentIndex: 0, elapsedSeconds: 0 })).ok, "autosave inside the window");
+    await new Promise((r) => setTimeout(r, 64_000)); // closing time + 60 s grace
+    const late = await services.tests.saveDraft(student.id, { testId: id, answers: {}, flagged: [], currentIndex: 0, elapsedSeconds: 0 }); assert.ok(!late.ok && late.code === "EXPIRED", "late autosave accepted");
+    const all = Object.fromEntries((await services.questions.list()).filter((q) => qids.includes(q.id)).map((q) => [q.id, q.correctOptionId]));
+    const s = await services.tests.submit({ userId: student.id, testId: id, answers: all, flagged: [] }); assert.ok(s.ok || s.code === "NO_ATTEMPT");
+    const r = await services.tests.getResult(id, student.id); assert.ok(r, "attempt was not closed");
+    assert.equal(r!.correct, 1, `late answers counted: ${r!.correct} correct (only the draft saved before closing may count)`);
+  });
+
+  await step("question illustrations: served while a topic test or an OPEN exam uses them; not for a scheduled / closed exam", async () => {
+    const { getStorage } = await import("../../src/services/storage");
+    const png = Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100" + "05fe02fea7e2f7340000000049454e44ae426082", "hex");
+    const file = await getStorage().put({ ownerId: "tester", file: new File([png], "q.png"), mime: "image/png" });
+    const q = await services.questions.create({ subjectSlug, text: "Which picture shows the exam question?", imageId: file.id, status: "published", tags: [], options: ["One", "Two", "Three", "Four"], correctIndex: 1, explanation: "Because two.", points: 1, difficulty: "easy" });
+    assert.ok(q.ok);
+    assert.equal(await services.questions.imageAccess(file.id), null, "an image of a question in no test was served");
+    const future = await make({ title: "Image exam future", questionIds: [q.data.id], opensAt: iso(2 * H), closesAt: iso(5 * H) });
+    assert.equal(await services.questions.imageAccess(file.id), null, "image of a scheduled exam served");
+    const closed = await make({ title: "Image exam closed", questionIds: [q.data.id], opensAt: iso(-5 * H), closesAt: iso(-2 * H) });
+    assert.equal(await services.questions.imageAccess(file.id), null, "image of a closed exam served");
+    await make({ title: "Image exam open", questionIds: [q.data.id] });
+    assert.deepEqual(await services.questions.imageAccess(file.id), { subjectSlug }, "image of an open exam not served");
+    void future; void closed;
+  });
+
   await step("admin lifecycle: draft is invisible, publish/unpublish, duplicate (draft, still an exam), archive, kind cannot be changed by update", async () => {
     const id = await make({ title: "Lifecycle exam", published: false });
     assert.ok(!(await services.exams.list(student.id)).some((e) => e.id === id), "draft exam visible");

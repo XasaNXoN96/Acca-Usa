@@ -77,7 +77,11 @@ export const questionService: QuestionService = {
   },
   async imageAccess(fileId) {
     const q = await getPrisma().question.findFirst({
-      where: { imageId: fileId, deletedAt: null, status: "published", tests: { some: { test: { published: true, deletedAt: null } } } },
+      // an illustration of an exam is served only while that exam is open (a scheduled or closed exam must not leak its content)
+      where: {
+        imageId: fileId, deletedAt: null, status: "published",
+        tests: { some: { test: { published: true, deletedAt: null, OR: [{ kind: "topic_test" }, { kind: "exam", AND: [{ OR: [{ opensAt: null }, { opensAt: { lte: new Date() } }] }, { OR: [{ closesAt: null }, { closesAt: { gte: new Date() } }] }] }] } } },
+      },
       select: { subjectSlug: true },
     });
     return q ? { subjectSlug: q.subjectSlug } : null;
@@ -320,11 +324,18 @@ export const testService: TestService = {
     // Exams run inside their availability window, and never past its end (server clock, not the browser's).
     const blocked = startBlock({ kind: t.kind, opensAt: t.opensAt?.toISOString(), closesAt: t.closesAt?.toISOString() });
     if (blocked) return err(blocked);
-    if (t.attemptsAllowed > 0 && (await prisma.testAttempt.count({ where: { userId, testId, status: "SUBMITTED" } })) >= t.attemptsAllowed) return err("ATTEMPTS_EXHAUSTED");
-    const startedAt = new Date();
-    const deadlineAt = new Date(attemptDeadline({ kind: t.kind, closesAt: t.closesAt?.toISOString() }, startedAt.getTime(), t.durationMinutes));
-    const a = await prisma.testAttempt.create({ data: { id: newId("att"), userId, testId, startedAt, deadlineAt } });
-    return ok(toStart(a));
+    // Serialise starts of the same learner and test: simultaneous requests must not create several attempts (that would
+    // let one learner exceed the attempt limit). The transaction-scoped advisory lock is released at commit.
+    return prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`attempt:${userId}:${testId}`}))`;
+      const live = await tx.testAttempt.findFirst({ where: { userId, testId, status: "IN_PROGRESS" }, orderBy: { startedAt: "desc" } });
+      if (live) return ok(toStart(live));
+      if (t.attemptsAllowed > 0 && (await tx.testAttempt.count({ where: { userId, testId, status: "SUBMITTED" } })) >= t.attemptsAllowed) return err("ATTEMPTS_EXHAUSTED");
+      const startedAt = new Date();
+      const deadlineAt = new Date(attemptDeadline({ kind: t.kind, closesAt: t.closesAt?.toISOString() }, startedAt.getTime(), t.durationMinutes));
+      const a = await tx.testAttempt.create({ data: { id: newId("att"), userId, testId, startedAt, deadlineAt } });
+      return ok(toStart(a));
+    });
   },
   async saveDraft(userId, draft) {
     const a = await findInProgress(userId, draft.testId);

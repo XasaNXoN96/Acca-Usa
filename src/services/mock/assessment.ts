@@ -9,7 +9,7 @@ import {
   type AttemptRec, type Db, type QuestionRec, type TestRec,
 } from "./db";
 import { subjectProgress } from "./calc";
-import { applyReviewPolicy, attemptDeadline, startBlock, windowInvalid } from "../domain/exams";
+import { applyReviewPolicy, attemptDeadline, startBlock, windowInvalid, windowStatus } from "../domain/exams";
 
 const GRACE_MS = 60_000;
 const LETTERS = ["a", "b", "c", "d"] as const;
@@ -81,7 +81,7 @@ export const questionService: QuestionService = {
     const db = getDb();
     const q = db.questions.find((x) => x.imageId === fileId && !x.deletedAt && x.status === "published");
     if (!q) return null;
-    const inPublishedTest = db.tests.some((t) => t.published && !t.deletedAt && t.questionIds.includes(q.id));
+    const inPublishedTest = db.tests.some((t) => t.published && !t.deletedAt && t.questionIds.includes(q.id) && (t.kind !== "exam" || windowStatus(t) === "open")); // an exam illustration is served only while the exam is open
     return inPublishedTest ? { subjectSlug: q.subjectSlug } : null;
   },
 };
