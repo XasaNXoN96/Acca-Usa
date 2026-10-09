@@ -1397,7 +1397,41 @@
       "remindersHint": "7 kun faol bo‘lmagan talabalarga pochta yuborish.",
       "saved": "Sozlamalar saqlandi (demo — ma’lumot saqlanmaydi).",
       "liveTitle": "Sozlamalar joylashtirish vaqtida beriladi",
-      "liveText": "Platforma sozlamalari (jo‘natuvchi manzili, URL, provayderlar, sirlar) server muhitida saqlanadi va ishga tushishda tekshiriladi. docs/DEPLOYMENT_MODES.md ga qarang."
+      "liveText": "Platforma sozlamalari (jo‘natuvchi manzili, URL, provayderlar, sirlar) server muhitida saqlanadi va ishga tushishda tekshiriladi. docs/DEPLOYMENT_MODES.md ga qarang.",
+      "email": {
+        "title": "E-mail yetkazish",
+        "provider": "Provayder",
+        "smtp": "SMTP protokoli",
+        "demo": "Demo qutisi — hech narsa yuborilmaydi",
+        "host": "SMTP serveri",
+        "from": "Jo‘natuvchi",
+        "stats": "Ishga tushgandan beri shu server nusxasi",
+        "sent": "Pochta serveri qabul qildi: {count}",
+        "failed": "Xatolar: {count}",
+        "lastFail": "Oxirgi xato: {code}, {time}",
+        "none": "Hali xabar yuborilmagan.",
+        "notConfigured": "SMTP sozlanmagan.",
+        "send": "Test xabarini manzilimga yuborish",
+        "sending": "Yuborilmoqda…",
+        "ok": "Pochta serveriga topshirildi. Kiruvchilarni (va spamni) tekshiring: server xabarni qabul qilgani uning qutiga yetganini isbotlamaydi.",
+        "demoOk": "Demo rejim: xabar faqat yozib qo‘yildi, hech narsa yuborilmadi.",
+        "limit": "Test xabarlari juda ko‘p. Keyinroq urinib ko‘ring.",
+        "forbidden": "Ruxsat yo‘q.",
+        "failedWith": "Yuborib bo‘lmadi: {code}.",
+        "codes": {
+          "AUTH": "pochta serveri kirishni rad etdi",
+          "CONNECTION": "pochta serveriga ulanib bo‘lmadi",
+          "TIMEOUT": "pochta serveri o‘z vaqtida javob bermadi",
+          "TEMPORARY": "pochta serverining vaqtinchalik rad etishi",
+          "REJECTED_RECIPIENT": "qabul qiluvchi manzili rad etildi",
+          "REJECTED_MESSAGE": "xabar rad etildi",
+          "UNKNOWN": "noma’lum xato",
+          "INVALID_RECIPIENT": "noto‘g‘ri qabul qiluvchi",
+          "RENDER": "xabarni tayyorlab bo‘lmadi",
+          "PROVIDER_ERROR": "provayder xatosi"
+        },
+        "note": "Hisoblagichlar har bir server nusxasi uchun yuritiladi va qayta ishga tushirilganda nolga tushadi. «Qabul qilindi» — SMTP server xabarni oldi degani; qutiga yetib borishi, SPF, DKIM va DMARC docs/EMAIL.md dagi ro‘yxat bo‘yicha tekshiriladi."
+      }
     },
     "difficulty": {
       "easy": "Oson",
@@ -1816,6 +1850,11 @@
       "body": "{description} uchun to‘lov yakunlanmadi va hisobingizdan pul yechilmadi.",
       "hint": "Istalgan vaqtda qayta urinib ko‘rishingiz mumkin.",
       "cta": "Qayta urinish"
+    },
+    "test": {
+      "subject": "ACCA USA dan test xabari",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "Bu «Admin → Sozlamalar» bo‘limidan yuborilgan test xabari. Agar uni o‘qiyotgan bo‘lsangiz, server xabarni pochta serveriga topshira oldi."
     }
   },
   "notesPage": {

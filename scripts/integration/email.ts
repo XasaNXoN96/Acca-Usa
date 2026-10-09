@@ -53,7 +53,39 @@ async function main() {
   assert.equal(ok.ok, true);
   assert.equal(String(sent[0]?.subject).includes("\n"), false, "subject header injection stripped");
   const failing = new SmtpEmailProvider({ sendMail: (async () => { throw new Error("boom: secret-password"); }) as never });
-  assert.deepEqual(await failing.send({ to: "a@b.co", subject: "s", text: "t", html: "h" }), { ok: false, reason: "PROVIDER_ERROR" }, "transport errors never throw");
+  assert.deepEqual(await failing.send({ to: "a@b.co", subject: "s", text: "t", html: "h" }), { ok: false, reason: "PROVIDER_ERROR", code: "UNKNOWN" }, "transport errors never throw");
+
+  // ── failure classes (codes only), bounded retry of transient errors, no retry of permanent ones, secrets never in the result
+  const { classifySmtpError } = await import("../../src/services/email/classify");
+  const cls = (e: object) => classifySmtpError(e);
+  assert.deepEqual(cls({ code: "EAUTH", responseCode: 535 }), { code: "AUTH", transient: false });
+  assert.deepEqual(cls({ code: "ECONNREFUSED" }), { code: "CONNECTION", transient: true });
+  assert.deepEqual(cls({ code: "ETIMEDOUT" }), { code: "TIMEOUT", transient: true });
+  assert.deepEqual(cls({ responseCode: 451 }), { code: "TEMPORARY", transient: true });
+  assert.deepEqual(cls({ code: "EENVELOPE", responseCode: 550 }), { code: "REJECTED_RECIPIENT", transient: false });
+  assert.deepEqual(cls({ responseCode: 554 }), { code: "REJECTED_MESSAGE", transient: false });
+  assert.deepEqual(cls(new Error("secret-password")), { code: "UNKNOWN", transient: false });
+  const attempts = { n: 0 };
+  const flaky = new SmtpEmailProvider({ sendMail: (async () => { attempts.n += 1; if (attempts.n < 2) throw Object.assign(new Error("down"), { code: "ECONNREFUSED" }); return { messageId: "<ok@x>" }; }) as never }, [1]);
+  assert.equal((await flaky.send({ to: "a@b.co", subject: "s", text: "t", html: "h" })).ok, true, "a transient failure is retried once and then succeeds"); assert.equal(attempts.n, 2);
+  const down = { n: 0 };
+  const dead = new SmtpEmailProvider({ sendMail: (async () => { down.n += 1; throw Object.assign(new Error("password=hunter2"), { code: "ECONNREFUSED" }); }) as never }, [1]);
+  const r1 = await dead.send({ to: "a@b.co", subject: "s", text: "t", html: "h" });
+  assert.deepEqual(r1, { ok: false, reason: "PROVIDER_ERROR", code: "CONNECTION" }); assert.equal(down.n, 2, "exactly one retry"); assert.ok(!JSON.stringify(r1).includes("hunter2"), "raw error text leaked into the result");
+  const auth = { n: 0 };
+  const badLogin = new SmtpEmailProvider({ sendMail: (async () => { auth.n += 1; throw Object.assign(new Error("535 bad credentials for u/p"), { code: "EAUTH", responseCode: 535 }); }) as never }, [1, 1]);
+  assert.deepEqual(await badLogin.send({ to: "a@b.co", subject: "s", text: "t", html: "h" }), { ok: false, reason: "PROVIDER_ERROR", code: "AUTH" }); assert.equal(auth.n, 1, "a permanent failure is not retried");
+
+  // ── the test message renders in all languages, escaped
+  for (const locale of ["en", "ru", "uz"] as const) {
+    const m = await renderEmail({ email: "a@b.co", locale }, { kind: "test", name: evil });
+    assert.ok(m.subject.length > 5 && !m.html.includes("<script") && !/\{[a-zA-Z]+\}/.test(m.text), `${locale}/test`);
+  }
+  // ── delivery counters: real outcomes only
+  const { recordEmailOutcome, emailStats, resetEmailStats } = await import("../../src/services/email/health");
+  resetEmailStats(); assert.deepEqual(emailStats(), { sent: 0, failed: 0 });
+  recordEmailOutcome(true); recordEmailOutcome(false, "AUTH"); recordEmailOutcome(false, "CONNECTION");
+  const st = emailStats(); assert.ok(st.sent === 1 && st.failed === 2 && st.lastFailCode === "CONNECTION" && st.lastOkAt && st.lastFailAt, JSON.stringify(st));
   console.log("email: all checks passed");
 }
 main().catch((e) => { console.error(e); process.exit(1); });

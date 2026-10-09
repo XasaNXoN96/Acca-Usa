@@ -49,6 +49,10 @@ export async function renderEmail(to: Recipient, mail: EmailKind): Promise<Email
       const paragraphs = [t("notification.hello", { name: mail.name }), mail.body];
       return { to: to.email, subject: mail.title, text: text([...paragraphs, mail.url, t("footer")]), html: layout({ preheader: mail.title, heading: mail.title, paragraphs, cta: mail.url ? { label: t("notification.cta"), url: mail.url } : undefined, ...common }) };
     }
+    case "test": {
+      const paragraphs = [t("test.hello", { name: mail.name }), t("test.body")];
+      return { to: to.email, subject: t("test.subject"), text: text([...paragraphs, t("footer")]), html: layout({ preheader: t("test.subject"), heading: t("test.subject"), paragraphs, ...common }) };
+    }
     case "paymentConfirmation": {
       const paragraphs = [t("paymentOk.hello", { name: mail.name }), t("paymentOk.body", { description: mail.description, amount: mail.amount }), t("paymentOk.reference", { id: mail.paymentId })];
       return { to: to.email, subject: t("paymentOk.subject"), text: text([...paragraphs, t("footer")]), html: layout({ preheader: t("paymentOk.subject"), heading: t("paymentOk.subject"), paragraphs, ...common }) };

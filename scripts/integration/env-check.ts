@@ -21,6 +21,9 @@ assert.ok(names({ ...full, AUTH_SECRET: "short" }).includes("AUTH_SECRET"), "sho
 assert.ok(names({ ...full, APP_URL: "http://acca.example" }).includes("APP_URL"), "http APP_URL refused");
 assert.ok(names({ ...full, DATABASE_URL: "mysql://x" }).includes("DATABASE_URL"), "non-postgres URL refused");
 assert.ok(names({ ...full, SMTP_PORT: "abc" }).includes("SMTP_PORT"), "bad port refused");
+assert.ok(names({ ...full, EMAIL_FROM: "not an address" }).includes("EMAIL_FROM"), "malformed sender refused");
+assert.deepEqual(names({ ...full, EMAIL_FROM: "ACCA USA <no-reply@acca.example>" }), [], "named sender is valid");
+assert.ok(names({ ...full, SMTP_SECURE: "yes" }).includes("SMTP_SECURE"), "SMTP_SECURE must be 0 or 1");
 assert.ok(names({ ...full, DEMO_LOGIN: "1" }).includes("DEMO_LOGIN"), "demo logins refused in production");
 assert.ok(names({ ...full, PAYMENT_SECRET_KEY: "not-a-stripe-key" }).includes("PAYMENT_SECRET_KEY"), "non-Stripe secret key refused");
 assert.deepEqual(names({ ...full, PAYMENT_SECRET_KEY: "sk_live_abc" }), [], "a live key is valid");

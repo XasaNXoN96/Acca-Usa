@@ -1397,7 +1397,41 @@
       "remindersHint": "Email students who have been inactive for 7 days.",
       "saved": "Settings saved (demo — not stored).",
       "liveTitle": "Settings are configured by the deployment",
-      "liveText": "Platform-wide settings (sender address, URLs, providers, secrets) live in the server environment and are validated at startup. See docs/DEPLOYMENT_MODES.md."
+      "liveText": "Platform-wide settings (sender address, URLs, providers, secrets) live in the server environment and are validated at startup. See docs/DEPLOYMENT_MODES.md.",
+      "email": {
+        "title": "E-mail delivery",
+        "provider": "Provider",
+        "smtp": "SMTP",
+        "demo": "Demo outbox — nothing is sent",
+        "host": "SMTP server",
+        "from": "Sender",
+        "stats": "This server instance since it started",
+        "sent": "Accepted by the mail server: {count}",
+        "failed": "Failed: {count}",
+        "lastFail": "Last failure: {code} at {time}",
+        "none": "No messages sent yet.",
+        "notConfigured": "SMTP is not configured.",
+        "send": "Send a test e-mail to my address",
+        "sending": "Sending…",
+        "ok": "Handed to the mail server. Check your inbox (and spam folder): the server accepting a message does not prove it reached the inbox.",
+        "demoOk": "Demo mode: the message was only recorded, nothing was sent.",
+        "limit": "Too many test messages. Try again later.",
+        "forbidden": "Not allowed.",
+        "failedWith": "Sending failed: {code}.",
+        "codes": {
+          "AUTH": "the mail server refused the login",
+          "CONNECTION": "cannot connect to the mail server",
+          "TIMEOUT": "the mail server did not answer in time",
+          "TEMPORARY": "temporary refusal by the mail server",
+          "REJECTED_RECIPIENT": "the recipient address was rejected",
+          "REJECTED_MESSAGE": "the message was rejected",
+          "UNKNOWN": "unknown error",
+          "INVALID_RECIPIENT": "invalid recipient",
+          "RENDER": "the message could not be built",
+          "PROVIDER_ERROR": "provider error"
+        },
+        "note": "Counters are per server instance and reset on restart. “Accepted” means the SMTP server took the message; inbox delivery, SPF, DKIM and DMARC are verified with the checklist in docs/EMAIL.md."
+      }
     },
     "difficulty": {
       "easy": "Easy",
@@ -1816,6 +1850,11 @@
       "body": "The payment for {description} was not completed and you have not been charged for it.",
       "hint": "You can try again at any time.",
       "cta": "Try again"
+    },
+    "test": {
+      "subject": "Test message from ACCA USA",
+      "hello": "Hello {name},",
+      "body": "This is a test message sent from Admin → Settings. If you can read it, the server could hand the message to the mail server."
     }
   },
   "notesPage": {

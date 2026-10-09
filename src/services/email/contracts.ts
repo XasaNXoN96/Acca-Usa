@@ -7,7 +7,9 @@ export interface EmailMessage {
   html: string;
 }
 
-export type EmailResult = { ok: true; id?: string } | { ok: false; reason: "PROVIDER_ERROR" | "INVALID_RECIPIENT" };
+import type { EmailFailure } from "./classify";
+
+export type EmailResult = { ok: true; id?: string } | { ok: false; reason: "PROVIDER_ERROR" | "INVALID_RECIPIENT"; /** safe failure class, never the raw error */ code?: EmailFailure };
 
 /**
  * Transactional e-mail. Business code depends on this interface only.
@@ -25,6 +27,7 @@ export type EmailKind =
   | { kind: "certificateIssued"; name: string; certificateTitle: string; number: string; certificateUrl: string; verifyUrl: string }
   | { kind: "notification"; name: string; title: string; body: string; url?: string }
   | { kind: "paymentConfirmation"; name: string; description: string; amount: string; paymentId: string }
+  | { kind: "test"; name: string }
   | { kind: "paymentFailed"; name: string; description: string; retryUrl: string };
 
 export interface Recipient { email: string; locale: Locale }

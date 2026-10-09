@@ -38,6 +38,8 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
 
   for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "EMAIL_FROM"]) need(name, "required in production (e-mail)");
   if (has(env.SMTP_PORT) && !/^\d{2,5}$/.test(env.SMTP_PORT!)) issues.push({ name: "SMTP_PORT", reason: "must be a port number" });
+  if (has(env.EMAIL_FROM) && !/^([^<>\r\n]+<)?[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+>?$/.test(env.EMAIL_FROM!.trim())) issues.push({ name: "EMAIL_FROM", reason: "must be an address like no-reply@example.com or Name <no-reply@example.com>" });
+  if (has(env.SMTP_SECURE) && !["0", "1"].includes(env.SMTP_SECURE!)) issues.push({ name: "SMTP_SECURE", reason: "must be 0 or 1" });
 
   need("PAYMENT_SECRET_KEY", "required in production (payments)");
   need("PAYMENT_WEBHOOK_SECRET", "required in production (payment webhooks)");

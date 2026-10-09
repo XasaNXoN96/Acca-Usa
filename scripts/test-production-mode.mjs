@@ -63,7 +63,7 @@ const baseEnv = {
   NEXT_PUBLIC_APP_MODE: "production", NODE_ENV: "production", PORT,
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
-  SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
+  SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
   PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
 };
 const startServer = (env) => {
@@ -245,6 +245,34 @@ try {
     assert((await p.getByRole("row").count()) >= 5, "ledger rows"); assert(/Refunded/.test(await p.locator("main").innerText()), "refunded payment missing");
     assert((await p.getByRole("button", { name: /mark as paid|set paid|simulate/i }).count()) === 0, "a manual paid control exists");
     await c.close();
+  });
+
+  // ── e-mail: real test message, counters, outage handling, no secrets
+  const adminLogin = async () => { const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin/); return { c, p }; };
+  await step("e-mail: Admin → Settings sends ONE real test message to the admin's own address over SMTP; status shows SMTP host/sender but never the credentials", async () => {
+    const { c, p } = await adminLogin(); await p.goto("/admin/settings"); await p.locator("[data-email-status='smtp']").waitFor();
+    const status = await p.locator("[data-email-card]").innerText(); assert(status.includes("127.0.0.1:2525") && status.includes("no-reply@acca.example"), `status: ${status}`);
+    assert(!status.includes("smtp-secret-pw-8231") && !status.includes("smtp-user-77"), "SMTP credentials rendered");
+    await p.getByRole("button", { name: "Send a test e-mail to my address" }).click(); await p.locator("[data-testmail-result='success']").waitFor();
+    const mail = await lastMail("Test message from ACCA USA"); assert(/To: .*owner@acca\.example/i.test(mail) || mail.includes("owner@acca.example"), "test mail not addressed to the admin");
+    assert(!(await p.content()).includes("smtp-secret-pw-8231"), "password in the page"); await c.close();
+  });
+  await step("e-mail: the test button is rate-limited and cannot be used by a student or a guest", async () => {
+    const { c, p } = await adminLogin(); await p.goto("/admin/settings");
+    for (let i = 0; i < 5; i++) { await p.getByRole("button", { name: "Send a test e-mail to my address" }).click(); await p.locator("[data-testmail-result]").first().waitFor(); }
+    await p.getByText("Too many test messages. Try again later.").waitFor(); await c.close();
+    await studentPage.goto("/admin/settings"); assert(!/admin/.test(new URL(studentPage.url()).pathname), "student reached settings");
+  });
+  await step("e-mail outage: with the SMTP server down registration still succeeds, the failure is logged as a CODE only, credentials never appear in logs, counters show it", async () => {
+    await new Promise((r) => sink.close(r)); // nobody listens on the SMTP port any more
+    const c = await ctx(); const p = await c.newPage(); await p.goto("/register"); await p.locator("#reg-name").fill("Outage Learner"); await p.locator("#reg-email").fill(`outage.${Date.now()}@example.com`);
+    await p.locator("#reg-password").fill("Learner-pass123"); await p.locator("#reg-confirm").fill("Learner-pass123"); await p.locator("#reg-terms").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/); await c.close();
+    const failedRe = /"event":"email\.send_failed","provider":"smtp","failure":"CONNECTION"/;
+    for (let i = 0; i < 40 && !failedRe.test(server.output()); i++) await sleep(250); // the welcome mail is sent after the response
+    const log = server.output(); assert(failedRe.test(log), `no classified failure in the log: ${log.slice(-400)}`);
+    assert(!log.includes("smtp-secret-pw-8231") && !log.includes("smtp-user-77"), "SMTP credentials in the server log");
+    const { c: c2, p: p2 } = await adminLogin(); await p2.goto("/admin/settings"); const counters = await p2.locator("[data-email-counters]").innerText();
+    assert(/Failed: [1-9]/.test(counters) && /cannot connect to the mail server/.test(counters), `counters: ${counters}`); await c2.close();
   });
   await db.$disconnect();
 } catch (e) {

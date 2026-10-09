@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { rateLimit } from "@/lib/rate-limit";
 import { services } from "@/services";
+import { getEmailProvider, sendEmail } from "@/services/email";
 import { sessionOrNull, STAFF_ROLES } from "@/lib/auth/guards";
 import { can } from "@/lib/permissions";
 import { editableResources, schemaFor, type EditableResource } from "@/lib/validators/admin";
@@ -22,6 +24,7 @@ const isEditable = (r: string): r is EditableResource => (editableResources as r
 
 async function authorize(resource: string) {
   const session = await sessionOrNull(STAFF_ROLES);
+  if (session && resource === "settings") return can(session.user.role, "manage_settings") ? session : null; // platform settings (not a record list)
   if (!session || !isEditable(resource)) return null;
   const perm = resourceConfig[resource as ResourceKey].editPermission;
   return perm && can(session.user.role, perm) ? session : null;
@@ -190,6 +193,19 @@ export async function duplicateTestAction(id: string): Promise<AdminActionResult
   if (!res.ok) return fail(res);
   refresh("tests");
   return { ok: true };
+}
+
+/**
+ * Sends ONE real test message to the signed-in administrator's OWN address (never to an arbitrary recipient, so the button
+ * cannot be used as a mail relay). Rate-limited. The outcome is the provider's real answer.
+ */
+export async function sendTestEmailAction(): Promise<{ ok: true; demo: boolean } | { ok: false; code: string }> {
+  const session = await authorize("settings");
+  if (!session) return { ok: false, code: "FORBIDDEN" };
+  const rl = await rateLimit(`testmail:${session.user.id}`, 5, 60 * 60_000);
+  if (!rl.ok) return { ok: false, code: "LIMIT" };
+  const res = await sendEmail({ email: session.user.email, locale: session.user.locale }, { kind: "test", name: session.user.name });
+  return res.ok ? { ok: true, demo: getEmailProvider().name === "demo" } : { ok: false, code: res.code ?? res.reason };
 }
 
 /** Makes a past version of a material current (the replaced content is kept as a version). */

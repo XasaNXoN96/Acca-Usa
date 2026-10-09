@@ -6,6 +6,7 @@ import { logEvent } from "@/lib/log";
 import type { EmailKind, EmailProvider, EmailResult, Recipient } from "./contracts";
 import { DemoEmailProvider } from "./demo-provider";
 import { SmtpEmailProvider } from "./smtp-provider";
+import { recordEmailOutcome } from "./health";
 import { renderEmail } from "./templates";
 
 const g = globalThis as unknown as { __accaEmail?: EmailProvider };
@@ -23,10 +24,12 @@ export async function sendEmail(to: Recipient, mail: EmailKind): Promise<EmailRe
   try {
     const message = await renderEmail(to, mail);
     const result = await getEmailProvider().send(message);
-    if (!result.ok) logEvent("warn", "email.not_sent", { kind: mail.kind, reason: result.reason });
+    recordEmailOutcome(result.ok, result.ok ? undefined : (result.code ?? result.reason));
+    if (!result.ok) logEvent("warn", "email.not_sent", { kind: mail.kind, reason: result.reason, failure: result.code });
     return result;
   } catch (e) {
     logEvent("error", "email.render_failed", { kind: mail.kind, error: e instanceof Error ? e.name : "unknown" });
+    recordEmailOutcome(false, "RENDER");
     return { ok: false, reason: "PROVIDER_ERROR" };
   }
 }

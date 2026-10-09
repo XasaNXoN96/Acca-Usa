@@ -2,6 +2,7 @@ import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { serverEnv } from "@/lib/env";
 import { logEvent } from "@/lib/log";
+import { classifySmtpError } from "./classify";
 import type { EmailMessage, EmailProvider, EmailResult } from "./contracts";
 
 const ADDRESS_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
@@ -11,7 +12,7 @@ export class SmtpEmailProvider implements EmailProvider {
   readonly name = "smtp" as const;
   private transporter: Transporter | null = null;
 
-  constructor(private readonly transport?: Pick<Transporter, "sendMail">) {}
+  constructor(private readonly transport?: Pick<Transporter, "sendMail">, private readonly retryDelaysMs: number[] = [600]) {}
 
   private get client(): Pick<Transporter, "sendMail"> {
     if (this.transport) return this.transport;
@@ -26,12 +27,18 @@ export class SmtpEmailProvider implements EmailProvider {
   async send(message: EmailMessage): Promise<EmailResult> {
     // Header-injection guard: one plain address, no control characters.
     if (!ADDRESS_RE.test(message.to) || message.to.length > 254) return { ok: false, reason: "INVALID_RECIPIENT" };
-    try {
-      const info = await this.client.sendMail({ from: serverEnv.smtp().from, to: message.to, subject: message.subject.replace(/[\r\n]+/g, " "), text: message.text, html: message.html });
-      return { ok: true, id: typeof info.messageId === "string" ? info.messageId : undefined };
-    } catch (e) {
-      logEvent("error", "email.send_failed", { provider: "smtp", error: e instanceof Error ? e.name : "unknown" });
-      return { ok: false, reason: "PROVIDER_ERROR" };
+    // Transient failures (connection, timeout, 4xx) are retried a bounded number of times; permanent ones (auth, rejected) are not.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const info = await this.client.sendMail({ from: serverEnv.smtp().from, to: message.to, subject: message.subject.replace(/[\r\n]+/g, " "), text: message.text, html: message.html });
+        return { ok: true, id: typeof info.messageId === "string" ? info.messageId : undefined };
+      } catch (e) {
+        const { code, transient } = classifySmtpError(e);
+        const delay = this.retryDelaysMs[attempt];
+        if (transient && delay !== undefined) { await new Promise((r) => setTimeout(r, delay)); continue; }
+        logEvent("error", "email.send_failed", { provider: "smtp", failure: code, attempts: attempt + 1 }); // the code only — never the error text
+        return { ok: false, reason: "PROVIDER_ERROR", code };
+      }
     }
   }
 }
