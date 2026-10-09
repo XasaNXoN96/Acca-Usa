@@ -74,6 +74,12 @@ export function PdfReader({ id, title, watermark }: { id: string; title: string;
   }, [page, zoom, watermark]);
 
   useEffect(() => { if (state === "ready") void draw(); }, [state, draw]);
+  // Notes jump to a page through this event (see NotesPanel).
+  useEffect(() => {
+    const goto = (e: Event) => setPage((p) => Math.min(Math.max(Number((e as CustomEvent<number>).detail) || p, 1), pages || 1));
+    window.addEventListener("acca:pdf-goto", goto);
+    return () => window.removeEventListener("acca:pdf-goto", goto);
+  }, [pages]);
   useEffect(() => {
     const box = holder.current; if (!box || state !== "ready") return;
     const ro = new ResizeObserver(() => void draw()); ro.observe(box);
@@ -107,7 +113,7 @@ export function PdfReader({ id, title, watermark }: { id: string; title: string;
         <Button type="button" variant="outline" size="icon" aria-label={t("zoomIn")} disabled={zoom >= 2.4} onClick={() => setZoom((z) => Math.min(2.4, +(z + 0.2).toFixed(1)))}><Plus aria-hidden /></Button>
       </div>
       <div
-        ref={holder} tabIndex={0} onKeyDown={onKey} role="document" aria-label={`${title} — ${t("pageOf", { page, total: pages })}`}
+        ref={holder} data-page={page} tabIndex={0} onKeyDown={onKey} role="document" aria-label={`${title} — ${t("pageOf", { page, total: pages })}`}
         className="relative max-h-[78dvh] min-h-[20rem] overflow-auto rounded-xl border border-border bg-muted p-1 focus-visible:outline-2"
       >
         {state === "loading" ? <Skeleton className="absolute inset-1 rounded-lg" /> : null}

@@ -1700,6 +1700,26 @@
     "transcript": {
       "title": "Transkript",
       "seek": "{time} ga o‘tish"
+    },
+    "notes": {
+      "title": "Mening yozuvlarim",
+      "all": "Barcha yozuvlarim",
+      "private": "Yozuvlaringizni faqat siz ko‘rasiz. Ular shu brauzerda emas, serverda saqlanadi.",
+      "empty": "Bu material bo‘yicha hali yozuv yo‘q.",
+      "new": "Yangi yozuv",
+      "add": "Yozuv qo‘shish",
+      "save": "Saqlash",
+      "cancel": "Bekor qilish",
+      "edit": "Tahrirlash",
+      "delete": "O‘chirish",
+      "confirmDelete": "Bu yozuv o‘chirilsinmi?",
+      "attachTime": "Joriy vaqtni qo‘shish",
+      "attachPage": "Joriy sahifani qo‘shish",
+      "detach": "Olib tashlash",
+      "page": "{page}-sahifa",
+      "limit": "Yozuvlarning maksimal soniga yetdingiz.",
+      "forbidden": "Bu material uchun yozuv saqlab bo‘lmaydi.",
+      "failed": "Yozuvni saqlab bo‘lmadi. Qayta urinib ko‘ring."
     }
   },
   "email": {
@@ -1741,5 +1761,17 @@
       "hint": "Istalgan vaqtda qayta urinib ko‘rishingiz mumkin.",
       "cta": "Qayta urinish"
     }
+  },
+  "notesPage": {
+    "title": "Mening yozuvlarim",
+    "description": "Barcha materiallar bo‘yicha shaxsiy yozuvlaringiz. Ularni faqat siz ko‘rasiz.",
+    "search": "Yozuvlardan qidirish",
+    "searchPlaceholder": "Yozuv matni va material nomlaridan qidirish",
+    "searchButton": "Qidirish",
+    "emptyTitle": "Hali yozuv yo‘q",
+    "emptyText": "Materialni oching va yozuv yozing — u shu yerda paydo bo‘ladi.",
+    "noResults": "So‘rovingizga mos yozuv topilmadi.",
+    "toCourses": "Kurslarga o‘tish",
+    "unavailable": "Bu material hozir sizga mavjud emas."
   }
 }

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/states";
 import { StudentShell } from "@/components/layout/student-shell";
 import { MaterialViewer, type ViewerFile } from "@/features/material/material-viewer";
 import { MaterialCompleteButton } from "@/features/material/complete-button";
+import { NotesPanel } from "@/features/material/notes-panel";
 import { TranscriptPanel } from "@/features/material/transcript-panel";
 import { MaterialTouch } from "@/features/material/material-touch";
 import { watermarkText } from "@/features/material/watermark";
@@ -120,6 +121,7 @@ async function MaterialContent({ params }: { params: Awaited<Params> }) {
         <MaterialViewer material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }} file={file} canDownload={isAdmin} watermark={watermarkText(session.user)} fileStatus={material.fileStatus} subtitleLangs={subtitleLangs} />
       </div>
       <TranscriptPanel lines={transcriptLines} />
+      {isAdmin ? null : <NotesPanel materialId={material.id} kind={material.kind} initial={await services.notes.listForMaterial(session.user.id, material.id)} notesHref={routes.notes} />}
 
       <div className="space-y-4 border-t border-border pt-5">
         <MaterialCompleteButton materialId={material.id} completed={completed} />

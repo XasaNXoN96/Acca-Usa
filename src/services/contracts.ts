@@ -398,6 +398,32 @@ export interface StatsService {
   getAdminStats(filter: StatsFilter): Promise<AdminStats>;
 }
 
+/** A student's private note. Every method is scoped by `userId`: another student's note is "not found". */
+export interface NoteView {
+  id: string;
+  materialId: string;
+  body: string;
+  /** 1-based PDF page the note is about */
+  pdfPage?: number;
+  /** seconds into a video / audio */
+  videoSeconds?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface NoteListItem extends NoteView {
+  materialTitle: string;
+  /** Present only while the material is still visible to the student (published, unlocked topic). */
+  href?: string;
+}
+export interface NoteService {
+  listForMaterial(userId: string, materialId: string): Promise<NoteView[]>;
+  /** All notes of the learner, newest first; `q` filters the note text and the material title. */
+  listForUser(userId: string, q?: string): Promise<NoteListItem[]>;
+  create(userId: string, input: { materialId: string; body: string; pdfPage?: number; videoSeconds?: number }): Promise<ServiceResult<NoteView>>;
+  update(userId: string, noteId: string, body: string): Promise<ServiceResult<NoteView>>;
+  remove(userId: string, noteId: string): Promise<ServiceResult>;
+}
+
 /** Admin analytics of materials: real events only (views, completions, processing errors, topic test attempts). */
 export interface MaterialStatsService {
   get(filter: StatsFilter): Promise<MaterialStats>;
@@ -428,6 +454,7 @@ export interface Services {
   mediaText: MediaTextService;
   materialVersions: MaterialVersionService;
   materialStats: MaterialStatsService;
+  notes: NoteService;
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;

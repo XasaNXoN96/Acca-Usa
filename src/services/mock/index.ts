@@ -9,3 +9,4 @@ export { statsService } from "./stats";
 export { mediaTextService } from "./media-text";
 export { materialVersionService } from "./material-versions";
 export { materialStatsService } from "./material-stats";
+export { noteService } from "./notes";

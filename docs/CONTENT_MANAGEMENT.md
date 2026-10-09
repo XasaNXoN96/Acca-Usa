@@ -52,3 +52,15 @@ completions (`MaterialProgress.completedAt` in the period — an undone completi
 REJECTED files, and attempts + average score of the **topic's** tests (a test belongs to a topic, not to one material).
 Both providers load raw records and call the same pure function (`domain/material-stats.ts`), so the numbers cannot drift.
 Empty periods show zeros; there are no estimated or sample figures. Views before this feature existed are unknown (0).
+
+## Student notes
+
+`MaterialNote` (table, additive migration): a private note of one student on one material, optionally anchored to a PDF page
+(`pdfPage`) or a media time (`videoSeconds`) — never both. Created / edited / deleted by server actions that require a
+signed-in STUDENT; creating also requires that the student may read the material (enrolment, unlocked topic, published).
+Every service call is scoped by the session's user id, so another student's note is simply "not found" (IDOR-safe; verified
+for both providers by `npm run test:notes`). Notes are never kept in `localStorage`. **There is no administrator read path:**
+administrators cannot see student notes, and their own material preview has no notes panel. Limits: 2000 characters per
+note, 2000 notes per student. Deleting a student or a material removes its notes (cascade). Student pages: the panel under the
+viewer (jump to the page / time) and `/notes` (all notes, search by text or material title). A note on a material that is
+hidden later stays in the list without a link.

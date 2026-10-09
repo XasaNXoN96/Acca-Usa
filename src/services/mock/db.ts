@@ -48,6 +48,7 @@ export interface Db {
   subtitles: import("../contracts").SubtitleRecord[];
   materialVersions: MaterialVersionRec[];
   materialViews: { materialId: string; userId: string; at: string }[];
+  notes: (import("../contracts").NoteView & { userId: string })[];
 }
 
 const g = globalThis as unknown as { __accaDb?: Db };
@@ -122,6 +123,7 @@ function seed(): Db {
     subtitles: [],
     materialVersions: [],
     materialViews: [],
+    notes: [],
   };
 
   const p = new Map<string, ProgressEntry>();

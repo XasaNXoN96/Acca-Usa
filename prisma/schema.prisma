@@ -130,6 +130,7 @@ model User {
   materialProgress MaterialProgress[]
   lastMaterial     LastMaterial?
   materialViews    MaterialView[]
+  materialNotes    MaterialNote[]
   attempts         TestAttempt[]
   payments         Payment[]
   certificates     Certificate[]
@@ -263,10 +264,30 @@ model Material {
   subtitles  Subtitle[]
   versions   MaterialVersion[]
   views      MaterialView[]
+  notes      MaterialNote[]
 
   @@index([subjectSlug])
   @@index([topicId])
   @@index([fileId])
+}
+
+/// A student's private note on a material, optionally anchored to a PDF page or a video / audio time. Only its owner
+/// can read or change it (every query is scoped by userId); there is no administrator read path.
+model MaterialNote {
+  id           String   @id @default(cuid())
+  userId       String
+  materialId   String
+  body         String   @db.Text
+  pdfPage      Int?
+  videoSeconds Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([userId, materialId, createdAt])
+  @@index([userId, updatedAt])
 }
 
 /// One student opening a material (at most one per student and material per 30 minutes). Real events only.

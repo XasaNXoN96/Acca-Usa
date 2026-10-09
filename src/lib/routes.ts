@@ -37,6 +37,7 @@ export const routes = {
   certificate: (id: string) => `/certificates/${encodeURIComponent(id)}`,
   progress: "/progress",
   ranking: "/ranking",
+  notes: "/notes",
   certificates: "/certificates",
   payments: "/payments",
   notifications: "/notifications",

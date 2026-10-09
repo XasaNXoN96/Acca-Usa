@@ -1700,6 +1700,26 @@
     "transcript": {
       "title": "Transcript",
       "seek": "Jump to {time}"
+    },
+    "notes": {
+      "title": "My notes",
+      "all": "All my notes",
+      "private": "Only you can see your notes. They are saved on the server, not in this browser.",
+      "empty": "You have no notes on this material yet.",
+      "new": "New note",
+      "add": "Add note",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete this note?",
+      "attachTime": "Add current time",
+      "attachPage": "Add current page",
+      "detach": "Remove",
+      "page": "Page {page}",
+      "limit": "You have reached the maximum number of notes.",
+      "forbidden": "You cannot save notes for this material.",
+      "failed": "Couldn’t save the note. Please try again."
     }
   },
   "email": {
@@ -1741,5 +1761,17 @@
       "hint": "You can try again at any time.",
       "cta": "Try again"
     }
+  },
+  "notesPage": {
+    "title": "My notes",
+    "description": "Your private notes from all materials. Only you can see them.",
+    "search": "Search notes",
+    "searchPlaceholder": "Search in notes and material titles",
+    "searchButton": "Search",
+    "emptyTitle": "No notes yet",
+    "emptyText": "Open a material and write a note — it appears here.",
+    "noResults": "No notes match your search.",
+    "toCourses": "Go to courses",
+    "unavailable": "This material is not available to you right now."
   }
 }
