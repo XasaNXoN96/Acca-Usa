@@ -2,6 +2,10 @@
 //   npm run build && npm start -- -p 3100   (in another terminal)
 //   BASE_URL=http://localhost:3100 CHROMIUM=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run smoke
 import { chromium } from "playwright-core";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -31,8 +35,12 @@ const pass2 = "Smoke-pass2";
 // ---------- tiny valid files (magic bytes are what the server checks) ----------
 const pdf = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n");
 const png = Buffer.from("89504e470d0a1a0a0000000d4948445200000001000000010806000000" + "1f15c4890000000d49444154789c6360000002000100" + "05fe02fea7e2f7340000000049454e44ae426082", "hex");
-const mp3 = Buffer.concat([Buffer.from("ID3\x03\x00\x00\x00\x00\x00\x00"), Buffer.alloc(512, 0xff)]);
-const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftypisom"), Buffer.alloc(64)]);
+// Real media (the media pipeline probes every upload with ffprobe, so header-only fakes are correctly REJECTED).
+const mediaDir = mkdtempSync(join(tmpdir(), "smoke-media-"));
+execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "sine=duration=2", "-c:a", "libmp3lame", join(mediaDir, "a.mp3")]);
+execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=duration=2:size=320x240:rate=15", "-f", "lavfi", "-i", "sine=duration=2", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", join(mediaDir, "v.mp4")]);
+const mp3 = readFileSync(join(mediaDir, "a.mp3"));
+const mp4 = readFileSync(join(mediaDir, "v.mp4"));
 const txtAsPng = Buffer.from("this is not a png");
 
 async function login(page, em, pw, buttonName = "Sign in") {
@@ -185,6 +193,7 @@ async function uploadMaterial(title, kind, file, expectError) {
   await admin.locator("#f-fileId").setInputFiles(file);
   if (expectError) { await admin.getByText(expectError).first().waitFor(); await admin.keyboard.press("Escape"); return; }
   await admin.getByText("Uploaded").first().waitFor();
+  if (kind === "video" || kind === "audio") await admin.getByText("Students cannot see this file until processing is finished.").waitFor({ state: "hidden", timeout: 90000 }); // media pipeline: READY
   await admin.getByRole("button", { name: "Save", exact: true }).click();
   await admin.getByText("Saved.").waitFor();
 }

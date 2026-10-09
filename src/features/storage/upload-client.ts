@@ -1,6 +1,22 @@
 import type { UploadKind } from "@/services/storage/validation";
 
-export interface UploadedFile { id: string; name: string; mime: string; size: number }
+export type FileState = "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
+export interface UploadedFile { id: string; name: string; mime: string; size: number; status?: FileState }
+export interface MediaStatus { status: FileState; code: string | null; transcoded: boolean; container: string | null; videoCodec: string | null; audioCodec: string | null }
+
+export async function fetchMediaStatus(id: string): Promise<MediaStatus | null> {
+  try {
+    const r = await fetch(`/api/media/${encodeURIComponent(id)}`, { cache: "no-store" });
+    return r.ok ? ((await r.json()) as MediaStatus) : null;
+  } catch { return null; }
+}
+
+export async function retryMedia(id: string): Promise<MediaStatus | null> {
+  try {
+    const r = await fetch(`/api/media/${encodeURIComponent(id)}`, { method: "POST" });
+    return r.ok ? ((await r.json()) as MediaStatus) : null;
+  } catch { return null; }
+}
 export type UploadOutcome =
   | { ok: true; file: UploadedFile }
   | { ok: false; code: "TYPE" | "SIZE" | "SIGNATURE" | "EMPTY" | "FORBIDDEN" | "NETWORK" | "ABORTED" | "FAILED"; max?: number; types?: string[] };

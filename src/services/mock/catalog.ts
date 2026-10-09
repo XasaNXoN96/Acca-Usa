@@ -119,14 +119,16 @@ async function toMaterial(r: MaterialRec): Promise<Material> {
   const { deletedAt, ...rest } = r;
   let meta: string = r.kind === "notes" ? "Notes" : r.kind;
   let fileMime = r.fileMime;
+  let fileStatus: Material["fileStatus"];
   if (r.fileId) {
     const f = await getStorage().stat(r.fileId);
     if (f) {
       meta = `${f.durationSeconds ? `${formatDuration(f.durationSeconds)} · ` : ""}${formatSize(f.size)} · ${f.name.split(".").pop()?.toUpperCase() ?? ""}`;
       fileMime = f.mime;
+      fileStatus = f.status ?? "READY";
     }
   }
-  return { ...rest, meta, fileMime, archived: !!deletedAt };
+  return { ...rest, meta, fileMime, fileStatus, archived: !!deletedAt };
 }
 
 function formatSize(bytes: number): string {

@@ -7,7 +7,7 @@
 export const uploadKinds = ["image", "pdf", "slides", "audio", "video", "file"] as const;
 export type UploadKind = (typeof uploadKinds)[number];
 
-type Family = "jpeg" | "png" | "webp" | "pdf" | "mp3" | "wav" | "ogg" | "mp4" | "webm" | "zip" | "text";
+type Family = "jpeg" | "png" | "webp" | "pdf" | "mp3" | "wav" | "ogg" | "mp4" | "webm" | "avi" | "flac" | "zip" | "text";
 
 const MB = 1024 * 1024;
 
@@ -20,20 +20,21 @@ export const uploadRules: Record<UploadKind, Rule> = {
   image: { exts: ["jpg", "jpeg", "png", "webp"], maxBytes: 5 * MB },
   pdf: { exts: ["pdf"], maxBytes: 25 * MB },
   slides: { exts: ["pdf", "pptx"], maxBytes: 40 * MB },
-  audio: { exts: ["mp3", "wav", "m4a", "ogg"], maxBytes: 40 * MB },
-  video: { exts: ["mp4", "webm"], maxBytes: 150 * MB },
+  // Video / audio are NOT served as uploaded: the media pipeline (FFmpeg) probes them and makes a browser-playable rendition.
+  audio: { exts: ["mp3", "wav", "m4a", "aac", "ogg", "flac"], maxBytes: 80 * MB },
+  video: { exts: ["mp4", "m4v", "mov", "webm", "mkv", "avi"], maxBytes: 150 * MB },
   file: { exts: ["pdf", "txt", "csv", "docx", "xlsx", "pptx", "zip"], maxBytes: 25 * MB },
 };
 
 const extFamily: Record<string, Family> = {
   jpg: "jpeg", jpeg: "jpeg", png: "png", webp: "webp", pdf: "pdf", mp3: "mp3", wav: "wav", m4a: "mp4",
-  ogg: "ogg", mp4: "mp4", webm: "webm", docx: "zip", xlsx: "zip", pptx: "zip", zip: "zip", txt: "text", csv: "text",
+  ogg: "ogg", mp4: "mp4", m4v: "mp4", mov: "mp4", webm: "webm", mkv: "webm", avi: "avi", aac: "mp3", flac: "flac", docx: "zip", xlsx: "zip", pptx: "zip", zip: "zip", txt: "text", csv: "text",
 };
 
 /** Mime type is derived from the (validated) extension, never from the client. */
 export const extMime: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", pdf: "application/pdf",
-  mp3: "audio/mpeg", wav: "audio/wav", m4a: "audio/mp4", ogg: "audio/ogg", mp4: "video/mp4", webm: "video/webm",
+  mp3: "audio/mpeg", wav: "audio/wav", m4a: "audio/mp4", ogg: "audio/ogg", mp4: "video/mp4", m4v: "video/x-m4v", mov: "video/quicktime", webm: "video/webm", mkv: "video/x-matroska", avi: "video/x-msvideo", aac: "audio/aac", flac: "audio/flac",
   txt: "text/plain; charset=utf-8", csv: "text/csv; charset=utf-8", zip: "application/zip",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -52,6 +53,8 @@ function sniff(b: Uint8Array): Family | null {
   if (b[0] === 0x89 && ascii(1, 4) === "PNG") return "png";
   if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "webp";
   if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WAVE") return "wav";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "AVI ") return "avi";
+  if (ascii(0, 4) === "fLaC") return "flac";
   if (ascii(0, 5) === "%PDF-") return "pdf";
   if (ascii(0, 3) === "ID3" || (b[0] === 0xff && ((b[1] ?? 0) & 0xe0) === 0xe0)) return "mp3";
   if (ascii(0, 4) === "OggS") return "ogg";

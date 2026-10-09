@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import type { OpenedFile, StorageProvider, StoredFileMeta } from "./contracts";
+import type { FileStatus, OpenedFile, StorageProvider, StoredFileMeta } from "./contracts";
 import { sanitizeFileName } from "./validation";
 import { seedAudioBase64, seedImageBase64, seedVideoBase64 } from "./seed-assets";
 
@@ -111,15 +111,35 @@ function removeFiles(id: string) {
 export class DemoStorageProvider implements StorageProvider {
   readonly name = "demo" as const;
 
-  async put({ ownerId, file, mime, durationSeconds }: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
+  async put({ ownerId, file, mime, durationSeconds, status, attached }: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta> {
     ensureRoot();
     ensureSeed();
     gc();
     const id = randomUUID();
     await pipeline(Readable.fromWeb(file.stream() as never), createWriteStream(bin(id), { mode: 0o600 }));
-    const meta: StoredFileMeta = { id, name: sanitizeFileName(file.name), mime, size: file.size, createdAt: new Date().toISOString(), ownerId, attached: false, durationSeconds };
+    const meta: StoredFileMeta = { id, name: sanitizeFileName(file.name), mime, size: file.size, createdAt: new Date().toISOString(), ownerId, attached: attached ?? false, durationSeconds, status: status ?? "READY" };
     writeFileSync(metaPath(id), JSON.stringify(meta), { mode: 0o600 });
     return meta;
+  }
+
+  async update(id: string, patch: Record<string, unknown>): Promise<StoredFileMeta | null> {
+    const meta = readMeta(id);
+    if (!meta) return null;
+    const next = { ...meta } as Record<string, unknown>;
+    for (const [k, v] of Object.entries(patch)) { if (v === null) delete next[k]; else if (v !== undefined) next[k] = v; }
+    writeFileSync(metaPath(id), JSON.stringify(next), { mode: 0o600 });
+    return next as unknown as StoredFileMeta;
+  }
+
+  async listByStatus(statuses: FileStatus[], limit = 50): Promise<StoredFileMeta[]> {
+    ensureRoot();
+    const out: StoredFileMeta[] = [];
+    for (const f of readdirSync(ROOT)) {
+      if (!f.endsWith(".json")) continue;
+      const m = readMeta(f.slice(0, -5));
+      if (m && statuses.includes(m.status ?? "READY")) out.push(m);
+    }
+    return out.sort((a, b) => a.createdAt.localeCompare(b.createdAt)).slice(0, limit);
   }
 
   async stat(id: string): Promise<StoredFileMeta | null> {
@@ -139,10 +159,13 @@ export class DemoStorageProvider implements StorageProvider {
   }
 
   async delete(id: string): Promise<void> {
-    if (ID_RE.test(id) && !id.startsWith("seed-")) removeFiles(id);
+    if (!ID_RE.test(id) || id.startsWith("seed-")) return;
+    const meta = readMeta(id);
+    for (const sub of [meta?.playbackFileId, meta?.thumbnailFileId]) if (sub && ID_RE.test(sub)) removeFiles(sub);
+    removeFiles(id);
   }
 
-  async replace(id: string, input: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
+  async replace(id: string, input: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus }): Promise<StoredFileMeta> {
     const next = await this.put(input);
     await this.delete(id);
     return next;

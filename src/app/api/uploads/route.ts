@@ -1,6 +1,8 @@
+import { after } from "next/server";
 import { json, sameOrigin } from "@/lib/api-guards";
 import { sessionOrNull, STAFF_ROLES } from "@/lib/auth/guards";
 import { rateLimit } from "@/lib/rate-limit";
+import { processFile } from "@/services/media/process";
 import { getStorage } from "@/services/storage";
 import { readMediaInfo } from "@/services/storage/media-info";
 import { uploadKinds, uploadRules, validateUpload, type UploadKind } from "@/services/storage/validation";
@@ -40,6 +42,9 @@ export async function POST(req: Request) {
 
   // Duration of video / audio, read from the container header (best effort; unknown stays unknown).
   const media = kind === "video" || kind === "audio" ? await readMediaInfo(file, check.ext) : null;
-  const stored = await getStorage().put({ ownerId: session.user.id, file, mime: check.mime, durationSeconds: media?.durationSeconds });
-  return json({ ok: true, file: { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size, durationSeconds: stored.durationSeconds } });
+  // Video / audio are not served until the media pipeline (ffprobe + FFmpeg) has validated them: UPLOADED → … → READY.
+  const needsProcessing = kind === "video" || kind === "audio";
+  const stored = await getStorage().put({ ownerId: session.user.id, file, mime: check.mime, durationSeconds: media?.durationSeconds, status: needsProcessing ? "UPLOADED" : "READY" });
+  if (needsProcessing) after(() => processFile(stored.id).catch(() => undefined));
+  return json({ ok: true, file: { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size, durationSeconds: stored.durationSeconds, status: stored.status ?? "READY" } });
 }

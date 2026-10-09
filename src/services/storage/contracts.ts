@@ -1,5 +1,8 @@
 import type { StoredFile } from "@/types";
 
+/** UPLOADED → PROCESSING → READY | FAILED (retryable) | REJECTED (content failed validation; never served). */
+export type FileStatus = "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
+
 export interface StoredFileMeta extends StoredFile {
   ownerId: string;
   attached: boolean;
@@ -8,7 +11,23 @@ export interface StoredFileMeta extends StoredFile {
   /** Media metadata (video / audio) — see docs/MEDIA.md. Absent until known; never invented. */
   durationSeconds?: number;
   thumbnailKey?: string;
+  /** Absent on legacy sidecars = READY (they were validated at upload and are served). */
+  status?: FileStatus;
+  /** Machine code of the last failure / rejection (FFMPEG_NOT_AVAILABLE, PROBE_FAILED, …). */
+  statusCode?: string;
+  attempts?: number;
+  processedAt?: string;
+  container?: string;
+  videoCodec?: string;
+  audioCodec?: string;
+  width?: number;
+  height?: number;
+  /** Id of the browser-playable rendition made by FFmpeg (null/absent = the file itself plays). */
+  playbackFileId?: string;
+  thumbnailFileId?: string;
 }
+
+export type FileMetaPatch = Partial<Pick<StoredFileMeta, "status" | "statusCode" | "attempts" | "processedAt" | "container" | "videoCodec" | "audioCodec" | "width" | "height" | "playbackFileId" | "thumbnailFileId" | "durationSeconds">>;
 
 export interface OpenedFile {
   file: StoredFileMeta;
@@ -26,7 +45,11 @@ export interface OpenedFile {
  */
 export interface StorageProvider {
   readonly name: "demo" | "production";
-  put(input: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta>;
+  put(input: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta>;
+  /** Updates processing metadata (status, codecs, rendition ids). `null` clears a field. */
+  update(id: string, patch: { [K in keyof FileMetaPatch]?: FileMetaPatch[K] | null }): Promise<StoredFileMeta | null>;
+  /** Files in the given states, oldest first — the processing queue is the StoredFile table / sidecar files themselves. */
+  listByStatus(statuses: FileStatus[], limit?: number): Promise<StoredFileMeta[]>;
   stat(id: string): Promise<StoredFileMeta | null>;
   open(id: string, range?: { start: number; end?: number }): Promise<OpenedFile | null>;
   delete(id: string): Promise<void>;

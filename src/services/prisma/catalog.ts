@@ -114,16 +114,18 @@ function formatSize(bytes: number): string {
 async function toMaterial(r: DbMaterial): Promise<Material> {
   let meta: string = r.kind === "notes" ? "Notes" : r.kind;
   let fileMime = r.fileMime ?? undefined;
+  let fileStatus: Material["fileStatus"];
   if (r.fileId) {
     const f = await getStorage().stat(r.fileId);
     if (f) {
       meta = `${f.durationSeconds ? `${formatDuration(f.durationSeconds)} · ` : ""}${formatSize(f.size)} · ${f.name.split(".").pop()?.toUpperCase() ?? ""}`;
       fileMime = f.mime;
+      fileStatus = f.status ?? "READY";
     }
   }
   return {
     id: r.id, subjectSlug: r.subjectSlug, topicId: r.topicId ?? undefined, kind: r.kind, title: r.title, meta,
-    fileId: r.fileId ?? undefined, fileMime, body: r.body ?? undefined, createdAt: r.createdAt.toISOString(), archived: !!r.deletedAt,
+    fileId: r.fileId ?? undefined, fileMime, fileStatus, body: r.body ?? undefined, createdAt: r.createdAt.toISOString(), archived: !!r.deletedAt,
   };
 }
 

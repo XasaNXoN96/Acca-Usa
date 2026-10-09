@@ -82,6 +82,8 @@ export interface Material {
   /** Reference to a StorageProvider object. Served through /api/files/[id] after a session check. */
   fileId?: string;
   fileMime?: string;
+  /** Media-pipeline state of the attached file; anything but READY is not playable yet. */
+  fileStatus?: "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
   /** Text content for kind = "notes" (rendered as plain text, never as HTML). */
   body?: string;
   createdAt: string;

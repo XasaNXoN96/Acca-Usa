@@ -261,19 +261,44 @@ model Material {
 /// Metadata of an object kept by the production StorageProvider. Bytes never live in PostgreSQL. Referenced by
 /// Material.fileId / Question.imageId by id only (no FK) so every storage provider can own its own metadata.
 model StoredFile {
-  id              String   @id
-  storageKey      String   @unique // key inside the bucket / folder
+  id              String     @id
+  storageKey      String     @unique // key inside the bucket / folder
   name            String // sanitised original name
   mime            String // derived from the validated extension, never from the client
   size            Int
   ownerId         String
-  attached        Boolean  @default(false)
+  attached        Boolean    @default(false)
   /// media metadata (video / audio duration, thumbnail key, …) — see docs/MEDIA.md
   durationSeconds Int?
   thumbnailKey    String?
-  createdAt       DateTime @default(now())
+  /// Processing state. Rows that existed before the media pipeline were validated at upload and are served: READY.
+  status          FileStatus @default(READY)
+  /// Machine code of the last failure / rejection (e.g. FFMPEG_NOT_AVAILABLE, PROBE_FAILED); never a stack trace
+  statusCode      String?
+  attempts        Int        @default(0)
+  processedAt     DateTime?
+  /// ffprobe results (null until processed)
+  container       String?
+  videoCodec      String?
+  audioCodec      String?
+  width           Int?
+  height          Int?
+  /// StoredFile id of the browser-playable rendition (H.264/AAC MP4, AAC M4A) produced by FFmpeg; null = the file itself plays
+  playbackFileId  String?
+  /// StoredFile id of the poster frame (JPEG) of a video
+  thumbnailFileId String?
+  createdAt       DateTime   @default(now())
 
   @@index([attached, createdAt])
+  @@index([status])
+}
+
+enum FileStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  REJECTED
 }
 
 // ───────────────────────────── access ─────────────────────────────

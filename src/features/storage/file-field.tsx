@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { File as FileIcon, Loader2, Paperclip, RefreshCw, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { uploadKindFor, uploadRules } from "@/services/storage/validation";
-import { deleteUpload, formatBytes, uploadFile, type UploadedFile } from "./upload-client";
+import { deleteUpload, fetchMediaStatus, formatBytes, retryMedia, uploadFile, type MediaStatus, type UploadedFile } from "./upload-client";
 
 type State = { phase: "idle" } | { phase: "uploading"; percent: number; name: string } | { phase: "error"; message: string };
 
@@ -38,6 +38,22 @@ export function FileField({
   const [state, setState] = useState<State>({ phase: "idle" });
   const [file, setFile] = useState<UploadedFile | undefined>(initialFile);
   const [freshIds, setFreshIds] = useState<string[]>([]); // uploaded in this dialog and not yet saved
+
+  const [mediaState, setMediaState] = useState<{ id: string; s: MediaStatus } | null>(null);
+  const media = mediaState && mediaState.id === value ? mediaState.s : null;
+  const setMedia = (s: MediaStatus) => setMediaState({ id: value, s });
+  const processable = materialKind === "video" || materialKind === "audio";
+  const status = media?.status ?? file?.status ?? "READY";
+
+  // Video / audio are processed by the media pipeline (ffprobe + FFmpeg): poll until READY / FAILED / REJECTED.
+  useEffect(() => {
+    if (!processable || !value || (status !== "UPLOADED" && status !== "PROCESSING")) return;
+    let live = true;
+    const tick = async () => { const s = await fetchMediaStatus(value); if (live && s) setMediaState({ id: value, s }); };
+    void tick();
+    const timer = setInterval(() => void tick(), 2000);
+    return () => { live = false; clearInterval(timer); };
+  }, [processable, value, status]);
 
   const kind = uploadKindFor(materialKind);
   const rule = kind ? uploadRules[kind] : null;
@@ -119,7 +135,15 @@ export function FileField({
               <span className="type-caption text-muted-foreground">{formatBytes(current.size)} · {t("uploaded")}</span>
             </span>
           </div>
-          {previewUrl ? <Preview url={previewUrl} mime={current.mime} name={current.name} label={t("preview")} /> : null}
+          {processable && status !== "READY" ? (
+            <div role="status" className="space-y-1 text-sm">
+              <p className="font-medium">{status === "FAILED" ? t("proc.failed") : status === "REJECTED" ? t("proc.rejected") : status === "PROCESSING" ? t("proc.processing") : t("proc.queued")}</p>
+              {media?.code ? <p className="text-destructive">{t(`codes.${media.code}` as never)}</p> : null}
+              <p className="type-caption text-muted-foreground">{t("proc.notReadyHint")}</p>
+              {status === "FAILED" ? <Button type="button" size="sm" variant="outline" onClick={async () => { const s = await retryMedia(value); if (s) setMedia(s); }}>{t("proc.retry")}</Button> : null}
+            </div>
+          ) : processable && media?.transcoded ? <p className="type-caption text-muted-foreground">{t("proc.converted")}</p> : null}
+          {previewUrl && (!processable || status === "READY") ? <Preview url={previewUrl} mime={current.mime} name={current.name} label={t("preview")} /> : null}
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}><RefreshCw aria-hidden />{t("replace")}</Button>
             <Button type="button" size="sm" variant="ghost" onClick={remove}><Trash2 className="text-destructive" aria-hidden />{t("remove")}</Button>

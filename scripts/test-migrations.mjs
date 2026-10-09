@@ -43,6 +43,7 @@ try {
     sql(urlB, `INSERT INTO "Platform"(slug,name,"fullName","updatedAt") VALUES ('acca','ACCA','Assoc',now())`);
     sql(urlB, `INSERT INTO "User"(id,name,email,"updatedAt") VALUES ('u1','Old User','old@example.com',now())`);
     sql(urlB, `INSERT INTO "Payment"(id,"userId","platformSlug",description,"amountCents",provider,"updatedAt") VALUES ('p1','u1','acca','ACCA',14900,'stripe',now())`);
+    sql(urlB, `INSERT INTO "StoredFile"(id,"storageKey",name,mime,size,"ownerId") VALUES ('f-legacy-1','files/f-legacy-1','lecture.mp4','video/mp4',1234,'u1')`);
     // now apply everything that is pending using the REAL migration folder
     must("npx", ["prisma", "migrate", "deploy"], { DATABASE_URL: urlB });
     assert.equal(sql(urlB, `SELECT count(*) FROM "User"`), "1"); assert.equal(sql(urlB, `SELECT count(*) FROM "Payment"`), "1");
@@ -50,6 +51,8 @@ try {
     assert.equal(sql(urlB, `SELECT "amountCents" FROM "Payment" WHERE id='p1'`), "14900", "payment untouched");
     assert.equal(sql(urlB, `SELECT "priceCents" FROM "Platform" WHERE slug='acca'`), "0", "new price column defaults to free (0)");
     assert.equal(sql(urlB, `SELECT "checkoutUrl" IS NULL FROM "Payment" WHERE id='p1'`), "t", "new nullable column");
+    assert.equal(sql(urlB, `SELECT status FROM "StoredFile" WHERE id='f-legacy-1'`), "READY", "files uploaded before the media pipeline stay servable (READY)");
+    assert.equal(sql(urlB, `SELECT attempts FROM "StoredFile" WHERE id='f-legacy-1'`), "0"); assert.equal(sql(urlB, `SELECT "playbackFileId" IS NULL FROM "StoredFile" WHERE id='f-legacy-1'`), "t");
   });
 
   step("re-running migrate deploy is a no-op and keeps the data", () => {

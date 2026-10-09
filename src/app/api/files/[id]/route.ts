@@ -26,7 +26,7 @@ function parseRange(header: string | null, size: number): { start: number; end: 
  */
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   // Plain-text errors in the viewer's language (the browser may show them directly, e.g. an opened download link).
-  const fail = async (status: number, key: "fileUnauthorized" | "fileForbidden" | "fileNotFound" | "fileRange" | "fileViewOnly", headers?: HeadersInit) =>
+  const fail = async (status: number, key: "fileUnauthorized" | "fileForbidden" | "fileNotFound" | "fileRange" | "fileViewOnly" | "fileNotReady", headers?: HeadersInit) =>
     new Response((await getTranslations("states"))(key), { status, headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff", ...headers } });
   const session = await getSession();
   if (!session) return fail(401, "fileUnauthorized");
@@ -35,11 +35,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const meta = await storage.stat(id);
   if (!meta) return fail(404, "fileNotFound");
 
+  // Nothing is served before processing succeeded (UPLOADED / PROCESSING / FAILED / REJECTED → 409), for every role.
+  if ((meta.status ?? "READY") !== "READY") return fail(409, "fileNotReady");
+  const download = new URL(req.url).searchParams.get("download") === "1";
+  // Videos / audio that FFmpeg converted play from their browser-compatible rendition; staff can still download the original.
+  const served = !download && meta.playbackFileId ? (await storage.stat(meta.playbackFileId)) ?? meta : meta;
+
   const isStudent = session.user.role === "STUDENT";
   // VIEW-ONLY policy, enforced here (hiding buttons is not protection): students never get an attachment / download
   // response, and file types a browser cannot display inline (office files, archives, …) are not served to them at all.
   if (isStudent && new URL(req.url).searchParams.has("download")) return fail(403, "fileViewOnly");
-  if (isStudent && !inlineMimes.has(meta.mime) && !/^text\/(plain|csv)/.test(meta.mime)) return fail(403, "fileViewOnly");
+  if (isStudent && !inlineMimes.has(served.mime) && !/^text\/(plain|csv)/.test(served.mime)) return fail(403, "fileViewOnly");
 
   if (isStudent) {
     const material = await services.materials.getByFileId(id);
@@ -61,22 +67,21 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     }
   }
 
-  const range = parseRange(req.headers.get("range"), meta.size);
-  if (range === "invalid") return fail(416, "fileRange", { "Content-Range": `bytes */${meta.size}` });
+  const range = parseRange(req.headers.get("range"), served.size);
+  if (range === "invalid") return fail(416, "fileRange", { "Content-Range": `bytes */${served.size}` });
 
-  const opened = await storage.open(id, range ?? undefined);
+  const opened = await storage.open(served.id, range ?? undefined);
   if (!opened) return fail(404, "fileNotFound");
 
-  const url = new URL(req.url);
-  const inline = isStudent || (inlineMimes.has(meta.mime) && url.searchParams.get("download") !== "1");
+  const inline = isStudent || (inlineMimes.has(served.mime) && !download);
   const headers = new Headers({
-    "Content-Type": meta.mime,
+    "Content-Type": served.mime,
     "Content-Length": String(opened.end - opened.start + 1),
     "Accept-Ranges": "bytes",
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "private, no-store",
-    "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(meta.name)}`,
+    "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(served.name)}`,
   });
-  if (range) headers.set("Content-Range", `bytes ${opened.start}-${opened.end}/${meta.size}`);
+  if (range) headers.set("Content-Range", `bytes ${opened.start}-${opened.end}/${served.size}`);
   return new Response(opened.stream, { status: range ? 206 : 200, headers });
 }

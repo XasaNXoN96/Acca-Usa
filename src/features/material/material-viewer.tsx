@@ -30,12 +30,14 @@ export interface ViewerMaterial {
  * topic checked on the server) — there is no public URL for a locked material. Text is rendered as plain text blocks,
  * never as HTML.
  */
-export function MaterialViewer({ material, file, canDownload = false, watermark = null }: {
+export function MaterialViewer({ material, file, canDownload = false, watermark = null, fileStatus }: {
   material: ViewerMaterial; file: ViewerFile | null;
   /** ADMIN only (server-decided). Students never get a download / open-original control. */
   canDownload?: boolean;
   /** Personal watermark text (abbreviated name · tag · date); null = none (admin preview may still pass one). */
   watermark?: string | null;
+  /** Media-pipeline state; undefined = READY (legacy). Not READY → a status message instead of a player. */
+  fileStatus?: string;
 }) {
   const t = useTranslations("material");
   const { kind, fileId, body, title } = material;
@@ -43,8 +45,11 @@ export function MaterialViewer({ material, file, canDownload = false, watermark 
   if (kind === "notes") return <TextViewer body={body ?? ""} />;
   if (!fileId || !file) return <p className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">{t("noFile")}</p>;
 
-  if (kind === "video") return <VideoViewer id={fileId} title={title} mime={file.mime} watermark={watermark} />;
-  if (kind === "audio") return <AudioViewer id={fileId} title={title} mime={file.mime} />;
+  if (fileStatus && fileStatus !== "READY") {
+    return <p role="status" className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">{fileStatus === "UPLOADED" || fileStatus === "PROCESSING" ? t("processing") : t("unavailable")}</p>;
+  }
+  if (kind === "video") return <VideoViewer id={fileId} title={title} watermark={watermark} />;
+  if (kind === "audio") return <AudioViewer id={fileId} title={title} />;
   if (kind === "image") return <ImageViewer id={fileId} title={title} watermark={watermark} />;
   if (file.mime === "application/pdf") {
     return (
@@ -71,7 +76,7 @@ function OpenButtons({ id }: { id: string }) {
   );
 }
 
-function VideoViewer({ id, title, mime, watermark }: { id: string; title: string; mime: string; watermark: string | null }) {
+function VideoViewer({ id, title, watermark }: { id: string; title: string; watermark: string | null }) {
   const t = useTranslations("material");
   const [failed, setFailed] = useState(false);
   return (
@@ -89,7 +94,7 @@ function VideoViewer({ id, title, mime, watermark }: { id: string; title: string
           onContextMenu={(e) => e.preventDefault()}
           className="aspect-video max-h-[75dvh] w-full rounded-xl bg-black"
         >
-          <source src={fileUrl(id)} type={mime} onError={() => setFailed(true)} />
+          <source src={fileUrl(id)} onError={() => setFailed(true)} />
           {t("videoUnsupported")}
         </video>
         {watermark ? <WatermarkOverlay text={watermark} /> : null}
@@ -99,7 +104,7 @@ function VideoViewer({ id, title, mime, watermark }: { id: string; title: string
   );
 }
 
-function AudioViewer({ id, title, mime }: { id: string; title: string; mime: string }) {
+function AudioViewer({ id, title }: { id: string; title: string }) {
   const t = useTranslations("material");
   const [failed, setFailed] = useState(false);
   return (
@@ -109,7 +114,7 @@ function AudioViewer({ id, title, mime }: { id: string; title: string; mime: str
         <p className="min-w-0 flex-1 text-pretty font-semibold [overflow-wrap:anywhere]">{title}</p>
       </div>
       <audio controls controlsList="nodownload" preload="metadata" aria-label={title} onError={() => setFailed(true)} onContextMenu={(e) => e.preventDefault()} className="w-full">
-        <source src={fileUrl(id)} type={mime} onError={() => setFailed(true)} />
+        <source src={fileUrl(id)} onError={() => setFailed(true)} />
         {t("audioUnsupported")}
       </audio>
       {failed ? <p role="alert" className="text-sm text-destructive">{t("loadError")}</p> : null}
@@ -134,8 +139,8 @@ function ImageViewer({ id, title, watermark }: { id: string; title: string; wate
       <DialogContent className="max-w-[min(96vw,64rem)]">
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{t("enlarge")}</DialogDescription>
-        {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
         <div className="relative" data-protected>
+          {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
           <img src={fileUrl(id)} alt={title} draggable={false} onContextMenu={(e) => e.preventDefault()} className="mx-auto max-h-[80dvh] w-full select-none object-contain" />
           {watermark ? <WatermarkOverlay text={watermark} /> : null}
         </div>

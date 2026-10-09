@@ -1426,7 +1426,8 @@
     "fileForbidden": "You don’t have access to this file.",
     "fileNotFound": "File not found.",
     "fileRange": "The requested range is not valid.",
-    "fileViewOnly": "This material is view-only. Download is not available."
+    "fileViewOnly": "This material is view-only. Download is not available.",
+    "fileNotReady": "This file is not ready yet."
   },
   "theme": {
     "label": "Theme",
@@ -1451,7 +1452,30 @@
     "failed": "Upload failed. Please try again.",
     "selectKindFirst": "Choose the material type first.",
     "current": "Current file",
-    "cancel": "Cancel upload"
+    "cancel": "Cancel upload",
+    "proc": {
+      "queued": "Queued for processing",
+      "processing": "Processing…",
+      "ready": "Ready",
+      "failed": "Processing failed",
+      "rejected": "File rejected",
+      "retry": "Retry processing",
+      "converted": "Converted to a browser-compatible format",
+      "info": "{container} · {video} · {audio}",
+      "notReadyHint": "Students cannot see this file until processing is finished."
+    },
+    "codes": {
+      "FFMPEG_NOT_AVAILABLE": "FFmpeg is not installed on the server. Install it and retry.",
+      "PROBE_FAILED": "The file is damaged or is not a valid media file.",
+      "TRANSCODE_FAILED": "Conversion failed. Retry or upload a different file.",
+      "TIMEOUT": "Processing took too long.",
+      "NO_VIDEO_STREAM": "The file has no video track.",
+      "NO_AUDIO_STREAM": "The file has no audio track.",
+      "NO_DURATION": "The duration of the file could not be determined.",
+      "TOO_LONG": "The file is longer than 6 hours.",
+      "TOO_LARGE_RESOLUTION": "The resolution is higher than 4K.",
+      "SOURCE_MISSING": "The uploaded file is missing from storage."
+    }
   },
   "publicSubject": {
     "courseTopics": "Course Topics",
@@ -1515,7 +1539,9 @@
       "zoomOut": "Zoom out",
       "error": "The document could not be loaded.",
       "viewOnly": "View-only document. It cannot be downloaded or printed."
-    }
+    },
+    "processing": "This lecture is being prepared. Please check back in a few minutes.",
+    "unavailable": "This file is temporarily unavailable."
   },
   "email": {
     "footer": "You receive this e-mail because you have an ACCA USA account.",

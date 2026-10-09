@@ -7,7 +7,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { StoredFile as DbStoredFile } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
 import { serverEnv } from "@/lib/env";
-import type { OpenedFile, StorageProvider, StoredFileMeta } from "./contracts";
+import type { FileStatus, OpenedFile, StorageProvider, StoredFileMeta } from "./contracts";
 import { sanitizeFileName } from "./validation";
 
 /**
@@ -35,6 +35,9 @@ export interface S3Config {
 const toMeta = (r: DbStoredFile): StoredFileMeta => ({
   id: r.id, name: r.name, mime: r.mime, size: r.size, createdAt: r.createdAt.toISOString(), ownerId: r.ownerId, attached: r.attached,
   storageKey: r.storageKey, durationSeconds: r.durationSeconds ?? undefined, thumbnailKey: r.thumbnailKey ?? undefined,
+  status: r.status, statusCode: r.statusCode ?? undefined, attempts: r.attempts, processedAt: r.processedAt?.toISOString(), container: r.container ?? undefined,
+  videoCodec: r.videoCodec ?? undefined, audioCodec: r.audioCodec ?? undefined, width: r.width ?? undefined, height: r.height ?? undefined,
+  playbackFileId: r.playbackFileId ?? undefined, thumbnailFileId: r.thumbnailFileId ?? undefined,
 });
 
 export class ProductionStorageProvider implements StorageProvider {
@@ -52,7 +55,7 @@ export class ProductionStorageProvider implements StorageProvider {
     });
   }
 
-  async put({ ownerId, file, mime, durationSeconds }: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
+  async put({ ownerId, file, mime, durationSeconds, status, attached }: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta> {
     const id = randomUUID();
     const storageKey = `files/${id}`;
     await new Upload({
@@ -63,12 +66,24 @@ export class ProductionStorageProvider implements StorageProvider {
       },
     }).done();
     try {
-      const row = await getPrisma().storedFile.create({ data: { id, storageKey, name: sanitizeFileName(file.name), mime, size: file.size, ownerId, durationSeconds } });
+      const row = await getPrisma().storedFile.create({ data: { id, storageKey, name: sanitizeFileName(file.name), mime, size: file.size, ownerId, durationSeconds, status: status ?? "READY", attached: attached ?? false } });
       return toMeta(row);
     } catch (e) {
       await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: storageKey })).catch(() => undefined); // no orphan bytes
       throw e;
     }
+  }
+
+  async update(id: string, patch: Record<string, unknown>): Promise<StoredFileMeta | null> {
+    if (!ID_RE.test(id)) return null;
+    const data = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined).map(([k, v]) => [k, k === "processedAt" && typeof v === "string" ? new Date(v) : v]));
+    const row = await getPrisma().storedFile.update({ where: { id }, data }).catch(() => null);
+    return row ? toMeta(row) : null;
+  }
+
+  async listByStatus(statuses: FileStatus[], limit = 50): Promise<StoredFileMeta[]> {
+    const rows = await getPrisma().storedFile.findMany({ where: { status: { in: statuses } }, orderBy: { createdAt: "asc" }, take: limit });
+    return rows.map(toMeta);
   }
 
   async stat(id: string): Promise<StoredFileMeta | null> {
@@ -106,12 +121,13 @@ export class ProductionStorageProvider implements StorageProvider {
   async delete(id: string): Promise<void> {
     const meta = await this.stat(id);
     if (!meta?.storageKey) return;
+    for (const sub of [meta.playbackFileId, meta.thumbnailFileId]) if (sub) await this.delete(sub).catch(() => undefined);
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: meta.storageKey }));
     if (meta.thumbnailKey) await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: meta.thumbnailKey })).catch(() => undefined);
     await getPrisma().storedFile.deleteMany({ where: { id } });
   }
 
-  async replace(id: string, input: { ownerId: string; file: File; mime: string; durationSeconds?: number }): Promise<StoredFileMeta> {
+  async replace(id: string, input: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus }): Promise<StoredFileMeta> {
     const next = await this.put(input);
     await this.delete(id);
     return next;

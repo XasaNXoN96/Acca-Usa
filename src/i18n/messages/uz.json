@@ -1426,7 +1426,8 @@
     "fileForbidden": "Bu faylga kirish huquqingiz yo‘q.",
     "fileNotFound": "Fayl topilmadi.",
     "fileRange": "So‘ralgan diapazon yaroqsiz.",
-    "fileViewOnly": "Bu material faqat ko‘rish uchun. Yuklab olish mavjud emas."
+    "fileViewOnly": "Bu material faqat ko‘rish uchun. Yuklab olish mavjud emas.",
+    "fileNotReady": "Fayl hali tayyor emas."
   },
   "theme": {
     "label": "Mavzu",
@@ -1451,7 +1452,30 @@
     "failed": "Faylni yuklab bo‘lmadi. Qayta urinib ko‘ring.",
     "selectKindFirst": "Avval material turini tanlang.",
     "current": "Joriy fayl",
-    "cancel": "Yuklashni bekor qilish"
+    "cancel": "Yuklashni bekor qilish",
+    "proc": {
+      "queued": "Qayta ishlash navbatida",
+      "processing": "Qayta ishlanmoqda…",
+      "ready": "Tayyor",
+      "failed": "Qayta ishlashda xatolik",
+      "rejected": "Fayl rad etildi",
+      "retry": "Qayta ishlashni takrorlash",
+      "converted": "Brauzer qo‘llab-quvvatlaydigan formatga o‘tkazildi",
+      "info": "{container} · {video} · {audio}",
+      "notReadyHint": "Qayta ishlash tugamaguncha talabalar bu faylni ko‘rmaydi."
+    },
+    "codes": {
+      "FFMPEG_NOT_AVAILABLE": "Serverda FFmpeg o‘rnatilmagan. Uni o‘rnatib, qayta urinib ko‘ring.",
+      "PROBE_FAILED": "Fayl shikastlangan yoki yaroqli media fayl emas.",
+      "TRANSCODE_FAILED": "Faylni o‘tkazib bo‘lmadi. Qayta urinib ko‘ring yoki boshqa fayl yuklang.",
+      "TIMEOUT": "Qayta ishlash juda uzoq davom etdi.",
+      "NO_VIDEO_STREAM": "Faylda video treki yo‘q.",
+      "NO_AUDIO_STREAM": "Faylda audio treki yo‘q.",
+      "NO_DURATION": "Fayl davomiyligini aniqlab bo‘lmadi.",
+      "TOO_LONG": "Fayl 6 soatdan uzun.",
+      "TOO_LARGE_RESOLUTION": "Ruxsat 4K dan yuqori.",
+      "SOURCE_MISSING": "Yuklangan fayl omborda topilmadi."
+    }
   },
   "publicSubject": {
     "courseTopics": "Kurs mavzulari",
@@ -1515,7 +1539,9 @@
       "zoomOut": "Kichiklashtirish",
       "error": "Hujjatni yuklab bo‘lmadi.",
       "viewOnly": "Hujjat faqat ko‘rish uchun. Uni yuklab olish yoki chop etib bo‘lmaydi."
-    }
+    },
+    "processing": "Bu material tayyorlanmoqda. Bir necha daqiqadan keyin qaytib ko‘ring.",
+    "unavailable": "Fayl vaqtincha mavjud emas."
   },
   "email": {
     "footer": "Siz bu xatni ACCA USA hisobingiz borligi uchun olyapsiz.",

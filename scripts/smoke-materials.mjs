@@ -1,5 +1,9 @@
 // Smoke test: Student Material Viewer. BASE_URL=http://localhost:3100 CHROMIUM=... node scripts/smoke-materials.mjs  (fresh server)
 import { chromium } from "playwright-core";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -142,6 +146,37 @@ await step("admin opens a material and the viewer works for admin", async () => 
   const ac = await ctx(); const a = await ac.newPage(); await demo(a, "Admin"); await a.waitForURL(/admin$/);
   await a.goto(M("video")); await a.locator("video").waitFor(); await a.goto(M("diagram")); await a.locator("main img[alt]").first().waitFor();
   assert((await ac.request.get("/api/files/seed-bt-glossary?download=1")).headers()["content-disposition"]?.startsWith("attachment"), "admin cannot download");
+  await ac.close();
+});
+
+await step("media pipeline end-to-end: admin uploads an .mkv → FFmpeg converts it → student streams an MP4 rendition; corrupt video is REJECTED and never served", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "smoke-media-"));
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=duration=2:size=320x240:rate=15", "-f", "lavfi", "-i", "sine=duration=2", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", join(dir, "lecture.mkv")]);
+  writeFileSync(join(dir, "broken.mp4"), Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from("ftypmp42"), Buffer.alloc(16), Buffer.from(Array.from({ length: 3000 }, (_, i) => (i * 37) % 251))]));
+  const ac = await ctx(); const a = await ac.newPage(); await demo(a, "Admin"); await a.waitForURL(/admin$/);
+  await a.goto("/admin/materials"); await a.getByRole("button", { name: "Add material" }).click();
+  await a.locator("#f-title").fill("Converted lecture"); await a.locator("#f-kind").selectOption("video"); await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" });
+  await a.locator("#f-topic").selectOption({ label: "Business organisations and their stakeholders" });
+  await a.locator("#f-fileId").setInputFiles({ name: "lecture.mkv", mimeType: "video/x-matroska", buffer: readFileSync(join(dir, "lecture.mkv")) });
+  await a.getByText("Converted to a browser-compatible format").waitFor({ timeout: 90000 });
+  await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  // student: topic page → the material plays from the MP4 rendition; the original container is never exposed
+  const sp = await sc.newPage(); await sp.goto(`/subject/bt/topic/${T1}`); await sp.getByRole("link", { name: /Converted lecture/ }).first().click(); await sp.waitForURL(/\/material\//);
+  await sp.locator("video").waitFor();
+  const src = await sp.locator("video source").getAttribute("src"); assert(src && src.startsWith("/api/files/"), `video src ${src}`);
+  const r = await sc.request.get(src, { headers: { Range: "bytes=0-99" } });
+  assert(r.status() === 206 && r.headers()["content-type"] === "video/mp4", `student stream ${r.status()} ${r.headers()["content-type"]}`);
+  assert((await sc.request.get(`${src}?download=1`)).status() === 403, "student download");
+  const adminDl = await ac.request.get(`${src}?download=1`); assert(adminDl.status() === 200 && /matroska/.test(adminDl.headers()["content-type"]) && /attachment/.test(adminDl.headers()["content-disposition"]), "admin original download");
+  await sp.close();
+  // corrupt video: validated by header only, then rejected by ffprobe; never served
+  const up = await ac.request.post("/api/uploads", { headers: { origin: BASE }, multipart: { kind: "video", file: { name: "broken.mp4", mimeType: "video/mp4", buffer: readFileSync(join(dir, "broken.mp4")) } } });
+  const body = await up.json(); assert(body.ok && body.file.status === "UPLOADED", `upload ${JSON.stringify(body)}`);
+  let st; for (let i = 0; i < 40; i++) { st = await (await ac.request.get(`/api/media/${body.file.id}`)).json(); if (st.status !== "UPLOADED" && st.status !== "PROCESSING") break; await new Promise((x) => setTimeout(x, 500)); }
+  assert(st.status === "REJECTED" && st.code === "PROBE_FAILED", `status ${JSON.stringify(st)}`);
+  assert((await ac.request.get(`/api/files/${body.file.id}`)).status() === 409, "rejected file was served");
+  assert((await sc.request.get(`/api/media/${body.file.id}`)).status() === 403, "student can read media status");
+  assert((await ac.request.post(`/api/media/${body.file.id}`, { headers: { origin: BASE } })).status() === 409, "rejected file is retryable");
   await ac.close();
 });
 
