@@ -10,7 +10,8 @@ everything else needs a human against the real service.
 - [ ] `DATABASE_URL`, S3 and SMTP and payment variables set; the server starts (it refuses otherwise) — *verified here: `test:production`, `test:env`*
 
 ## Database (`docs/MIGRATIONS.md`)
-- [ ] automated backups + point-in-time recovery enabled, restore tested
+- [ ] automated backups (`npm run db:backup`, encrypted, copied to write-once storage) + point-in-time recovery enabled; **restore drill done** with `npm run db:restore` on YOUR infrastructure (`docs/BACKUP_RESTORE.md`) — tools proven only on local PostgreSQL 16
+- [ ] object-storage versioning / replication for uploaded files (not covered by the database backup); `AUTH_SECRET` / `AUDIT_CHAIN_SECRET` stored in a secret manager
 - [ ] `prisma migrate deploy` run from the pipeline; `npm run db:bootstrap`; `npm run admin:create` (strong password)
 - [ ] connection pool sized for the number of instances (PgBouncer / Prisma Accelerate if serverless)
 

@@ -33,4 +33,4 @@ Records are written **after** the action succeeded. If the write itself fails th
 * Deleting the *tail* of the chain (the newest rows) is not detectable from the chain alone; anchor the latest hash externally if that matters.
 * The in-memory (demo) provider keeps events in process memory only and loses them on restart; it is for demos.
 * Retention: nothing is deleted automatically. Events contain e-mail addresses and client IP addresses (personal data); define a retention period with your legal advisor — removing rows requires an operator to disable the trigger deliberately, which breaks the chain unless you archive and re-anchor first.
-* Backups: restore tests must run `npm run audit:verify` afterwards (see docs/BACKUP_RESTORE.md once Phase 26 is done).
+* Backups: restore tests must run `npm run audit:verify` afterwards (`db:restore` does this for you when it is given the key — see docs/BACKUP_RESTORE.md).
