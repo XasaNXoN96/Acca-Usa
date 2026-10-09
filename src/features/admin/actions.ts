@@ -1,5 +1,6 @@
 "use server";
 
+import { audit, adminActor } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/rate-limit";
 import { services } from "@/services";
@@ -59,6 +60,7 @@ export async function saveResourceAction(resource: string, id: string | null, ra
   const v = parsed.data as Record<string, unknown> & never;
   const d = v as unknown as Record<string, string | number | boolean | string[]>;
   let res: ServiceResult<unknown>;
+  let before: { role: string; status: string } | null = null;
 
   switch (resource) {
     case "platforms":
@@ -132,6 +134,7 @@ export async function saveResourceAction(resource: string, id: string | null, ra
     case "students": {
       const input = { name: String(d.name), email: String(d.email), role: d.role as never, status: d.status as never, password: d.password ? String(d.password) : undefined };
       if (id) {
+        before = await services.users.getById(id);
         // Nobody may change their own role/status here (prevents locking yourself out or self-escalation).
         if (id === session.user.id && (input.role !== session.user.role || input.status !== "active")) {
           return { ok: false, code: "FAILED", message: "selfProtect", fieldErrors: { role: "selfProtect" } };
@@ -144,6 +147,15 @@ export async function saveResourceAction(resource: string, id: string | null, ra
     }
   }
   if (!res.ok) return fail(res);
+  const createdId = res.data && typeof res.data === "object" && "id" in res.data ? String((res.data as { id: unknown }).id) : undefined;
+  await audit({
+    actor: adminActor(session.user), action: `${resource}.${id ? "update" : "create"}`, target: { type: resource, id: id ?? createdId },
+    // field NAMES only — never the submitted values (they may hold passwords or private text)
+    meta: {
+      fields: Object.keys(d).sort(),
+      ...(resource === "students" ? { roleTo: String(d.role), statusTo: String(d.status), ...(before ? { roleFrom: before.role, statusFrom: before.status } : {}), credentialsChanged: Boolean(d.password) } : {}),
+    },
+  });
   refresh(resource);
   return { ok: true };
 }
@@ -172,6 +184,7 @@ export async function setArchivedAction(resource: string, id: string, archived: 
     }
   }
   if (!res.ok) return fail(res);
+  await audit({ actor: adminActor(session.user), action: `${resource}.${archived ? "archive" : "restore"}`, target: { type: resource, id } });
   refresh(resource);
   return { ok: true };
 }
@@ -182,6 +195,7 @@ export async function setTestPublishedAction(id: string, published: boolean): Pr
   if (!session || typeof id !== "string" || id.length > 160) return { ok: false, code: "FORBIDDEN" };
   const res = await services.tests.setPublished(id, published === true);
   if (!res.ok) return fail(res);
+  await audit({ actor: adminActor(session.user), action: published === true ? "tests.publish" : "tests.unpublish", target: { type: "tests", id } });
   refresh("tests");
   return { ok: true };
 }
@@ -191,6 +205,7 @@ export async function duplicateTestAction(id: string): Promise<AdminActionResult
   if (!session || typeof id !== "string" || id.length > 160) return { ok: false, code: "FORBIDDEN" };
   const res = await services.tests.duplicate(id);
   if (!res.ok) return fail(res);
+  await audit({ actor: adminActor(session.user), action: "tests.duplicate", target: { type: "tests", id } });
   refresh("tests");
   return { ok: true };
 }
@@ -205,6 +220,7 @@ export async function sendTestEmailAction(): Promise<{ ok: true; demo: boolean }
   const rl = await rateLimit(`testmail:${session.user.id}`, 5, 60 * 60_000);
   if (!rl.ok) return { ok: false, code: "LIMIT" };
   const res = await sendEmail({ email: session.user.email, locale: session.user.locale }, { kind: "test", name: session.user.name });
+  await audit({ actor: adminActor(session.user), action: "email.test_sent", target: { type: "settings" }, outcome: res.ok ? "success" : "failed", meta: { provider: getEmailProvider().name, ...(res.ok ? {} : { failure: res.code ?? res.reason }) } });
   return res.ok ? { ok: true, demo: getEmailProvider().name === "demo" } : { ok: false, code: res.code ?? res.reason };
 }
 
@@ -214,6 +230,7 @@ export async function restoreMaterialVersionAction(materialId: string, versionId
   if (!session || typeof materialId !== "string" || typeof versionId !== "string" || materialId.length > 160 || versionId.length > 160) return { ok: false, code: "FORBIDDEN" };
   const res = await services.materialVersions.restore(materialId, versionId, session.user.id);
   if (!res.ok) return fail(res);
+  await audit({ actor: adminActor(session.user), action: "materials.version_restore", target: { type: "materials", id: materialId }, meta: { versionId } });
   revalidatePath(`/admin/materials/${materialId}/versions`);
   refresh("materials");
   return { ok: true };

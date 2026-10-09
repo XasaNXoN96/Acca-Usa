@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import type { AuditEventRec } from "@/lib/audit-chain";
 import type { AppNotification, Difficulty, IssuedCertificate, MaterialKind, PlatformSlug } from "@/types";
 import { platforms as seedPlatforms, subjects as seedSubjects, allTopics as seedTopics, materials as seedMaterials } from "@/data/mock/catalog";
 import { btQuestions, questionBank, testRecords } from "@/data/mock/assessments";
@@ -45,6 +46,8 @@ export interface Db {
   activity: ActivityRec[];
   resetTokens: ResetTokenRec[];
   mfaRecovery: { userId: string; codeHash: string; usedAt?: string }[];
+  /** append-only, hash-chained (lib/audit-chain) */
+  audit: AuditEventRec[];
   transcripts: import("../contracts").TranscriptRecord[];
   subtitles: import("../contracts").SubtitleRecord[];
   materialVersions: MaterialVersionRec[];
@@ -122,6 +125,7 @@ function seed(): Db {
     activity: [],
     resetTokens: [],
     mfaRecovery: [],
+    audit: [],
     transcripts: [],
     subtitles: [],
     materialVersions: [],

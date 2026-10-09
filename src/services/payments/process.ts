@@ -1,5 +1,6 @@
 import "server-only";
 import { routes } from "@/lib/routes";
+import { audit } from "@/lib/audit";
 import { logEvent } from "@/lib/log";
 import { absoluteUrl, sendEmail } from "../email";
 import type { PaymentProvider, PaymentRec, PaymentStore, ProcessOutcome, ProviderEvent } from "./contracts";
@@ -58,6 +59,7 @@ export async function applyProviderEvent(store: PaymentStore, provider: PaymentP
       providerPaymentId: payment.providerPaymentId ?? event.providerPaymentId,
       ...(event.type === "paid" ? { paidAt: new Date().toISOString() } : {}),
     });
+    await audit({ actor: { type: "system", id: provider }, action: `payment.${next[event.type].toLowerCase()}`, target: { type: "payment", id: payment.id }, meta: { provider, amountCents: payment.amountCents, currency: payment.currency, platform: payment.platform } });
     if (event.type === "paid") await notify.paymentReceived(payment.userId, payment);
     else if (event.type === "failed") await notify.paymentFailed(payment.userId, payment);
     return "applied";

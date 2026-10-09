@@ -38,6 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     statistics: ts("statistics.title"),
     settings: ts("settings.title"),
     security: ts("security.title"),
+    audit: ts("audit.title"),
   };
   return (
     <AppShell variant="admin" items={setupRequired ? [] : adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} unreadNotifications={unread} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>

@@ -7,6 +7,7 @@
  * valid second factor). The administrator must enrol a new authenticator at the next sign-in when MFA is mandatory.
  */
 import { PrismaClient } from "@prisma/client";
+import { cliAudit } from "./lib/cli-audit";
 
 const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
 if (!email) {
@@ -25,6 +26,7 @@ async function main() {
     prisma.mfaRecoveryCode.deleteMany({ where: { userId: user.id } }),
     prisma.user.update({ where: { id: user.id }, data: { mfaSecretEnc: null, mfaEnabledAt: null, mfaLastStep: null, tokenVersion: { increment: 1 } } }),
   ]);
+  await cliAudit(prisma, { action: "mfa.reset", target: { type: "user", id: user.id }, meta: { adminEmail: email } });
   console.log(`Second factor removed for ${email}; all sessions revoked.`);
 }
 main().catch((e) => { console.error(e instanceof Error ? e.message : e); process.exitCode = 1; }).finally(() => prisma.$disconnect());

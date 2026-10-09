@@ -8,6 +8,7 @@ import { services } from "@/services";
 import { clearMfaChallenge, endSession, pendingMfa, startMfaChallenge, startSession } from "@/lib/auth/session";
 import { homeFor } from "@/lib/auth/guards";
 import { safeNext } from "@/lib/auth/redirect";
+import { audit } from "@/lib/audit";
 import { rateLimit, rateLimitClear } from "@/lib/rate-limit";
 import { isDemoMode } from "@/lib/app-mode";
 import { routes } from "@/lib/routes";
@@ -47,6 +48,7 @@ export async function loginAction(input: unknown, next?: string | null): Promise
     return { ok: true, redirectTo: routes.loginMfa };
   }
   await startSession(res.user, res.tokenVersion);
+  if (res.user.role === "ADMIN") await audit({ actor: { type: "admin", id: res.user.id, email: res.user.email }, action: "auth.login", target: { type: "session" }, meta: { mfa: false } });
   return { ok: true, redirectTo: safeNext(next) ?? homeFor(res.user.role) };
 }
 
@@ -59,17 +61,24 @@ export async function verifyMfaAction(input: unknown): Promise<AuthResult> {
 
   const [byUser, byClient] = await Promise.all([rateLimit(`mfa:u:${pending.uid}`, 6, 10 * 60_000), rateLimit(`mfa:c:${await clientKey()}`, 20, 10 * 60_000)]);
   const rl = !byUser.ok ? byUser : byClient;
-  if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
+  if (!rl.ok) {
+    await audit({ actor: { type: "admin", id: pending.uid }, action: "auth.mfa_locked", target: { type: "session" }, outcome: "denied" });
+    return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
+  }
 
   // The account must still be the one that passed the password step (not suspended / signed out since).
   const user = await services.auth.getSessionUser(pending.uid, pending.v);
   if (!user) { await clearMfaChallenge(); return { ok: false, code: "NO_CHALLENGE" }; }
   const res = await services.mfa.verifyLogin(user.id, parsed.data.code);
-  if (!res.ok) return { ok: false, code: "INVALID_CODE" };
+  if (!res.ok) {
+    await audit({ actor: { type: "admin", id: user.id, email: user.email }, action: "auth.mfa_failed", target: { type: "session" }, outcome: "failed" });
+    return { ok: false, code: "INVALID_CODE" };
+  }
 
   await clearMfaChallenge();
   await rateLimitClear(`mfa:u:${pending.uid}`); // only FAILED attempts count towards the lockout
   await startSession(user, pending.v, { mfa: true });
+  await audit({ actor: { type: "admin", id: user.id, email: user.email }, action: "auth.login", target: { type: "session" }, meta: { mfa: true, method: res.method } });
   return { ok: true, redirectTo: safeNext(pending.next) ?? homeFor(user.role) };
 }
 

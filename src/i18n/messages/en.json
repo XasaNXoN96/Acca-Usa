@@ -1687,6 +1687,38 @@
       "enabledText": "A code is required at every sign-in.",
       "recoveryLeft": "Unused recovery codes: {count}.",
       "lostDevice": "Lost your device and recovery codes? A server operator can reset it with the admin:mfa-reset command."
+    },
+    "audit": {
+      "title": "Audit log",
+      "description": "Who did what in the admin area. Append-only: events cannot be edited or deleted here or by the application.",
+      "integrityOk": "Hash chain verified: the latest {count} events are consistent.",
+      "integrityBroken": "The audit chain is BROKEN at event {id}: a record was changed or removed outside the application. Investigate immediately.",
+      "filters": "Filter the audit log",
+      "filterAction": "Action",
+      "filterActor": "Administrator (e-mail)",
+      "filterOutcome": "Outcome",
+      "any": "Any",
+      "apply": "Filter",
+      "empty": "No events match.",
+      "pagination": "Audit log pages",
+      "prev": "Newer",
+      "next": "Older",
+      "pageOf": "Page {page} of {pages} · {total} events",
+      "system": "System",
+      "operator": "Operator (CLI)",
+      "outcome": {
+        "success": "Success",
+        "denied": "Denied",
+        "failed": "Failed"
+      },
+      "col": {
+        "time": "Time",
+        "actor": "Actor",
+        "action": "Action",
+        "target": "Target",
+        "outcome": "Outcome",
+        "details": "Details"
+      }
     }
   },
   "states": {

@@ -716,3 +716,30 @@ model Notification {
   @@index([userId, readAt])
   @@index([userId, createdAt(sort: Desc)])
 }
+
+/// Append-only record of administrator / system / operator actions. UPDATE, DELETE and TRUNCATE are rejected by database
+/// triggers (see migration 20261013100000_audit_log); every row is chained to the previous one with a keyed hash so a
+/// change made behind the application's back is detectable (`npm run audit:verify`). No foreign key to User on purpose:
+/// the record must survive account deletion.
+model AuditEvent {
+  id          String   @id
+  /// insertion order (assigned under an advisory lock, so it is also the chain order)
+  seq         Int      @unique @default(autoincrement())
+  at          DateTime
+  actorType   String
+  actorId     String?
+  actorEmail  String?
+  action      String
+  targetType  String?
+  targetId    String?
+  outcome     String
+  /// canonical JSON text (sorted keys, secrets redacted) — text, not jsonb, so the hashed bytes are the stored bytes
+  metaJson    String?
+  ip          String?
+  prevHash    String
+  hash        String   @unique
+
+  @@index([at(sort: Desc)])
+  @@index([action])
+  @@index([actorId])
+}

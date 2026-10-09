@@ -1687,6 +1687,38 @@
       "enabledText": "Har safar kirishda kod talab qilinadi.",
       "recoveryLeft": "Ishlatilmagan tiklash kodlari: {count}.",
       "lostDevice": "Qurilma va tiklash kodlarini yo‘qotdingizmi? Server operatori admin:mfa-reset buyrug‘i bilan tiklashi mumkin."
+    },
+    "audit": {
+      "title": "Audit jurnali",
+      "description": "Admin panelda kim nima qilgani. Faqat qo‘shiladi: hodisalarni bu yerda ham, ilova orqali ham o‘zgartirib yoki o‘chirib bo‘lmaydi.",
+      "integrityOk": "Xesh zanjiri tekshirildi: oxirgi {count} ta hodisa mos keladi.",
+      "integrityBroken": "Audit zanjiri {id} hodisasida BUZILGAN: yozuv ilovadan tashqarida o‘zgartirilgan yoki o‘chirilgan. Zudlik bilan tekshiring.",
+      "filters": "Audit jurnalini filtrlash",
+      "filterAction": "Amal",
+      "filterActor": "Administrator (e-pochta)",
+      "filterOutcome": "Natija",
+      "any": "Istalgan",
+      "apply": "Filtrlash",
+      "empty": "Mos hodisa yo‘q.",
+      "pagination": "Audit jurnali sahifalari",
+      "prev": "Yangiroq",
+      "next": "Eskiroq",
+      "pageOf": "{pages} sahifadan {page}-sahifa · hodisalar: {total}",
+      "system": "Tizim",
+      "operator": "Operator (buyruq qatori)",
+      "outcome": {
+        "success": "Muvaffaqiyatli",
+        "denied": "Rad etildi",
+        "failed": "Xato"
+      },
+      "col": {
+        "time": "Vaqt",
+        "actor": "Kim",
+        "action": "Amal",
+        "target": "Obyekt",
+        "outcome": "Natija",
+        "details": "Tafsilotlar"
+      }
     }
   },
   "states": {

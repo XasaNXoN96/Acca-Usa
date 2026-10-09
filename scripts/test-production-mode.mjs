@@ -79,7 +79,7 @@ try {
   sh("psql", [ADMIN_URL, "-c", `CREATE DATABASE ${DB}`]);
   sh("npx", ["prisma", "migrate", "deploy"], { DATABASE_URL: DB_URL });
   sh("npx", ["tsx", "prisma/bootstrap.ts"], { DATABASE_URL: DB_URL });
-  sh("npx", ["tsx", "scripts/create-admin.ts"], { DATABASE_URL: DB_URL, ADMIN_EMAIL: "owner@acca.example", ADMIN_NAME: "Site Owner", ADMIN_PASSWORD: "Owner-pass-12345" });
+  sh("npx", ["tsx", "scripts/create-admin.ts"], { DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET, ADMIN_EMAIL: "owner@acca.example", ADMIN_NAME: "Site Owner", ADMIN_PASSWORD: "Owner-pass-12345" });
   await new Promise((r) => sink.listen(SMTP_PORT, "127.0.0.1", r));
   await new Promise((r) => fakeStripe.listen(STRIPE_PORT, "127.0.0.1", r));
 
@@ -159,7 +159,7 @@ try {
   });
   await step("admin:mfa-reset (operator CLI) removes the second factor and revokes sessions; the administrator is forced to enrol again", async () => {
     const live = await adminLogin(); // a verified session that must die with the reset
-    const r = spawnSync("npx", ["tsx", "scripts/mfa-reset.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ADMIN_EMAIL: "owner@acca.example" }, encoding: "utf8" });
+    const r = spawnSync("npx", ["tsx", "scripts/mfa-reset.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET, ADMIN_EMAIL: "owner@acca.example" }, encoding: "utf8" });
     assert(r.status === 0 && /Second factor removed/.test(r.stdout), `reset failed: ${r.stdout}${r.stderr}`);
     const bad = spawnSync("npx", ["tsx", "scripts/mfa-reset.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ADMIN_EMAIL: studentEmail }, encoding: "utf8" }); assert(bad.status !== 0, "mfa-reset accepted a student account");
     await live.p.goto("/admin/payments"); assert(live.p.url().includes("/login"), `old verified session survived the reset (${live.p.url()})`); await live.c.close();
@@ -183,7 +183,7 @@ try {
   // ── real signed webhook path against the real database
   const user = await db.user.findUnique({ where: { email: studentEmail } });
 
-  const adminCli = (env) => { const r = spawnSync("npx", ["tsx", "scripts/create-admin.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ...env }, encoding: "utf8" }); return { code: r.status, out: `${r.stdout}${r.stderr}` }; };
+  const adminCli = (env) => { const r = spawnSync("npx", ["tsx", "scripts/create-admin.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET, ...env }, encoding: "utf8" }); return { code: r.status, out: `${r.stdout}${r.stderr}` }; };
   await step("admin:create is safe: a second administrator / a student's e-mail are refused without an explicit flag; reset works and revokes sessions; the password is never printed", async () => {
     const other = adminCli({ ADMIN_EMAIL: "second@acca.example", ADMIN_PASSWORD: "Second-pass-12345" });
     assert(other.code === 3 && /administrator already exists/.test(other.out), `second admin: ${other.code} ${other.out}`); assert(!other.out.includes("Second-pass-12345"), "password printed");
@@ -331,6 +331,27 @@ try {
     assert(!log.includes("smtp-secret-pw-8231") && !log.includes("smtp-user-77"), "SMTP credentials in the server log");
     const { c: c2, p: p2 } = await adminLogin(); await p2.goto("/admin/settings"); const counters = await p2.locator("[data-email-counters]").innerText();
     assert(/Failed: [1-9]/.test(counters) && /cannot connect to the mail server/.test(counters), `counters: ${counters}`); await c2.close();
+  });
+  await step("audit log: operator CLIs, sign-ins, MFA, e-mail test and payment events are recorded without secrets; the chain verifies; the database refuses rewrites; tampering is detected", async () => {
+    const events = await db.auditEvent.findMany({ orderBy: { seq: "asc" } }); const actions = new Set(events.map((e) => e.action));
+    for (const a of ["admin.created", "admin.password_reset", "mfa.reset", "mfa.enabled", "auth.login", "email.test_sent", "payment.paid", "payment.refunded"]) assert(actions.has(a), `audit event missing: ${a} (have ${[...actions].join(", ")})`);
+    assert(events.find((e) => e.action === "payment.refunded").actorType === "system", "payment events are attributed to the system, not a person");
+    assert(events.find((e) => e.action === "mfa.reset").actorType === "cli", "operator CLI actions are attributed to the operator");
+    const blob = JSON.stringify(events);
+    for (const secret of ["Owner-pass", "smtp-secret-pw-8231", "smtp-user-77", mfaSecret, ...mfaRecovery, baseEnv.AUTH_SECRET]) assert(!blob.includes(secret), `a secret reached the audit log: ${secret.slice(0, 6)}…`);
+    const verify = () => spawnSync("npx", ["tsx", "scripts/audit-verify.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET }, encoding: "utf8" });
+    let v = verify(); assert(v.status === 0 && /intact: \d+ events/.test(v.stdout), `verify: ${v.stdout}${v.stderr}`);
+    const noKey = spawnSync("npx", ["tsx", "scripts/audit-verify.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: "", AUDIT_CHAIN_SECRET: "" }, encoding: "utf8" }); assert(noKey.status === 1, "verification without the key must refuse, not pass");
+    const wrongKey = spawnSync("npx", ["tsx", "scripts/audit-verify.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: "x".repeat(48) }, encoding: "utf8" }); assert(wrongKey.status === 2, "a different key must not validate the chain");
+    const first = events[0];
+    let rejected = false; try { await db.auditEvent.update({ where: { id: first.id }, data: { action: "x.y" } }); } catch (e) { rejected = /append-only/.test(String(e)); } assert(rejected, "UPDATE on the audit log was not rejected by the database");
+    rejected = false; try { await db.auditEvent.deleteMany({}); } catch (e) { rejected = /append-only/.test(String(e)); } assert(rejected, "DELETE on the audit log was not rejected by the database");
+    await db.$transaction([db.$executeRawUnsafe(`ALTER TABLE "AuditEvent" DISABLE TRIGGER USER`), db.$executeRawUnsafe(`UPDATE "AuditEvent" SET "outcome" = 'failed' WHERE "id" = '${first.id}'`), db.$executeRawUnsafe(`ALTER TABLE "AuditEvent" ENABLE TRIGGER USER`)]);
+    v = verify(); assert(v.status === 2 && v.stderr.includes(first.id), `tampering not detected: ${v.stdout}${v.stderr}`);
+    await db.$transaction([db.$executeRawUnsafe(`ALTER TABLE "AuditEvent" DISABLE TRIGGER USER`), db.$executeRawUnsafe(`UPDATE "AuditEvent" SET "outcome" = '${first.outcome}' WHERE "id" = '${first.id}'`), db.$executeRawUnsafe(`ALTER TABLE "AuditEvent" ENABLE TRIGGER USER`)]);
+    v = verify(); assert(v.status === 0, "chain should be intact after restoring the row");
+    const { c, p } = await adminLogin(); await p.goto("/admin/audit"); await p.locator("[data-audit-integrity='ok']").waitFor();
+    assert((await p.locator("[data-audit-action='payment.refunded']").count()) >= 1 && (await p.locator("[data-audit-action='mfa.reset']").count()) >= 1, "UI does not list the events"); await c.close();
   });
   await db.$disconnect();
 } catch (e) {

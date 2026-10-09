@@ -13,7 +13,8 @@ export type Permission =
   | "manage_students"
   | "manage_payments"
   | "view_statistics"
-  | "manage_settings";
+  | "manage_settings"
+  | "view_audit";
 
 const matrix: Record<Role, readonly Permission[]> = {
   STUDENT: ["learn"],
@@ -26,6 +27,7 @@ const matrix: Record<Role, readonly Permission[]> = {
     "manage_payments",
     "view_statistics",
     "manage_settings",
+    "view_audit",
   ],
 };
 

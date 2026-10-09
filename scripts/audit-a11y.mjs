@@ -9,7 +9,7 @@ const axeSource = readFileSync(createRequire(import.meta.url).resolve("axe-core/
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search?q=cost", "/login", "/register", "/forgot-password", "/verify/certificate/AU-2026-000001"];
 const STUDENT = ["/dashboard", "/notes", "/mistakes", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, "/test/bt-stakeholders-test", "/exams", "/progress", "/ranking", "/certificates", "/payments", "/notifications", "/profile"];
-const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/students", "/admin/access", "/admin/payments", "/admin/security", "/admin/certificates", "/admin/statistics", "/admin/settings"];
+const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/students", "/admin/access", "/admin/payments", "/admin/security", "/admin/audit", "/admin/certificates", "/admin/statistics", "/admin/settings"];
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
 let problems = 0, checks = 0;
 

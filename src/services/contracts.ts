@@ -1,4 +1,5 @@
 import type { ProcessOutcome, ProviderEvent } from "./payments/contracts";
+import type { AuditEventRec, AuditInput, AuditOutcome, AuditVerification } from "@/lib/audit-chain";
 import type {
   RankingResult,
   ActivityItem,
@@ -64,6 +65,17 @@ export interface AuthService {
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   /** Used by the session layer: re-reads the user on every request (role/status changes apply immediately). */
   getSessionUser(userId: string, tokenVersion: number): Promise<User | null>;
+}
+
+/* ---------------- audit log ---------------- */
+
+export interface AuditQuery { action?: string; outcome?: AuditOutcome; actor?: string; page?: number; pageSize?: number }
+export interface AuditService {
+  /** Appends to the chain. There is NO update or delete anywhere in this interface — by design. */
+  record(input: AuditInput): Promise<void>;
+  list(q?: AuditQuery): Promise<{ items: AuditEventRec[]; total: number }>;
+  /** Re-computes the chain (latest `limit` events, default all) and reports the first broken row. */
+  verify(limit?: number): Promise<AuditVerification>;
 }
 
 /* ---------------- second factor (administrators) ---------------- */
@@ -481,6 +493,7 @@ export interface SearchService {
 export interface Services {
   auth: AuthService;
   mfa: MfaService;
+  audit: AuditService;
   users: UserService;
   platforms: PlatformService;
   subjects: SubjectService;

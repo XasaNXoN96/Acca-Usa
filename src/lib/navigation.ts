@@ -56,6 +56,7 @@ export const adminNav: NavItem[] = [
   { labelKey: "payments", href: routes.adminSection("payments"), icon: "payments", permission: "manage_payments" },
   { labelKey: "statistics", href: routes.adminSection("statistics"), icon: "statistics", permission: "view_statistics" },
   { labelKey: "settings", href: routes.adminSection("settings"), icon: "settings", permission: "manage_settings" },
+  { labelKey: "audit", href: routes.adminSection("audit"), icon: "statistics", permission: "view_audit" },
   { labelKey: "security", href: routes.adminSection("security"), icon: "settings" },
 ];
 

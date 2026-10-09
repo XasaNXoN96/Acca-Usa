@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { services } from "@/services";
 import { getSessionForMfaSetup, startSession } from "@/lib/auth/session";
+import { audit, adminActor } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
 import { mfaCodeSchema } from "@/lib/validators/auth";
 
@@ -24,7 +25,11 @@ export async function confirmMfaAction(input: unknown): Promise<ConfirmMfaResult
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
 
   const res = await services.mfa.confirmEnrollment(loaded.session.user.id, parsed.data.code);
-  if (!res.ok) return { ok: false, code: res.code === "INVALID_CODE" ? "INVALID_CODE" : res.code === "ALREADY_ENABLED" ? "ALREADY_ENABLED" : "FAILED" };
+  if (!res.ok) {
+    if (res.code === "INVALID_CODE") await audit({ actor: adminActor(loaded.session.user), action: "mfa.enroll_failed", target: { type: "user", id: loaded.session.user.id }, outcome: "failed" });
+    return { ok: false, code: res.code === "INVALID_CODE" ? "INVALID_CODE" : res.code === "ALREADY_ENABLED" ? "ALREADY_ENABLED" : "FAILED" };
+  }
   await startSession(loaded.session.user, res.data.tokenVersion, { mfa: true });
+  await audit({ actor: adminActor(loaded.session.user), action: "mfa.enabled", target: { type: "user", id: loaded.session.user.id } });
   return { ok: true, recoveryCodes: res.data.recoveryCodes };
 }

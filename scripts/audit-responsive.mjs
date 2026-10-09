@@ -7,7 +7,7 @@ const WIDTHS = [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920];
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search", "/login", "/register"];
 const STUDENT = ["/dashboard", "/notes", "/mistakes", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, `/subject/bt/topic/${T1}/material/${T1}-video`, `/subject/bt/topic/${T1}/material/${T1}-pdf`, `/subject/bt/topic/${T1}/material/${T1}-audio`, `/subject/bt/topic/${T1}/material/${T1}-diagram`, `/subject/bt/topic/${T1}/material/${T1}-glossary`, "/exams", "/progress", "/ranking", "/ranking?platform=acca&subject=bt", "/certificates", "/certificates/cert-demo-bt", "/notifications", "/payments", "/profile"];
-const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/exams", "/admin/students", "/admin/payments", "/admin/security", "/admin/certificates", "/admin/notifications", "/admin/statistics", "/admin/statistics?subject=bt", "/admin/settings"];
+const ADMIN = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/exams", "/admin/students", "/admin/payments", "/admin/security", "/admin/audit", "/admin/certificates", "/admin/notifications", "/admin/statistics", "/admin/statistics?subject=bt", "/admin/settings"];
 const extra = process.argv.slice(2);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM });
 let problems = 0, checks = 0;

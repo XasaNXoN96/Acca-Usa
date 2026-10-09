@@ -63,7 +63,8 @@ export const routes = {
       | "payments"
       | "statistics"
       | "settings"
-      | "security",
+      | "security"
+      | "audit",
   ) => `/admin/${section}` as const,
 } as const;
 

@@ -14,6 +14,7 @@
  * In production the administrator must enrol two-factor authentication at the first sign-in (Admin → Security).
  */
 import { PrismaClient } from "@prisma/client";
+import { cliAudit } from "./lib/cli-audit";
 import { decideAdminBootstrap, passwordProblem } from "../src/lib/admin-bootstrap";
 import { hashPassword } from "../src/lib/auth/password";
 
@@ -55,6 +56,7 @@ async function main() {
     create: { email: adminEmail, name, passwordHash, role: "ADMIN", status: "active" },
     update: { name, passwordHash, role: "ADMIN", status: "active", deletedAt: null, tokenVersion: { increment: 1 } },
   });
+  await cliAudit(prisma, { action: `admin.${decision.action === "create" ? "created" : decision.action === "reset" ? "password_reset" : "promoted"}`, target: { type: "user", id: user.id }, meta: { adminEmail: user.email } });
   console.log(`Administrator ${decision.action === "create" ? "created" : decision.action === "reset" ? "password reset" : "promoted"}: ${user.email}`);
   console.log("Sign in at /login; in production you will be asked to set up two-factor authentication first.");
 }
