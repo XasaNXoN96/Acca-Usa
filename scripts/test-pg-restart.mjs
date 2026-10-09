@@ -55,7 +55,7 @@ try {
   await step("memory vs PostgreSQL parity: the same pages show the same content for the demo learner and the demo admin", async () => {
     const learner = ["/dashboard", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, "/exams", "/progress", "/ranking", "/certificates", "/payments", "/notifications"];
     const admin = ["/admin", "/admin/platforms", "/admin/subjects", "/admin/topics", "/admin/materials", "/admin/question-bank", "/admin/tests", "/admin/students", "/admin/access", "/admin/payments", "/admin/certificates", "/admin/statistics", "/admin/exams"];
-    const norm = (t) => t.replace(/\s+/g, " ").replace(/\b\d+ (minutes?|hours?|days?) ago\b/g, "<ago>").replace(/AU-\d{4}-\d{6}/g, "AU-<n>").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}, \d{4}\b/g, "<date>").trim();
+    const norm = (t) => t.replace(/\s+/g, " ").replace(/Couldn’t load this file\. Try opening it in a new tab\. ?/g, "") /* async <video> error: CI Chromium has no H.264 */.replace(/\b\d+ (minutes?|hours?|days?) ago\b/g, "<ago>").replace(/AU-\d{4}-\d{6}/g, "AU-<n>").replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}, \d{4}\b/g, "<date>").trim();
     const diffs = [];
     for (const [who, pages] of [["Student", learner], ["Admin", admin]]) {
       const a = await login(PORT, who); const b = await login(MEM_PORT, who);
