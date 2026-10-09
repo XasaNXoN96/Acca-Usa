@@ -60,6 +60,30 @@ Then add subjects / topics / materials / tests in Admin. Set a platform price in
 `/api/webhooks/payments` with the payment provider (`docs/PAYMENTS.md`). The bucket must have public access blocked
 (`docs/STORAGE.md`). Rate limiting is shared across instances through the `RateLimit` table.
 
+## Vercel (or any serverless host): what must be set
+
+`NEXT_PUBLIC_APP_MODE` is inlined **at build time** — it must exist in the project's environment variables for the *Production*
+environment before the build, not only at runtime. Everything below is validated when the server starts (`src/instrumentation.ts`
+→ `src/lib/env-check.ts`); if anything is missing the whole site answers **HTTP 500** and the Vercel function log says
+`Invalid environment (production mode): - NAME: reason` (names only, never values).
+
+| Group | Variables |
+| --- | --- |
+| Mode / data | `NEXT_PUBLIC_APP_MODE=production`, `DATA_PROVIDER=prisma`, `DATABASE_URL` (use the provider's **pooled** connection string for serverless), `APP_URL` (public https URL), `AUTH_SECRET` (≥ 32 random chars; never rotate casually — see docs/AUTH.md) |
+| Files | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (+ `S3_ENDPOINT` for R2/MinIO) |
+| E-mail | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` |
+| Payments | `PAYMENT_SECRET_KEY` (`sk_test_…` until you decide otherwise), `PAYMENT_WEBHOOK_SECRET` (`whsec_…`); never `STRIPE_API_BASE` |
+| Legal | `LEGAL_OPERATOR_NAME`, `LEGAL_CONTACT_EMAIL`, `LEGAL_DATA_LOCATION` (+ optional `LEGAL_*`, `LEGAL_TEXTS_REVIEWED`) |
+| Optional | `AUDIT_CHAIN_SECRET`, `MFA_REQUIRED` (production already forces MFA), media/STT variables |
+
+**Database migrations are NOT run by Vercel or by `next build`.** Run `npx prisma migrate deploy` against the production database
+from your pipeline (or your machine) **before** promoting a build that contains new migrations, then `npm run db:bootstrap` once,
+then `npm run admin:create`. A build deployed against a database that lacks a migration fails at the first query that touches it —
+reproduced on this code base: with `User.mfaSecretEnc` missing every sign-in (administrator *and* student) ends on "Something went
+wrong" and the log shows `PrismaClientKnownRequestError … code: 'P2022' … The column User.mfaSecretEnc does not exist`; with the
+`ConsentRecord` table missing, sign-in succeeds and the next page fails with `code: 'P2021'`. Check with
+`npx prisma migrate status` (all migrations "applied") when you see that page.
+
 ## Verifying a production build
 
 ```bash
