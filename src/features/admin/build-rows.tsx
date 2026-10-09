@@ -106,7 +106,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
             meta: m.kind === "video" || m.kind === "audio" ? (
               <span className="flex flex-col gap-1">
                 <span>{m.meta}{stored?.status && stored.status !== "READY" ? <> · <Badge variant={stored.status === "FAILED" || stored.status === "REJECTED" ? "destructive" : "warning"}>{ts(`mediaText.statuses.${stored.status === "UPLOADED" ? "QUEUED" : stored.status === "PROCESSING" ? "PROCESSING" : "FAILED"}` as never)}</Badge></> : null}</span>
-                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/media`} className="text-primary hover:underline">{ts("mediaText.link")}</Link>
+                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/media`} className="inline-flex min-h-8 items-center text-primary hover:underline">{ts("mediaText.link")}</Link>
               </span>
             ) : m.meta,
           }, { title: m.title, kind: m.kind, subject: m.subjectSlug, topic: m.topicId ?? "", body: m.body ?? "", fileId: m.fileId ?? "", visibility, publishAt: visibility === "scheduled" && m.publishAt ? m.publishAt.slice(0, 10) : "", position: String(m.position ?? 0) },
