@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import { TopicWorkspace } from "@/features/topic/topic-workspace";
+import { watermarkText } from "@/features/material/watermark";
 import { TopicFooter } from "@/features/topic/topic-footer";
 import { TopicTouch } from "@/features/topic/topic-touch";
 import { TopicTestCard } from "@/features/topic/topic-test-card";
@@ -95,6 +96,8 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
         keyPoints={topic.keyPoints}
         materials={ctx.materials}
         testId={testId}
+        canDownload={isAdmin}
+        watermark={watermarkText(session.user)}
       />
       <TopicFooter
         topicId={topic.id}

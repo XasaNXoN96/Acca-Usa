@@ -11,6 +11,7 @@ import { StudentShell } from "@/components/layout/student-shell";
 import { MaterialViewer, type ViewerFile } from "@/features/material/material-viewer";
 import { MaterialCompleteButton } from "@/features/material/complete-button";
 import { MaterialTouch } from "@/features/material/material-touch";
+import { watermarkText } from "@/features/material/watermark";
 import { services } from "@/services";
 import { getStorage } from "@/services/storage";
 import { routes } from "@/lib/routes";
@@ -110,7 +111,7 @@ async function MaterialContent({ params }: { params: Awaited<Params> }) {
       </header>
 
       <div className="min-w-0" data-material-kind={material.kind}>
-        <MaterialViewer material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }} file={file} />
+        <MaterialViewer material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }} file={file} canDownload={isAdmin} watermark={watermarkText(session.user)} />
       </div>
 
       <div className="space-y-4 border-t border-border pt-5">

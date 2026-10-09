@@ -26,7 +26,7 @@ function parseRange(header: string | null, size: number): { start: number; end: 
  */
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   // Plain-text errors in the viewer's language (the browser may show them directly, e.g. an opened download link).
-  const fail = async (status: number, key: "fileUnauthorized" | "fileForbidden" | "fileNotFound" | "fileRange", headers?: HeadersInit) =>
+  const fail = async (status: number, key: "fileUnauthorized" | "fileForbidden" | "fileNotFound" | "fileRange" | "fileViewOnly", headers?: HeadersInit) =>
     new Response((await getTranslations("states"))(key), { status, headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff", ...headers } });
   const session = await getSession();
   if (!session) return fail(401, "fileUnauthorized");
@@ -35,7 +35,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const meta = await storage.stat(id);
   if (!meta) return fail(404, "fileNotFound");
 
-  if (session.user.role === "STUDENT") {
+  const isStudent = session.user.role === "STUDENT";
+  // VIEW-ONLY policy, enforced here (hiding buttons is not protection): students never get an attachment / download
+  // response, and file types a browser cannot display inline (office files, archives, …) are not served to them at all.
+  if (isStudent && new URL(req.url).searchParams.has("download")) return fail(403, "fileViewOnly");
+  if (isStudent && !inlineMimes.has(meta.mime) && !/^text\/(plain|csv)/.test(meta.mime)) return fail(403, "fileViewOnly");
+
+  if (isStudent) {
     const material = await services.materials.getByFileId(id);
     if (material) {
       const subject = await services.subjects.getBySlug(material.subjectSlug);
@@ -62,13 +68,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (!opened) return fail(404, "fileNotFound");
 
   const url = new URL(req.url);
-  const inline = inlineMimes.has(meta.mime) && url.searchParams.get("download") !== "1";
+  const inline = isStudent || (inlineMimes.has(meta.mime) && url.searchParams.get("download") !== "1");
   const headers = new Headers({
     "Content-Type": meta.mime,
     "Content-Length": String(opened.end - opened.start + 1),
     "Accept-Ranges": "bytes",
     "X-Content-Type-Options": "nosniff",
-    "Cache-Control": "private, max-age=0, must-revalidate",
+    "Cache-Control": "private, no-store",
     "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(meta.name)}`,
   });
   if (range) headers.set("Content-Range", `bytes ${opened.start}-${opened.end}/${meta.size}`);

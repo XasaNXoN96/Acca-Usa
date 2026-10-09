@@ -1425,7 +1425,8 @@
     "fileUnauthorized": "Please sign in to open this file.",
     "fileForbidden": "You don’t have access to this file.",
     "fileNotFound": "File not found.",
-    "fileRange": "The requested range is not valid."
+    "fileRange": "The requested range is not valid.",
+    "fileViewOnly": "This material is view-only. Download is not available."
   },
   "theme": {
     "label": "Theme",
@@ -1500,7 +1501,21 @@
     "noMaterials": "No materials in this topic yet.",
     "pageOf": "Material {current} of {total}",
     "lockedTitle": "This topic is locked",
-    "lockedText": "Complete the previous topics to unlock this material."
+    "lockedText": "Complete the previous topics to unlock this material.",
+    "notPreviewable": "This file type cannot be shown in the browser. Ask the administrator for a viewable (PDF) version.",
+    "adminOnlyFile": "Administrators can download this file; students cannot open it. Provide a PDF version for learners.",
+    "pdf": {
+      "toolbar": "PDF reader controls",
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Page number",
+      "of": "of {total}",
+      "pageOf": "page {page} of {total}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "error": "The document could not be loaded.",
+      "viewOnly": "View-only document. It cannot be downloaded or printed."
+    }
   },
   "email": {
     "footer": "You receive this e-mail because you have an ACCA USA account.",

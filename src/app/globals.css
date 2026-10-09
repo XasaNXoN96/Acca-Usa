@@ -396,6 +396,8 @@
 .certificate-paper .paper-line { border-color: var(--paper-line); }
 
 @media print {
+  /* protected learning material is never printed */
+  [data-protected] { display: none !important; }
   @page { size: A4 landscape; margin: 10mm; }
   html, body { background: #fff !important; }
   body * { visibility: hidden !important; }

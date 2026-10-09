@@ -1425,7 +1425,8 @@
     "fileUnauthorized": "Bu faylni ochish uchun tizimga kiring.",
     "fileForbidden": "Bu faylga kirish huquqingiz yo‘q.",
     "fileNotFound": "Fayl topilmadi.",
-    "fileRange": "So‘ralgan diapazon yaroqsiz."
+    "fileRange": "So‘ralgan diapazon yaroqsiz.",
+    "fileViewOnly": "Bu material faqat ko‘rish uchun. Yuklab olish mavjud emas."
   },
   "theme": {
     "label": "Mavzu",
@@ -1500,7 +1501,21 @@
     "noMaterials": "Bu mavzuda hali materiallar yo‘q.",
     "pageOf": "{total} tadan {current}-material",
     "lockedTitle": "Mavzu yopiq",
-    "lockedText": "Bu materialni ochish uchun oldingi mavzularni tugating."
+    "lockedText": "Bu materialni ochish uchun oldingi mavzularni tugating.",
+    "notPreviewable": "Bu fayl turini brauzerda ko‘rsatib bo‘lmaydi. Administratordan ko‘rish uchun (PDF) variantni so‘rang.",
+    "adminOnlyFile": "Administrator bu faylni yuklab olishi mumkin, talabalar ochib bo‘lmaydi. Talabalar uchun PDF variantini qo‘shing.",
+    "pdf": {
+      "toolbar": "PDF boshqaruvi",
+      "previous": "Oldingi sahifa",
+      "next": "Keyingi sahifa",
+      "page": "Sahifa raqami",
+      "of": "/ {total}",
+      "pageOf": "{page}-sahifa, jami {total}",
+      "zoomIn": "Kattalashtirish",
+      "zoomOut": "Kichiklashtirish",
+      "error": "Hujjatni yuklab bo‘lmadi.",
+      "viewOnly": "Hujjat faqat ko‘rish uchun. Uni yuklab olish yoki chop etib bo‘lmaydi."
+    }
   },
   "email": {
     "footer": "Siz bu xatni ACCA USA hisobingiz borligi uchun olyapsiz.",

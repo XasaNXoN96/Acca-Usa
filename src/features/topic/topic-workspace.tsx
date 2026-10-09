@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
-import { MaterialCard, fileUrl } from "./material-viewers";
+import { MaterialCard } from "./material-viewers";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import type { Material, MaterialKind } from "@/types";
@@ -27,16 +27,19 @@ export function TopicWorkspace({
   keyPoints,
   materials,
   testId,
+  canDownload = false,
+  watermark = null,
 }: {
   description: string;
   keyPoints: string[];
   materials: Material[];
   testId: string | null;
+  canDownload?: boolean;
+  watermark?: string | null;
 }) {
   const t = useTranslations("topic");
   const k = useTranslations("subject.materialKinds");
   const [tab, setTab] = useState<TabId>("video");
-  const downloads = materials.filter((m) => m.fileId);
   const count = (id: TabId) => materials.filter((m) => (tabs.find((x) => x.id === id)!.kinds as readonly string[]).includes(m.kind)).length;
 
   return (
@@ -96,7 +99,7 @@ export function TopicWorkspace({
                     description={id === "notes" ? t("notesEmpty") : undefined}
                   />
                 ) : (
-                  list.map((m) => <MaterialCard key={m.id} material={m} />)
+                  list.map((m) => <MaterialCard key={m.id} material={m} canDownload={canDownload} watermark={watermark} fileInfo={null} />)
                 )}
               </TabsContent>
             );
@@ -118,20 +121,7 @@ export function TopicWorkspace({
           ) : null}
         </section>
 
-        <section aria-labelledby="topic-resources" className="space-y-3">
-          <h2 id="topic-resources" className="type-h3">{t("resources")}</h2>
-          {downloads.length === 0 ? (
-            <p className="type-small text-muted-foreground">{t("noResources")}</p>
-          ) : (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {downloads.map((m) => (
-                <li key={m.id} className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                  <span className="min-w-0 truncate font-medium">{m.title}</span>
-                  <a href={fileUrl(m.fileId!, true)} className="shrink-0 rounded-md px-2 py-1 font-semibold text-primary hover:underline">{t("download")}</a>
-                </li>
-              ))}
-            </ul>
-          )}
+        <section aria-labelledby="topic-test-cta" className="space-y-3 lg:hidden">
           {testId ? (
             <Button asChild variant="navy" className="lg:hidden">
               <Link href={routes.test(testId)}>

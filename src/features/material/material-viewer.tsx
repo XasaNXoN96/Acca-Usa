@@ -1,12 +1,13 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, Maximize2, Music } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { fileUrl } from "@/features/topic/material-viewers";
+import { fileUrl } from "@/lib/file-url";
+import { PdfReader } from "./pdf-reader";
+import { WatermarkOverlay } from "./watermark-overlay";
 import type { MaterialKind } from "@/types";
 
 export interface ViewerFile {
@@ -29,18 +30,31 @@ export interface ViewerMaterial {
  * topic checked on the server) — there is no public URL for a locked material. Text is rendered as plain text blocks,
  * never as HTML.
  */
-export function MaterialViewer({ material, file }: { material: ViewerMaterial; file: ViewerFile | null }) {
+export function MaterialViewer({ material, file, canDownload = false, watermark = null }: {
+  material: ViewerMaterial; file: ViewerFile | null;
+  /** ADMIN only (server-decided). Students never get a download / open-original control. */
+  canDownload?: boolean;
+  /** Personal watermark text (abbreviated name · tag · date); null = none (admin preview may still pass one). */
+  watermark?: string | null;
+}) {
   const t = useTranslations("material");
   const { kind, fileId, body, title } = material;
 
   if (kind === "notes") return <TextViewer body={body ?? ""} />;
   if (!fileId || !file) return <p className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">{t("noFile")}</p>;
 
-  if (kind === "video") return <VideoViewer id={fileId} title={title} mime={file.mime} />;
+  if (kind === "video") return <VideoViewer id={fileId} title={title} mime={file.mime} watermark={watermark} />;
   if (kind === "audio") return <AudioViewer id={fileId} title={title} mime={file.mime} />;
-  if (kind === "image") return <ImageViewer id={fileId} title={title} />;
-  if (file.mime === "application/pdf") return <PdfViewer id={fileId} title={title} />;
-  return <GeneralFile id={fileId} file={file} />;
+  if (kind === "image") return <ImageViewer id={fileId} title={title} watermark={watermark} />;
+  if (file.mime === "application/pdf") {
+    return (
+      <div className="space-y-3">
+        <PdfReader id={fileId} title={title} watermark={watermark} />
+        {canDownload ? <OpenButtons id={fileId} /> : null}
+      </div>
+    );
+  }
+  return <GeneralFile id={fileId} file={file} canDownload={canDownload} />;
 }
 
 function OpenButtons({ id }: { id: string }) {
@@ -57,23 +71,29 @@ function OpenButtons({ id }: { id: string }) {
   );
 }
 
-function VideoViewer({ id, title, mime }: { id: string; title: string; mime: string }) {
+function VideoViewer({ id, title, mime, watermark }: { id: string; title: string; mime: string; watermark: string | null }) {
   const t = useTranslations("material");
   const [failed, setFailed] = useState(false);
   return (
-    <div className="space-y-3">
-      {/* native controls: play / pause, seek bar (progress), current time and duration, fullscreen */}
-      <video
-        controls
-        preload="metadata"
-        playsInline
-        aria-label={title}
-        onError={() => setFailed(true)}
-        className="aspect-video max-h-[75dvh] w-full rounded-xl bg-black"
-      >
-        <source src={fileUrl(id)} type={mime} onError={() => setFailed(true)} />
-        {t("videoUnsupported")}
-      </video>
+    <div className="space-y-3" data-protected>
+      {/* native controls: play / pause, seek bar (progress), time, volume, fullscreen — `nodownload` removes the download item */}
+      <div className="relative">
+        <video
+          controls
+          controlsList="nodownload noremoteplayback"
+          disablePictureInPicture
+          preload="metadata"
+          playsInline
+          aria-label={title}
+          onError={() => setFailed(true)}
+          onContextMenu={(e) => e.preventDefault()}
+          className="aspect-video max-h-[75dvh] w-full rounded-xl bg-black"
+        >
+          <source src={fileUrl(id)} type={mime} onError={() => setFailed(true)} />
+          {t("videoUnsupported")}
+        </video>
+        {watermark ? <WatermarkOverlay text={watermark} /> : null}
+      </div>
       {failed ? <p role="alert" className="text-sm text-destructive">{t("loadError")}</p> : null}
     </div>
   );
@@ -88,7 +108,7 @@ function AudioViewer({ id, title, mime }: { id: string; title: string; mime: str
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-navy-soft text-navy"><Music className="size-6" aria-hidden /></span>
         <p className="min-w-0 flex-1 text-pretty font-semibold [overflow-wrap:anywhere]">{title}</p>
       </div>
-      <audio controls preload="metadata" aria-label={title} onError={() => setFailed(true)} className="w-full">
+      <audio controls controlsList="nodownload" preload="metadata" aria-label={title} onError={() => setFailed(true)} onContextMenu={(e) => e.preventDefault()} className="w-full">
         <source src={fileUrl(id)} type={mime} onError={() => setFailed(true)} />
         {t("audioUnsupported")}
       </audio>
@@ -97,38 +117,17 @@ function AudioViewer({ id, title, mime }: { id: string; title: string; mime: str
   );
 }
 
-function PdfViewer({ id, title }: { id: string; title: string }) {
-  const t = useTranslations("material");
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
-  return (
-    <div className="space-y-3">
-      <div className="relative">
-        {!loaded && !failed ? <Skeleton className="absolute inset-0 h-full w-full rounded-xl" /> : null}
-        <iframe
-          src={fileUrl(id)}
-          title={title}
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-          className="h-[70dvh] min-h-[24rem] w-full rounded-xl border border-border bg-muted"
-        />
-      </div>
-      {failed ? <p role="alert" className="text-sm text-destructive">{t("loadError")}</p> : <p className="type-small text-muted-foreground">{t("pdfHint")}</p>}
-      <OpenButtons id={id} />
-    </div>
-  );
-}
-
-function ImageViewer({ id, title }: { id: string; title: string }) {
+function ImageViewer({ id, title, watermark }: { id: string; title: string; watermark: string | null }) {
   const t = useTranslations("material");
   const [failed, setFailed] = useState(false);
   if (failed) return <p role="alert" className="text-sm text-destructive">{t("loadError")}</p>;
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" aria-label={`${t("enlarge")}: ${title}`} className="group relative block w-full overflow-hidden rounded-xl border border-border bg-muted">
+        <button type="button" data-protected aria-label={`${t("enlarge")}: ${title}`} className="group relative block w-full overflow-hidden rounded-xl border border-border bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element -- access-controlled API URL; next/image optimisation does not apply */}
-          <img src={fileUrl(id)} alt={title} onError={() => setFailed(true)} className="mx-auto max-h-[70dvh] w-full object-contain" />
+          <img src={fileUrl(id)} alt={title} draggable={false} onContextMenu={(e) => e.preventDefault()} onError={() => setFailed(true)} className="mx-auto max-h-[70dvh] w-full select-none object-contain" />
+          {watermark ? <WatermarkOverlay text={watermark} /> : null}
           <span className="absolute right-2 top-2 grid size-9 place-items-center rounded-lg bg-black/60 text-white" aria-hidden><Maximize2 className="size-4" /></span>
         </button>
       </DialogTrigger>
@@ -136,17 +135,21 @@ function ImageViewer({ id, title }: { id: string; title: string }) {
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{t("enlarge")}</DialogDescription>
         {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
-        <img src={fileUrl(id)} alt={title} className="mx-auto max-h-[80dvh] w-full object-contain" />
+        <div className="relative" data-protected>
+          <img src={fileUrl(id)} alt={title} draggable={false} onContextMenu={(e) => e.preventDefault()} className="mx-auto max-h-[80dvh] w-full select-none object-contain" />
+          {watermark ? <WatermarkOverlay text={watermark} /> : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function GeneralFile({ id, file }: { id: string; file: ViewerFile }) {
+function GeneralFile({ id, file, canDownload }: { id: string; file: ViewerFile; canDownload: boolean }) {
   const t = useTranslations("material");
   const rows: [string, string][] = [[t("fileName"), file.name], [t("fileType"), file.typeLabel], [t("fileSize"), file.sizeLabel]];
+  const textual = file.mime.startsWith("text/plain") || file.mime.startsWith("text/csv");
   return (
-    <div className="space-y-5 rounded-xl border border-border bg-card p-4 sm:p-6">
+    <div className="space-y-5 rounded-xl border border-border bg-card p-4 sm:p-6" data-protected>
       <div className="flex items-start gap-3">
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-navy-soft text-navy"><FileText className="size-6" aria-hidden /></span>
         <dl className="grid min-w-0 flex-1 gap-x-6 gap-y-3 sm:grid-cols-[auto_1fr]">
@@ -158,9 +161,24 @@ function GeneralFile({ id, file }: { id: string; file: ViewerFile }) {
           ))}
         </dl>
       </div>
-      <OpenButtons id={id} />
+      {textual ? <TextFile id={id} /> : <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground" data-view-only>{canDownload ? t("adminOnlyFile") : t("notPreviewable")}</p>}
+      {canDownload ? <OpenButtons id={id} /> : null}
     </div>
   );
+}
+
+/** Plain text / CSV files are shown as text (never as HTML). */
+function TextFile({ id }: { id: string }) {
+  const t = useTranslations("material");
+  const [text, setText] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch(fileUrl(id), { credentials: "same-origin" }).then((r) => (r.ok ? r.text() : Promise.reject(new Error("load")))).then((x) => live && setText(x.slice(0, 200_000))).catch(() => live && setFailed(true));
+    return () => { live = false; };
+  }, [id]);
+  if (failed) return <p role="alert" className="text-sm text-destructive">{t("loadError")}</p>;
+  return <pre className="max-h-[60dvh] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-3 text-sm [overflow-wrap:anywhere]" tabIndex={0}>{text ?? "…"}</pre>;
 }
 
 /** Plain-text → blocks: "# " headings, "• " / "- " lists, blank-line separated paragraphs. Never HTML. */

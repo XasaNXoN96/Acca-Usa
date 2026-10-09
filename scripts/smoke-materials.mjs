@@ -48,10 +48,16 @@ await step("video viewer: player, play/pause, duration, correct headers", async 
   else console.log("      (note: this Chromium build has no H.264 — playback not exercised, element + headers verified)");
   assert(await v.evaluate((el) => el.controls), "no controls");
 });
-await step("PDF viewer: inline iframe via the protected URL, open/download actions", async () => {
-  await s.goto(M("pdf")); const f = s.locator("iframe"); await f.waitFor(); assert((await f.getAttribute("src")) === "/api/files/seed-bt-overview", "iframe src");
-  const r = await sc.request.get("/api/files/seed-bt-overview"); assert(r.headers()["content-type"] === "application/pdf" && /inline/.test(r.headers()["content-disposition"]), "pdf headers");
-  await s.getByRole("link", { name: "Open" }).waitFor(); await s.getByRole("link", { name: "Download" }).waitFor();
+await step("PDF viewer: controlled reader (canvas, page + zoom controls, watermark) — NO iframe, Open, Download or Print for the student", async () => {
+  await s.goto(M("pdf")); const r = s.locator("[data-pdf-reader]"); await r.waitFor(); assert((await r.getAttribute("data-src")) === "/api/files/seed-bt-overview", "reader source");
+  assert((await s.locator("iframe").count()) === 0, "browser PDF viewer (with its download / print toolbar) is embedded");
+  await s.waitForFunction(() => { const c = document.querySelector("[data-pdf-reader] canvas"); return c && c.width > 100 && c.getContext("2d").getImageData(0, 0, c.width, c.height).data.some((v, i) => i % 4 !== 3 && v < 250); }, null, { timeout: 20000 });
+  for (const name of ["Previous page", "Next page", "Zoom in", "Zoom out"]) await s.getByRole("button", { name }).waitFor();
+  const before = await s.locator("[data-pdf-reader] canvas").evaluate((c) => c.width); await s.getByRole("button", { name: "Zoom in" }).click(); await s.waitForFunction((w) => document.querySelector("[data-pdf-reader] canvas").width > w, before);
+  await s.getByText("View-only document. It cannot be downloaded or printed.").waitFor();
+  for (const name of ["Open", "Download", "Print"]) assert((await s.getByRole("link", { name }).count()) + (await s.getByRole("button", { name }).count()) === 0, `${name} control present`);
+  const res = await sc.request.get("/api/files/seed-bt-overview"); assert(res.headers()["content-type"] === "application/pdf" && /inline/.test(res.headers()["content-disposition"]) && /no-store/.test(res.headers()["cache-control"]), "pdf headers");
+  await s.emulateMedia({ media: "print" }); assert(await s.locator("[data-pdf-reader]").evaluate((el) => getComputedStyle(el).display) === "none", "the reader is printed"); await s.emulateMedia({ media: "screen" });
 });
 await step("Text viewer: formatted paragraphs and list", async () => {
   await s.goto(M("notes")); const a = s.locator("article"); await a.waitFor(); assert((await a.locator("p").count()) >= 1 && (await a.locator("li").count()) >= 3, "text blocks");
@@ -66,10 +72,22 @@ await step("Audio viewer: player with duration", async () => {
   const d = await a.evaluate((el) => el.duration); assert(d > 5 && d < 7, `duration ${d}`);
   await a.evaluate((el) => el.play()); await s.waitForFunction(() => !document.querySelector("audio").paused); await a.evaluate((el) => el.pause());
 });
-await step("General file: name, type, size and Open/Download", async () => {
+await step("General file: student sees name / type / size and the TEXT, with no Open / Download; the server refuses downloads", async () => {
   await s.goto(M("glossary")); await s.getByText("glossary.txt").waitFor(); await s.getByText("TXT", { exact: true }).waitFor(); await s.getByText(/\d+ KB|\d+(\.\d)? MB/).first().waitFor();
-  assert((await s.getByRole("link", { name: "Download" }).getAttribute("href")).includes("download=1"), "download href");
-  const r = await sc.request.get("/api/files/seed-bt-glossary?download=1"); assert(/attachment/.test(r.headers()["content-disposition"]), "not an attachment");
+  await s.getByText(/Stakeholder: any person or group affected/).waitFor();
+  for (const name of ["Open", "Download"]) assert((await s.getByRole("link", { name }).count()) === 0, `${name} link present`);
+  const dl = await sc.request.get("/api/files/seed-bt-glossary?download=1"); assert(dl.status() === 403, `student download status ${dl.status()}`); assert(!/attachment/.test(dl.headers()["content-disposition"] ?? ""), "attachment for a student");
+  const ok = await sc.request.get("/api/files/seed-bt-glossary"); assert(ok.status() === 200 && /inline/.test(ok.headers()["content-disposition"]), "inline text");
+  assert((await ac.request.get("/api/files/seed-bt-glossary?download=1")).headers()["content-disposition"]?.startsWith("attachment"), "admin cannot download");
+});
+await step("View-only policy on every material page: no download / open-original / print control for the student; direct download URLs refused", async () => {
+  for (const k of ["notes", "video", "pdf", "audio", "diagram", "glossary"]) {
+    await s.goto(M(k)); await s.waitForLoadState("networkidle"); const html = await s.content();
+    assert(!/download=1|download="|>Download<|Open original|Download PDF/i.test(html.replace(/<script[\s\S]*?<\/script>/g, "")), `${k}: a download affordance is present`);
+    assert((await s.locator("a[href*='/api/files/']").count()) === 0, `${k}: a direct file link is present`);
+  }
+  await s.goto(M("video")); assert((await s.locator("video").getAttribute("controlslist")) === "nodownload noremoteplayback", "video controlslist");
+  for (const id of ["seed-bt-lecture", "seed-bt-overview", "seed-bt-audio", "seed-bt-diagram", "seed-bt-glossary"]) assert((await sc.request.get(`/api/files/${id}?download=1`)).status() === 403, `${id}: ?download=1`);
 });
 await step("Mark as completed → ✓ Completed (persists after reload, shows in topic list, can be undone)", async () => {
   await s.goto(M("notes")); const b = s.getByRole("button", { name: "Mark as completed" }); await b.click();

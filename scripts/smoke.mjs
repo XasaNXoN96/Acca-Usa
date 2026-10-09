@@ -251,10 +251,10 @@ await step("student: subject → topic → notes + media render", async () => {
   await stu.getByText("These are the smoke test notes for the topic.").waitFor();
   await stu.getByRole("tab", { name: "Video" }).click(); assert(await stu.locator("video").count() === 1, "video element missing");
   await stu.getByRole("tab", { name: "Audio" }).click(); assert(await stu.locator("audio").count() === 1, "audio element missing");
-  await stu.getByRole("tab", { name: "PDF" }).click(); assert(await stu.locator("iframe").count() >= 1, "pdf iframe missing");
+  await stu.getByRole("tab", { name: "PDF" }).click(); assert(await stu.locator("[data-pdf-reader]").count() >= 1, "pdf reader missing"); assert(await stu.locator("iframe").count() === 0, "browser pdf viewer embedded");
 });
 await step("student can fetch an enrolled file; unauthenticated cannot", async () => {
-  const href = await stu.locator("iframe").first().getAttribute("src");
+  const href = await stu.locator("[data-pdf-reader]").first().getAttribute("data-src");
   const ok = await stu.request.get(href); assert(ok.status() === 200 && (ok.headers()["content-type"] ?? "").includes("pdf"), `status ${ok.status()}`);
   assert(ok.headers()["x-content-type-options"] === "nosniff", "nosniff missing");
   const anon = await ctx(); const r = await anon.request.get(href); assert(r.status() === 401, `anon status ${r.status()}`); await anon.close();
