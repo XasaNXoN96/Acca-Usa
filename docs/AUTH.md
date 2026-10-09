@@ -50,3 +50,23 @@ the limiter falls back to the local counter rather than failing open.
 Demo credentials are shown on the login page and exist only in the demo dataset (`NEXT_PUBLIC_APP_MODE=demo`). In
 production there are no seeded accounts; the first administrator is created with `npm run admin:create` (see
 `docs/DEPLOYMENT_MODES.md`). Auth.js is not used (removed) — the session layer above is the single mechanism.
+
+## First administrator (production)
+
+No demo account exists in production and **there is no public path to staff access**: registration only ever creates a student
+(any `role` / `status` sent with the request is ignored — tested on both providers), and promoting someone is an administrator action.
+
+```
+ADMIN_EMAIL=owner@your-domain ADMIN_NAME="Owner" ADMIN_PASSWORD='…≥12 chars, letters + digits…' DATABASE_URL=… npm run admin:create
+```
+
+| Situation | Result |
+| --- | --- |
+| no administrator yet | the first administrator is created |
+| e-mail already belongs to an administrator | operator **password reset**; all of that admin's sessions are revoked (`tokenVersion`) |
+| e-mail belongs to a student | refused unless `ADMIN_PROMOTE_EXISTING=1` |
+| another administrator already exists | refused unless `ADMIN_ALLOW_ADDITIONAL=1` — create further admins in **Admin → Students** instead |
+
+The password is read from the environment (not argv, so it stays out of shell history and process lists), hashed with scrypt, and never printed.
+Run the script from a trusted shell with database access, then unset the variable. Rules: `src/lib/admin-bootstrap.ts`; tests: `npm run test:admin`
+(both providers) and `npm run test:production` (real CLI runs against a throw-away PostgreSQL).

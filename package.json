@@ -27,6 +27,7 @@
     "test:media-pipeline": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/media-pipeline.ts",
     "test:mistakes": "tsx scripts/integration/mistakes.ts",
     "test:exams": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/exams.ts",
+    "test:admin": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/admin-bootstrap.ts",
     "email:test": "tsx scripts/email-test.ts",
     "test:notes": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/notes.ts",
     "test:media-text": "NEXT_PUBLIC_APP_MODE=demo DATA_PROVIDER=memory node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/media-text.ts",

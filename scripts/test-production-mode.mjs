@@ -141,6 +141,24 @@ try {
   const { PrismaClient } = await import("@prisma/client");
   const db = new PrismaClient({ datasources: { db: { url: DB_URL } } });
   const user = await db.user.findUnique({ where: { email: studentEmail } });
+
+  const adminCli = (env) => { const r = spawnSync("npx", ["tsx", "scripts/create-admin.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, ...env }, encoding: "utf8" }); return { code: r.status, out: `${r.stdout}${r.stderr}` }; };
+  await step("admin:create is safe: a second administrator / a student's e-mail are refused without an explicit flag; reset works and revokes sessions; the password is never printed", async () => {
+    const other = adminCli({ ADMIN_EMAIL: "second@acca.example", ADMIN_PASSWORD: "Second-pass-12345" });
+    assert(other.code === 3 && /administrator already exists/.test(other.out), `second admin: ${other.code} ${other.out}`); assert(!other.out.includes("Second-pass-12345"), "password printed");
+    const student = adminCli({ ADMIN_EMAIL: studentEmail, ADMIN_PASSWORD: "Promote-pass-12345" }); assert(student.code === 3 && /student account/.test(student.out), `student: ${student.code} ${student.out}`);
+    assert((await db.user.findUnique({ where: { email: studentEmail } })).role === "STUDENT", "the student was promoted without the flag");
+    assert(adminCli({ ADMIN_EMAIL: "owner@acca.example", ADMIN_PASSWORD: "short" }).code === 1, "weak password accepted"); assert(adminCli({ ADMIN_EMAIL: "not-an-email", ADMIN_PASSWORD: "Whatever-pass-12345" }).code === 1, "bad e-mail accepted");
+    const tv = (await db.user.findUnique({ where: { email: "owner@acca.example" } })).tokenVersion;
+    const reset = adminCli({ ADMIN_EMAIL: "owner@acca.example", ADMIN_PASSWORD: "Owner-pass-67890" }); assert(reset.code === 0 && /password reset/.test(reset.out) && !reset.out.includes("Owner-pass-67890"), `reset: ${reset.out}`);
+    assert((await db.user.findUnique({ where: { email: "owner@acca.example" } })).tokenVersion === tv + 1, "sessions of the reset administrator were not revoked");
+    const c = await ctx(); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.getByText(/incorrect|invalid/i).first().waitFor();
+    assert(adminCli({ ADMIN_EMAIL: "owner@acca.example", ADMIN_PASSWORD: "Owner-pass-12345" }).code === 0, "restore"); await c.close();
+    await db.user.create({ data: { name: "Promote Me", email: "promote.me@example.com", passwordHash: "x", role: "STUDENT", status: "active" } });
+    const promote = adminCli({ ADMIN_EMAIL: "promote.me@example.com", ADMIN_PASSWORD: "Promote-pass-12345", ADMIN_PROMOTE_EXISTING: "1" }); assert(promote.code === 3 && /already exists/.test(promote.out), "promotion must still respect the single-admin rule");
+    const both = adminCli({ ADMIN_EMAIL: "promote.me@example.com", ADMIN_PASSWORD: "Promote-pass-12345", ADMIN_PROMOTE_EXISTING: "1", ADMIN_ALLOW_ADDITIONAL: "1" }); assert(both.code === 0 && /promoted/.test(both.out), `explicit promotion: ${both.out}`);
+    assert((await db.user.findUnique({ where: { email: "promote.me@example.com" } })).role === "ADMIN", "promotion not applied");
+  });
   const secret = baseEnv.PAYMENT_WEBHOOK_SECRET;
   const post = async (event, { sign = true, stale = false } = {}) => {
     const body = JSON.stringify(event); const t = Math.floor(Date.now() / 1000) - (stale ? 3600 : 0);
