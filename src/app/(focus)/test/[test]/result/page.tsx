@@ -62,9 +62,11 @@ export default async function ResultPage({ params, searchParams }: { params: Par
         <ProgressUpdate result={result} />
 
         <div className="mx-auto flex w-full max-w-xl flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg" className="flex-1">
-            <a href="#review">{t("review")}</a>
-          </Button>
+          {result.reviewHidden ? null : (
+            <Button asChild size="lg" className="flex-1">
+              <a href="#review">{t("review")}</a>
+            </Button>
+          )}
           {canRetake ? (
             <Button asChild size="lg" variant="outline-primary" className="flex-1">
               <Link href={routes.test(result.testId)}>{t("retake")}</Link>
@@ -75,7 +77,7 @@ export default async function ResultPage({ params, searchParams }: { params: Par
             </Button>
           )}
         </div>
-        {result.incorrect + result.unanswered > 0 ? (
+        {!result.reviewHidden && result.incorrect + result.unanswered > 0 ? (
           <p className="text-center"><Button asChild variant="ghost" size="sm"><Link href={routes.mistakes}>{t("allMistakes")}</Link></Button></p>
         ) : null}
         {summary && summary.attemptsAllowed > 0 ? (
@@ -86,7 +88,11 @@ export default async function ResultPage({ params, searchParams }: { params: Par
         {history.length > 1 ? <AttemptHistory items={history} current={result.attemptId} /> : null}
 
         <div className="pt-6">
-          <ReviewList items={result.review} />
+          {result.reviewHidden ? (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground" data-review-hidden={result.reviewHidden}>
+              {result.reviewHidden === "after_close" ? t("reviewAfterClose") : t("reviewNever")}
+            </p>
+          ) : <ReviewList items={result.review} />}
         </div>
       </main>
     </>

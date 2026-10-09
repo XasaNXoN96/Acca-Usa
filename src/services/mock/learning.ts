@@ -1,14 +1,14 @@
 import "server-only";
 import { materialLive } from "../domain/records";
 import type { CertificateService, ExamService, ProgressService, RankingService } from "../contracts";
-import type { Certificate, RankingEntry } from "@/types";
+import type { Certificate, Exam, RankingEntry } from "@/types";
 import type { PlatformSlug } from "@/types";
-import { exams } from "@/data/mock/people";
+import { windowStatus } from "../domain/exams";
 import { publicName } from "../domain/names";
 import { routes } from "@/lib/routes";
-import { getDb, nowIso, platformOfSubject, pushActivity, pushNotification, topicVisible, userProgress } from "./db";
+import { getDb, nowIso, platformOfSubject, pushActivity, pushNotification, subjectVisible, topicVisible, userProgress } from "./db";
 import { activeCertificate, createCertificate, issueIfEarned } from "./certs-core";
-import { isEnrolled, platformProgress, subjectProgress, topicEarned, topicPercent, visibleSubjects } from "./calc";
+import { enrollmentActive, isEnrolled, platformProgress, subjectProgress, topicEarned, topicPercent, visibleSubjects } from "./calc";
 
 export const progressService: ProgressService = {
   async getTopicProgress(userId) {
@@ -194,7 +194,24 @@ export const certificateService: CertificateService = {
 };
 
 export const examService: ExamService = {
-  async list() {
-    return [...exams].sort((a, b) => a.startsAt.localeCompare(b.startsAt)); // demo fixtures: illustrative only — never startable, scores are sample data
+  /** Exams are Tests with kind = "exam". Nothing is invented: no exam rows → an empty list. */
+  async list(userId) {
+    const db = getDb();
+    const now = Date.now();
+    const rows = db.tests.filter((t) => t.kind === "exam" && t.published && !t.deletedAt && subjectVisible(db, db.subjects.find((s) => s.slug === t.subjectSlug)));
+    return rows
+      .map((t): Exam => {
+        const subject = db.subjects.find((s) => s.slug === t.subjectSlug)!;
+        const platform = platformOfSubject(db, subject);
+        const mine = userId ? db.attempts.filter((a) => a.userId === userId && a.testId === t.id && a.result) : [];
+        const status = windowStatus(t, now);
+        const enrolled = !!userId && db.enrollments.some((e) => e.userId === userId && e.platform === platform && enrollmentActive(e));
+        return {
+          id: t.id, title: t.title, platform, subjectSlug: t.subjectSlug, startsAt: t.opensAt ?? t.createdAt, closesAt: t.closesAt, durationMinutes: t.durationMinutes, status,
+          score: mine.length ? Math.max(...mine.map((a) => a.result!.scorePercent)) : undefined, startable: status === "open" && enrolled,
+          passMark: t.passMark, attemptsAllowed: t.attemptsAllowed, attemptsUsed: userId ? mine.length : undefined,
+        };
+      })
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   },
 };

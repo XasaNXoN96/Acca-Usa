@@ -152,7 +152,17 @@ export interface TestSummary {
   /** Best score for the current user in %, if attempted. */
   bestScore?: number;
   archived?: boolean;
+  /** "exam" = scheduled assessment with an availability window; absent = topic test. */
+  kind?: "topic_test" | "exam";
+  /** exams: ISO time the exam opens / closes (UTC); absent = no limit on that side */
+  opensAt?: string;
+  closesAt?: string;
+  /** exams: when the question-by-question review becomes visible to the student */
+  reviewPolicy?: ReviewPolicy;
 }
+
+export const reviewPolicies = ["IMMEDIATE", "AFTER_CLOSE", "NEVER"] as const;
+export type ReviewPolicy = (typeof reviewPolicies)[number];
 
 /** What the browser receives. Correct answers and explanations never leave the server before submission. */
 export interface PublicQuestion {
@@ -215,6 +225,8 @@ export interface TestResult {
   /** Subject progress before/after this attempt — drives the "progress update" block. */
   progressBefore: number;
   progressAfter: number;
+  /** Set when the exam settings hide the review for now: `review` is then empty. */
+  reviewHidden?: "after_close" | "never";
 }
 
 export interface ResultListItem {
@@ -461,6 +473,11 @@ export interface Exam {
   score?: number;
   /** The current learner can open the exam player now (window open, access active). Demo fixtures are never startable. */
   startable?: boolean;
+  closesAt?: string;
+  passMark?: number;
+  /** 0 = unlimited */
+  attemptsAllowed?: number;
+  attemptsUsed?: number;
 }
 
 export interface StudentRecord extends User {

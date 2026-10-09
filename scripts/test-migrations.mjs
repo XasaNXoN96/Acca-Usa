@@ -46,6 +46,7 @@ try {
     sql(urlB, `INSERT INTO "Level"(id,"platformSlug","order",name) VALUES ('l1','acca',1,'Applied Knowledge')`);
     sql(urlB, `INSERT INTO "Subject"(slug,code,name,"levelId","updatedAt") VALUES ('bt','BT','Business and Technology','l1',now())`);
     sql(urlB, `INSERT INTO "Material"(id,"subjectSlug",kind,title,body,"updatedAt") VALUES ('m-legacy-1','bt','notes','Legacy notes','Some text that existed before publication states',now())`);
+    sql(urlB, `INSERT INTO "Test"(id,"subjectSlug",title,"durationMinutes","passMark","updatedAt") VALUES ('t-legacy-1','bt','Legacy test',30,60,now())`);
     sql(urlB, `INSERT INTO "StoredFile"(id,"storageKey",name,mime,size,"ownerId") VALUES ('f-legacy-1','files/f-legacy-1','lecture.mp4','video/mp4',1234,'u1')`);
     // now apply everything that is pending using the REAL migration folder
     must("npx", ["prisma", "migrate", "deploy"], { DATABASE_URL: urlB });
@@ -58,6 +59,8 @@ try {
     assert.equal(sql(urlB, `SELECT "publishAt" IS NULL AND position = 0 FROM "Material" WHERE id='m-legacy-1'`), "t");
     assert.equal(sql(urlB, `SELECT body FROM "Material" WHERE id='m-legacy-1'`), "Some text that existed before publication states", "content untouched");
     assert.equal(sql(urlB, `SELECT count(*) FROM "MaterialVersion"`), "0");
+    assert.equal(sql(urlB, `SELECT "reviewPolicy" FROM "Test" WHERE id='t-legacy-1'`), "IMMEDIATE", "existing tests keep showing their review immediately");
+    assert.equal(sql(urlB, `SELECT kind FROM "Test" WHERE id='t-legacy-1'`), "topic_test");
     assert.equal(sql(urlB, `SELECT status FROM "StoredFile" WHERE id='f-legacy-1'`), "READY", "files uploaded before the media pipeline stay servable (READY)");
     assert.equal(sql(urlB, `SELECT attempts FROM "StoredFile" WHERE id='f-legacy-1'`), "0"); assert.equal(sql(urlB, `SELECT "playbackFileId" IS NULL FROM "StoredFile" WHERE id='f-legacy-1'`), "t");
   });

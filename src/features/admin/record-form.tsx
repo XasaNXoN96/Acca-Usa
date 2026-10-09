@@ -68,6 +68,8 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
             return <TextField key={f.name} {...common} type="number" inputMode="numeric" registration={form.register(f.name)} />;
           case "date":
             return <TextField key={f.name} {...common} type="date" registration={form.register(f.name)} />;
+          case "datetime":
+            return <TextField key={f.name} {...common} type="datetime-local" registration={form.register(f.name)} />;
           case "email":
             return <TextField key={f.name} {...common} type="email" autoComplete="off" registration={form.register(f.name)} />;
           case "checkbox":

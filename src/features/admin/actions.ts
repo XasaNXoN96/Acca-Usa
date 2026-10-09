@@ -104,6 +104,18 @@ export async function saveResourceAction(resource: string, id: string | null, ra
       res = id ? await services.tests.update(id, input) : await services.tests.create(input);
       break;
     }
+    case "exams": {
+      const at = (v: unknown) => (v ? `${String(v)}:00.000Z` : null); // the form's time is UTC
+      const input = {
+        kind: "exam" as const, title: String(d.title), description: String(d.description ?? ""), subjectSlug: String(d.subject),
+        durationMinutes: Number(d.durationMinutes), passMark: Number(d.passMark), attemptsAllowed: Number(d.attemptsAllowed),
+        randomizeQuestions: Boolean(d.randomizeQuestions), randomizeAnswers: Boolean(d.randomizeAnswers),
+        questionIds: d.questionIds as string[], published: Boolean(d.published),
+        opensAt: at(d.opensAt), closesAt: at(d.closesAt), reviewPolicy: d.reviewPolicy as "IMMEDIATE" | "AFTER_CLOSE" | "NEVER",
+      };
+      res = id ? await services.tests.update(id, input) : await services.tests.create(input);
+      break;
+    }
     case "access": {
       // Grant / change access. The row id is `<userId>|<platform>`; the browser never sets who the grant is for except through the form's student field.
       res = await services.enrollments.grant({ userId: String(d.student), platform: d.platform as never, expiresAt: d.expiresAt ? `${String(d.expiresAt)}T23:59:59.000Z` : null });
@@ -147,6 +159,7 @@ export async function setArchivedAction(resource: string, id: string, archived: 
     case "question-bank": res = await services.questions.setArchived(id, archived); break;
     case "tests": res = await services.tests.setArchived(id, archived); break;
     case "students": res = await services.users.setArchived(id, archived); break;
+    case "exams": res = await services.tests.setArchived(id, archived); break;
     case "certificates": res = await services.certificates.setRevoked(id, archived); break;
     case "access": {
       const [userId, platform] = id.split("|");

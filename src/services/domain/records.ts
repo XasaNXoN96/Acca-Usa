@@ -1,4 +1,4 @@
-import type { Difficulty, Locale, Material, PlatformSlug, Role, TestResult, Topic, UserStatus } from "@/types";
+import type { Difficulty, Locale, Material, PlatformSlug, ReviewPolicy, Role, TestResult, Topic, UserStatus } from "@/types";
 
 /** Record shapes shared by every data provider (in-memory demo, Prisma). Pure types — no server-only imports. */
 export interface UserRec {
@@ -64,6 +64,11 @@ export interface TestRec {
   randomizeAnswers: boolean;
   published: boolean;
   publishedAt?: string;
+  /** absent = topic test */
+  kind?: "topic_test" | "exam";
+  opensAt?: string;
+  closesAt?: string;
+  reviewPolicy?: ReviewPolicy;
   createdAt: string;
   deletedAt?: string;
 }

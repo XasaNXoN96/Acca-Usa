@@ -9,6 +9,7 @@ import {
   type AttemptRec, type Db, type QuestionRec, type TestRec,
 } from "./db";
 import { subjectProgress } from "./calc";
+import { applyReviewPolicy, attemptDeadline, startBlock, windowInvalid } from "../domain/exams";
 
 const GRACE_MS = 60_000;
 const LETTERS = ["a", "b", "c", "d"] as const;
@@ -104,6 +105,7 @@ function summary(db: Db, t: TestRec, userId?: string): TestSummary {
     totalPoints: qs.reduce((a, q) => a + q.points, 0), durationMinutes: t.durationMinutes, passMark: t.passMark,
     attemptsAllowed: t.attemptsAllowed, attemptsUsed, randomizeQuestions: t.randomizeQuestions, randomizeAnswers: t.randomizeAnswers,
     published: t.published, publishedAt: t.publishedAt, bestScore, archived: !!t.deletedAt,
+    kind: t.kind ?? "topic_test", opensAt: t.opensAt, closesAt: t.closesAt, reviewPolicy: t.reviewPolicy ?? "IMMEDIATE",
   };
 }
 
@@ -218,11 +220,11 @@ const toStart = (a: AttemptRec): AttemptStart => ({ attemptId: a.id, draft: draf
 export const testService: TestService = {
   async listForSubject(slug, userId) {
     const db = getDb();
-    return db.tests.filter((t) => t.subjectSlug === slug && studentVisible(db, t)).map((t) => summary(db, t, userId));
+    return db.tests.filter((t) => (t.kind ?? "topic_test") === "topic_test" && t.subjectSlug === slug && studentVisible(db, t)).map((t) => summary(db, t, userId));
   },
   async listPublished(userId) {
     const db = getDb();
-    return db.tests.filter((t) => studentVisible(db, t)).map((t) => summary(db, t, userId));
+    return db.tests.filter((t) => (t.kind ?? "topic_test") === "topic_test" && studentVisible(db, t)).map((t) => summary(db, t, userId));
   },
   async getSummary(testId, userId) {
     const db = getDb();
@@ -251,13 +253,16 @@ export const testService: TestService = {
     if (!studentVisible(db, t)) return { ok: false, code: "NOT_FOUND" };
     const existing = expireIfNeeded(db, inProgress(db, userId, testId));
     if (existing && existing.status === "IN_PROGRESS") return { ok: true, data: toStart(existing) };
+    // Exams run inside their availability window, and never past its end (server clock, not the browser's).
+    const blocked = startBlock(t);
+    if (blocked) return { ok: false, code: blocked };
     if (t.attemptsAllowed > 0 && db.attempts.filter((x) => x.userId === userId && x.testId === testId && x.status === "SUBMITTED").length >= t.attemptsAllowed) {
       return { ok: false, code: "ATTEMPTS_EXHAUSTED" };
     }
     const startedAt = new Date();
     const a: AttemptRec = {
       id: newId("att"), userId, testId, status: "IN_PROGRESS", startedAt: startedAt.toISOString(),
-      deadlineAt: new Date(startedAt.getTime() + t.durationMinutes * 60_000).toISOString(),
+      deadlineAt: new Date(attemptDeadline(t, startedAt.getTime(), t.durationMinutes)).toISOString(),
       answers: {}, flagged: [], currentIndex: 0, elapsedSeconds: 0,
     };
     db.attempts.push(a);
@@ -291,8 +296,8 @@ export const testService: TestService = {
   async getResult(testId, userId, attemptId) {
     const db = getDb();
     const mine = db.attempts.filter((a) => a.userId === userId && a.testId === testId && a.status === "SUBMITTED" && a.result);
-    if (attemptId) return mine.find((a) => a.id === attemptId)?.result ?? null;
-    return mine.sort((x, y) => (y.submittedAt ?? "").localeCompare(x.submittedAt ?? ""))[0]?.result ?? null;
+    const found = attemptId ? mine.find((a) => a.id === attemptId)?.result : mine.sort((x, y) => (y.submittedAt ?? "").localeCompare(x.submittedAt ?? ""))[0]?.result;
+    return found ? applyReviewPolicy(found, db.tests.find((x) => x.id === testId)) : null; // the stored result stays untouched
   },
   async listResults(userId, limit = 20): Promise<ResultListItem[]> {
     return getDb().attempts
@@ -304,9 +309,9 @@ export const testService: TestService = {
         scorePercent: a.result!.scorePercent, passed: a.result!.passed, submittedAt: a.submittedAt!,
       }));
   },
-  async listAllForAdmin() {
+  async listAllForAdmin(kind = "topic_test") {
     const db = getDb();
-    return db.tests.map((t) => ({ ...summary(db, t), questionIds: t.questionIds }));
+    return db.tests.filter((t) => (t.kind ?? "topic_test") === kind).map((t) => ({ ...summary(db, t), questionIds: t.questionIds }));
   },
   async create(input) {
     const db = getDb();
@@ -314,7 +319,8 @@ export const testService: TestService = {
     if (bad) return bad;
     const now = nowIso();
     const rec: TestRec = {
-      id: newId("test"), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, title: input.title.trim(), description: input.description.trim(),
+      id: newId("test"), subjectSlug: input.subjectSlug, topicId: input.kind === "exam" ? undefined : input.topicId || undefined, title: input.title.trim(), description: input.description.trim(),
+      ...(input.kind === "exam" ? { kind: "exam" as const, opensAt: input.opensAt || undefined, closesAt: input.closesAt || undefined, reviewPolicy: input.reviewPolicy ?? "IMMEDIATE" } : {}),
       durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
       randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers, questionIds: input.questionIds,
       published: input.published, publishedAt: input.published ? now : undefined, createdAt: now,
@@ -331,10 +337,11 @@ export const testService: TestService = {
     if (bad) return bad;
     const wasPublished = rec.published;
     Object.assign(rec, {
-      title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined,
+      title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: rec.kind === "exam" ? undefined : input.topicId || undefined,
       durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
       randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers, questionIds: input.questionIds,
       published: input.published, publishedAt: input.published ? (rec.publishedAt ?? nowIso()) : rec.publishedAt,
+      ...(rec.kind === "exam" ? { opensAt: input.opensAt || undefined, closesAt: input.closesAt || undefined, reviewPolicy: input.reviewPolicy ?? rec.reviewPolicy ?? "IMMEDIATE" } : {}),
     });
     if (rec.published && !wasPublished) announceTest(db, rec);
     return { ok: true, data: undefined };
@@ -378,6 +385,7 @@ function checkTest(db: Db, input: TestInput): Extract<ServiceResult, { ok: false
     const topic = db.topics.find((t) => t.id === input.topicId && !t.deletedAt);
     if (!topic || topic.subjectSlug !== input.subjectSlug) return { ok: false, code: "TOPIC_MISMATCH", field: "topic" };
   }
+  if (input.kind === "exam" && windowInvalid(input.opensAt, input.closesAt)) return { ok: false, code: "WINDOW_INVALID", field: "closesAt" };
   const unique = [...new Set(input.questionIds)];
   if (unique.length === 0) return { ok: false, code: "QUESTIONS_REQUIRED", field: "questionIds" };
   const ok = unique.every((qid) => db.questions.some((q) => q.id === qid && !q.deletedAt && q.status === "published" && q.subjectSlug === input.subjectSlug));

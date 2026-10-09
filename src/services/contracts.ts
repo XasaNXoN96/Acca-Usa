@@ -24,6 +24,7 @@ import type {
   MaterialKind,
   Payment,
   Platform,
+  ReviewPolicy,
   PlatformSlug,
   RankingEntry,
   ResultListItem,
@@ -305,6 +306,11 @@ export interface TestInput {
   /** Order = order of the test (unless randomised per attempt). */
   questionIds: string[];
   published: boolean;
+  /** default "topic_test". Exams ignore `topicId` and may carry a window and a review policy. */
+  kind?: "topic_test" | "exam";
+  opensAt?: string | null;
+  closesAt?: string | null;
+  reviewPolicy?: ReviewPolicy;
 }
 
 export interface AttemptStart {
@@ -328,7 +334,7 @@ export interface TestService {
   getResult(testId: string, userId: string, attemptId?: string): Promise<TestResult | null>;
   listResults(userId: string, limit?: number): Promise<ResultListItem[]>;
   /* admin */
-  listAllForAdmin(): Promise<(TestSummary & { questionIds: string[] })[]>;
+  listAllForAdmin(kind?: "topic_test" | "exam"): Promise<(TestSummary & { questionIds: string[] })[]>;
   create(input: TestInput): Promise<ServiceResult<{ id: string }>>;
   update(id: string, input: TestInput): Promise<ServiceResult>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;

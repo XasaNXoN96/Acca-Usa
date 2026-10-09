@@ -62,6 +62,12 @@ enum QuestionStatus {
   published
 }
 
+enum ReviewPolicy {
+  IMMEDIATE
+  AFTER_CLOSE
+  NEVER
+}
+
 enum TestKind {
   topic_test
   exam
@@ -538,6 +544,8 @@ model Test {
   /// exams only: optional availability window
   opensAt            DateTime?
   closesAt           DateTime?
+  /// exams only: when a student may see the question-by-question review of a finished attempt
+  reviewPolicy       ReviewPolicy @default(IMMEDIATE)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   deletedAt          DateTime?

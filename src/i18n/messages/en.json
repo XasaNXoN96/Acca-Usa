@@ -622,7 +622,9 @@
     "noAttemptsLeft": "No attempts left for this test.",
     "history": "Your attempts",
     "attemptN": "Attempt {n}",
-    "allMistakes": "Review all my mistakes"
+    "allMistakes": "Review all my mistakes",
+    "reviewAfterClose": "The question-by-question review of this exam becomes available after the exam closes.",
+    "reviewNever": "The question-by-question review is not available for this exam."
   },
   "exams": {
     "title": "Mock Exams",
@@ -640,7 +642,18 @@
     "empty": "No exams scheduled.",
     "durationHeader": "Duration",
     "action": "Action",
-    "start": "Start exam"
+    "start": "Start exam",
+    "info": {
+      "window": "Window",
+      "opens": "Opens",
+      "closes": "Closes",
+      "passMark": "Pass mark",
+      "attempts": "Attempts",
+      "left": "{left} left",
+      "unlimited": "Unlimited",
+      "instructions": "Instructions",
+      "notStartable": "You can start this exam only while it is open and you have access to the platform."
+    }
   },
   "progressPage": {
     "title": "Progress",
@@ -1119,21 +1132,50 @@
       },
       "exams": {
         "title": "Exams",
-        "description": "Scheduled mock exams (demo data, read-only).",
+        "description": "Build timed exams from published bank questions: instructions, window, duration, pass mark, attempt limit, review policy, preview and publishing.",
         "add": "Schedule exam",
         "columns": {
           "title": "Title",
           "platform": "Platform",
           "startsAt": "Starts",
           "duration": "Duration",
-          "status": "Status"
+          "status": "Status",
+          "subject": "Subject",
+          "questions": "Questions",
+          "window": "Window (UTC)",
+          "passMark": "Pass mark",
+          "attempts": "Attempts"
         },
         "fields": {
           "title": "Exam title",
           "platform": "Platform",
-          "duration": "Duration (minutes)"
+          "duration": "Duration (minutes)",
+          "description": "Instructions for students",
+          "subject": "Subject",
+          "durationMinutes": "Duration (minutes)",
+          "passMark": "Pass mark (%)",
+          "attemptsAllowed": "Attempts allowed (0 = unlimited)",
+          "opensAt": "Opens (UTC, empty = already open)",
+          "closesAt": "Closes (UTC, empty = no end)",
+          "reviewPolicy": "Question review for students",
+          "randomizeQuestions": "Randomise question order",
+          "randomizeAnswers": "Randomise answer order",
+          "questionIds": "Questions",
+          "published": "Published",
+          "publishedHint": "Only published exams are visible to students. An exam needs at least one published question."
         },
-        "descriptionLive": "Published exams and their availability windows."
+        "descriptionLive": "Build timed exams from published bank questions: instructions, window, duration, pass mark, attempt limit, review policy, preview and publishing.",
+        "filters": {
+          "subject": "Subject",
+          "status": "Status"
+        },
+        "reviewPolicy": {
+          "IMMEDIATE": "Review available right after submitting",
+          "AFTER_CLOSE": "Review available after the exam closes",
+          "NEVER": "No question review (score only)"
+        },
+        "noStart": "Open now",
+        "noEnd": "No end"
       },
       "students": {
         "title": "Students",
@@ -1268,7 +1310,8 @@
       "paymentRequired": "This platform is paid — access comes with a completed payment.",
       "accessRevoked": "Access to this platform was revoked by an administrator.",
       "duplicate": "A record with the same name already exists here.",
-      "fileNotReady": "The new file is not ready (still processing, failed or rejected). Save after it is marked ready."
+      "fileNotReady": "The new file is not ready (still processing, failed or rejected). Save after it is marked ready.",
+      "windowInvalid": "The closing time must be after the opening time."
     },
     "statistics": {
       "title": "Statistics",

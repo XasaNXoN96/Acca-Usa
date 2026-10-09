@@ -29,7 +29,7 @@ export const statsService: StatsService = {
     const topicIds = new Set(topics.map((t) => t.id));
     const materials = db.materials.filter((m) => materialLive(m) && subjectSlugs.has(m.subjectSlug));
     const materialIds = new Set(materials.map((m) => m.id));
-    const tests = db.tests.filter((t) => !t.deletedAt && subjectSlugs.has(t.subjectSlug));
+    const tests = db.tests.filter((t) => !t.deletedAt && (t.kind ?? "topic_test") === "topic_test" && subjectSlugs.has(t.subjectSlug));
     const testIds = new Set(tests.map((t) => t.id));
 
     // Students in scope: every student account; with a platform / subject filter only those enrolled in the platform(s).

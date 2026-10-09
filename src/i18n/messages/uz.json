@@ -622,7 +622,9 @@
     "noAttemptsLeft": "Bu test uchun urinishlar qolmadi.",
     "history": "Urinishlaringiz",
     "attemptN": "{n}-urinish",
-    "allMistakes": "Barcha xatolarim"
+    "allMistakes": "Barcha xatolarim",
+    "reviewAfterClose": "Bu imtihon savollarining tahlili imtihon yopilgandan keyin ochiladi.",
+    "reviewNever": "Bu imtihon uchun savollar tahlili mavjud emas."
   },
   "exams": {
     "title": "Sinov imtihonlari",
@@ -640,7 +642,18 @@
     "empty": "Rejalashtirilgan imtihonlar yo‘q.",
     "durationHeader": "Davomiyligi",
     "action": "Amal",
-    "start": "Imtihonni boshlash"
+    "start": "Imtihonni boshlash",
+    "info": {
+      "window": "Davr",
+      "opens": "Ochiladi",
+      "closes": "Yopiladi",
+      "passMark": "O‘tish bali",
+      "attempts": "Urinishlar",
+      "left": "{left} ta qoldi",
+      "unlimited": "Cheksiz",
+      "instructions": "Ko‘rsatma",
+      "notStartable": "Imtihonni u ochiq bo‘lganda va platformaga kirish huquqingiz bo‘lsa boshlash mumkin."
+    }
   },
   "progressPage": {
     "title": "Progress",
@@ -1119,21 +1132,50 @@
       },
       "exams": {
         "title": "Imtihonlar",
-        "description": "Rejalashtirilgan sinov imtihonlari (demo ma’lumot, faqat ko‘rish).",
+        "description": "Nashr etilgan bank savollaridan vaqtli imtihonlar tuzing: ko‘rsatma, ochiq davr, davomiylik, o‘tish bali, urinishlar limiti, tahlilni ko‘rsatish, ko‘rib chiqish va nashr.",
         "add": "Imtihon rejalashtirish",
         "columns": {
           "title": "Nomi",
           "platform": "Platforma",
           "startsAt": "Boshlanishi",
           "duration": "Davomiyligi",
-          "status": "Holat"
+          "status": "Holat",
+          "subject": "Fan",
+          "questions": "Savollar",
+          "window": "Davr (UTC)",
+          "passMark": "O‘tish bali",
+          "attempts": "Urinishlar"
         },
         "fields": {
           "title": "Imtihon nomi",
           "platform": "Platforma",
-          "duration": "Davomiyligi (daqiqa)"
+          "duration": "Davomiyligi (daqiqa)",
+          "description": "Talabalar uchun ko‘rsatma",
+          "subject": "Fan",
+          "durationMinutes": "Davomiyligi (daqiqa)",
+          "passMark": "O‘tish bali (%)",
+          "attemptsAllowed": "Urinishlar soni (0 = cheksiz)",
+          "opensAt": "Ochilish (UTC, bo‘sh = allaqachon ochiq)",
+          "closesAt": "Yopilish (UTC, bo‘sh = tugamaydi)",
+          "reviewPolicy": "Talabalar uchun savollar tahlili",
+          "randomizeQuestions": "Savollar tartibini aralashtirish",
+          "randomizeAnswers": "Javoblar tartibini aralashtirish",
+          "questionIds": "Savollar",
+          "published": "Nashr etilgan",
+          "publishedHint": "Talabalar faqat nashr etilgan imtihonlarni ko‘radi. Imtihonda kamida bitta nashr etilgan savol bo‘lishi kerak."
         },
-        "descriptionLive": "E’lon qilingan imtihonlar va ularning ochiq bo‘lish oynalari."
+        "descriptionLive": "Nashr etilgan bank savollaridan vaqtli imtihonlar tuzing: ko‘rsatma, ochiq davr, davomiylik, o‘tish bali, urinishlar limiti, tahlilni ko‘rsatish, ko‘rib chiqish va nashr.",
+        "filters": {
+          "subject": "Fan",
+          "status": "Holat"
+        },
+        "reviewPolicy": {
+          "IMMEDIATE": "Tahlil yuborilgandan so‘ng darhol",
+          "AFTER_CLOSE": "Tahlil imtihon yopilgandan keyin",
+          "NEVER": "Savollar tahlilisiz (faqat natija)"
+        },
+        "noStart": "Hozir ochiq",
+        "noEnd": "Tugash yo‘q"
       },
       "students": {
         "title": "Talabalar",
@@ -1268,7 +1310,8 @@
       "paymentRequired": "Bu platforma pullik — kirish to‘lov yakunlangach ochiladi.",
       "accessRevoked": "Bu platformaga kirish administrator tomonidan bekor qilingan.",
       "duplicate": "Bunday yozuv allaqachon mavjud.",
-      "fileNotReady": "Yangi fayl tayyor emas (hali qayta ishlanmoqda, xato yoki rad etilgan). Tayyor bo‘lgach saqlang."
+      "fileNotReady": "Yangi fayl tayyor emas (hali qayta ishlanmoqda, xato yoki rad etilgan). Tayyor bo‘lgach saqlang.",
+      "windowInvalid": "Yopilish vaqti ochilish vaqtidan keyin bo‘lishi kerak."
     },
     "statistics": {
       "title": "Statistika",

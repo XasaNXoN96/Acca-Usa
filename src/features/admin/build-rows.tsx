@@ -197,16 +197,44 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
     }
 
     case "exams": {
-      const [exams, es] = await Promise.all([services.exams.list(), getTranslations("exams")]);
-      const variant = { scheduled: "info", open: "success", completed: "neutral" } as const;
+      const [exams, questions, et] = await Promise.all([services.tests.listAllForAdmin("exam"), services.questions.list(), getTranslations("admin.resources.exams")]);
+      const statusOf = (x: { archived?: boolean; published: boolean }) => (x.archived ? "archived" : x.published ? "published" : "draft") as "archived" | "published" | "draft";
+      const statusFilter: Option[] = (["draft", "published", "archived"] as const).map((x) => ({ value: x, label: ts(`testStatus.${x}`) }));
+      const statusTone = { draft: "neutral", published: "success", archived: "outline" } as const;
+      const pickable = questions.filter((q) => q.status === "published");
+      const policyOptions: Option[] = (["IMMEDIATE", "AFTER_CLOSE", "NEVER"] as const).map((v) => ({ value: v, label: et(`reviewPolicy.${v}`) }));
+      const when = (iso?: string) => (iso ? formatDateTime(iso, locale) : null);
       return {
-        options: {}, filters: {},
-        rows: exams.map((e) =>
-          mk(e.id, {
-            title: bold(e.title), platform: platformBadge(e.platform), startsAt: formatDateTime(e.startsAt, locale), duration: c("minutes", { count: e.durationMinutes }),
-            status: <Badge variant={variant[e.status]}>{es(`status.${e.status}`)}</Badge>,
-          }, {}, [e.title, e.platform], e.title, false),
-        ),
+        filters: { subject: subjectOptions, status: statusFilter },
+        options: {
+          subject: subjectOptions, reviewPolicy: policyOptions,
+          questionIds: pickable.map((q) => ({
+            value: q.id, label: clip(q.text, 80), group: q.subjectSlug,
+            meta: { text: q.text, points: q.points, difficulty: q.difficulty, topic: undefined, tags: q.tags.join(" ") },
+          })),
+        },
+        rows: exams.map((x) => {
+          const status = statusOf(x);
+          const qs = x.questionIds.flatMap((id) => questions.find((q) => q.id === id && q.status === "published" && !q.archived) ?? []);
+          const row = mk(x.id, {
+            title: <span className="flex flex-col"><span className="font-semibold">{x.title}</span><span className="type-caption text-muted-foreground">{et(`reviewPolicy.${x.reviewPolicy ?? "IMMEDIATE"}`)}</span></span>,
+            subject: subjectCode(x.subjectSlug), questions: x.questionCount,
+            window: <span className="flex flex-col"><span>{when(x.opensAt) ?? et("noStart")}</span><span className="type-caption text-muted-foreground">{when(x.closesAt) ?? et("noEnd")}</span></span>,
+            duration: c("minutes", { count: x.durationMinutes }), passMark: `${x.passMark}%`, attempts: x.attemptsAllowed === 0 ? "∞" : x.attemptsAllowed,
+            status: <Badge variant={statusTone[status]}>{ts(`testStatus.${status}`)}</Badge>,
+          }, {
+            title: x.title, description: x.description, subject: x.subjectSlug, durationMinutes: x.durationMinutes, passMark: x.passMark, attemptsAllowed: x.attemptsAllowed,
+            randomizeQuestions: x.randomizeQuestions, randomizeAnswers: x.randomizeAnswers, published: x.published, questionIds: x.questionIds,
+            opensAt: x.opensAt ? x.opensAt.slice(0, 16) : "", closesAt: x.closesAt ? x.closesAt.slice(0, 16) : "", reviewPolicy: x.reviewPolicy ?? "IMMEDIATE",
+          }, [x.title, x.subjectSlug, x.description], x.title, !!x.archived,
+          { subject: x.subjectSlug, status },
+          undefined,
+          <TestPreview test={{
+            title: x.title, description: x.description, durationMinutes: x.durationMinutes, passMark: x.passMark, attemptsAllowed: x.attemptsAllowed,
+            questions: qs.map((q) => ({ id: q.id, text: q.text, options: q.options, points: q.points, imageId: q.imageId })),
+          }} />);
+          return { ...row, quick: x.archived ? undefined : { duplicate: true, publish: x.published ? ("unpublish" as const) : ("publish" as const) } };
+        }),
       };
     }
 

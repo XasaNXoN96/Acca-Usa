@@ -26,6 +26,7 @@
     "test:media": "tsx scripts/integration/media-info.ts",
     "test:media-pipeline": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/media-pipeline.ts",
     "test:mistakes": "tsx scripts/integration/mistakes.ts",
+    "test:exams": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/exams.ts",
     "test:notes": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/notes.ts",
     "test:media-text": "NEXT_PUBLIC_APP_MODE=demo DATA_PROVIDER=memory node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/media-text.ts",
     "media:worker": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/media-worker.ts",

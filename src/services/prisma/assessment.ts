@@ -7,6 +7,7 @@ import { routes } from "@/lib/routes";
 import { getPrisma } from "@/lib/prisma";
 import { getStorage } from "../storage";
 import { subjectProgress } from "../domain/calc";
+import { applyReviewPolicy, attemptDeadline, startBlock, windowInvalid } from "../domain/exams";
 import { issueIfEarned } from "./certs-core";
 import { notifyAdmins, notifyEnrolled, notifyUser, recordActivity } from "./events";
 import { loadCalcDb } from "./load";
@@ -118,6 +119,7 @@ function summary(t: TestRow, stats?: UserTestStats): TestSummary {
     totalPoints: qs.reduce((a, q) => a + q.points, 0), durationMinutes: t.durationMinutes, passMark: t.passMark,
     attemptsAllowed: t.attemptsAllowed, attemptsUsed: stats?.attemptsUsed, randomizeQuestions: t.randomizeQuestions, randomizeAnswers: t.randomizeAnswers,
     published: t.published, publishedAt: t.publishedAt?.toISOString(), bestScore: stats?.bestScore, archived: !!t.deletedAt,
+    kind: t.kind, opensAt: t.opensAt?.toISOString(), closesAt: t.closesAt?.toISOString(), reviewPolicy: t.reviewPolicy,
   };
 }
 
@@ -262,7 +264,8 @@ async function announceTest(t: { id: string; title: string; subjectSlug: string 
 }
 
 async function checkTest(input: TestInput) {
-  const bad = await checkSubjectAndTopic(input.subjectSlug, input.topicId);
+  if (input.kind === "exam" && windowInvalid(input.opensAt, input.closesAt)) return err("WINDOW_INVALID", "closesAt");
+  const bad = await checkSubjectAndTopic(input.subjectSlug, input.kind === "exam" ? undefined : input.topicId);
   if (bad) return bad;
   const unique = [...new Set(input.questionIds)];
   if (unique.length === 0) return err("QUESTIONS_REQUIRED", "questionIds");
@@ -272,10 +275,11 @@ async function checkTest(input: TestInput) {
   return null;
 }
 
-const testData = (input: TestInput) => ({
-  title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: input.topicId || null,
+const testData = (input: TestInput, exam: boolean) => ({
+  title: input.title.trim(), description: input.description.trim(), subjectSlug: input.subjectSlug, topicId: exam ? null : input.topicId || null,
   durationMinutes: input.durationMinutes, passMark: input.passMark, attemptsAllowed: input.attemptsAllowed,
   randomizeQuestions: input.randomizeQuestions, randomizeAnswers: input.randomizeAnswers,
+  ...(exam ? { opensAt: input.opensAt ? new Date(input.opensAt) : null, closesAt: input.closesAt ? new Date(input.closesAt) : null, reviewPolicy: input.reviewPolicy ?? "IMMEDIATE" } : {}),
 });
 const questionLinks = (ids: string[]) => ids.map((questionId, position) => ({ questionId, position }));
 
@@ -314,15 +318,11 @@ export const testService: TestService = {
     const existing = await expireIfNeeded(await findInProgress(userId, testId));
     if (existing && existing.status === "IN_PROGRESS") return ok(toStart(existing));
     // Exams run inside their availability window, and never past its end (server clock, not the browser's).
-    if (t.kind === "exam") {
-      const now = Date.now();
-      if (t.opensAt && now < t.opensAt.getTime()) return err("EXAM_NOT_OPEN");
-      if (t.closesAt && now > t.closesAt.getTime()) return err("EXAM_CLOSED");
-    }
+    const blocked = startBlock({ kind: t.kind, opensAt: t.opensAt?.toISOString(), closesAt: t.closesAt?.toISOString() });
+    if (blocked) return err(blocked);
     if (t.attemptsAllowed > 0 && (await prisma.testAttempt.count({ where: { userId, testId, status: "SUBMITTED" } })) >= t.attemptsAllowed) return err("ATTEMPTS_EXHAUSTED");
     const startedAt = new Date();
-    const byDuration = startedAt.getTime() + t.durationMinutes * 60_000;
-    const deadlineAt = new Date(t.kind === "exam" && t.closesAt ? Math.min(byDuration, t.closesAt.getTime()) : byDuration);
+    const deadlineAt = new Date(attemptDeadline({ kind: t.kind, closesAt: t.closesAt?.toISOString() }, startedAt.getTime(), t.durationMinutes));
     const a = await prisma.testAttempt.create({ data: { id: newId("att"), userId, testId, startedAt, deadlineAt } });
     return ok(toStart(a));
   },
@@ -352,21 +352,24 @@ export const testService: TestService = {
   },
   async getResult(testId, userId, attemptId) {
     const a = await getPrisma().testAttempt.findFirst(submittedOf(userId, attemptId ? { testId, id: attemptId } : { testId }));
-    return a ? resultOf(a) : null;
+    const result = a ? resultOf(a) : null;
+    if (!result) return null;
+    const t = await getPrisma().test.findUnique({ where: { id: testId }, select: { kind: true, opensAt: true, closesAt: true, reviewPolicy: true } });
+    return applyReviewPolicy(result, t ? { kind: t.kind, closesAt: t.closesAt?.toISOString(), reviewPolicy: t.reviewPolicy } : undefined); // the stored result stays untouched
   },
   async listResults(userId, limit = 20) {
     const rows = await getPrisma().testAttempt.findMany({ ...submittedOf(userId), take: limit });
     return rows.flatMap((a) => toListItem(a) ?? []);
   },
-  async listAllForAdmin() {
-    const rows = await getPrisma().test.findMany({ where: { kind: "topic_test" }, include: testInclude, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
+  async listAllForAdmin(kind = "topic_test") {
+    const rows = await getPrisma().test.findMany({ where: { kind }, include: testInclude, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
     return (await summaries(rows)).map((s, i) => ({ ...s, questionIds: rows[i]!.questions.map((x) => x.questionId) }));
   },
   async create(input) {
     const bad = await checkTest(input);
     if (bad) return bad;
     const t = await getPrisma().test.create({
-      data: { id: newId("test"), ...testData(input), published: input.published, publishedAt: input.published ? new Date() : null, questions: { create: questionLinks(input.questionIds) } },
+      data: { id: newId("test"), ...testData(input, input.kind === "exam"), ...(input.kind === "exam" ? { kind: "exam" as const } : {}), published: input.published, publishedAt: input.published ? new Date() : null, questions: { create: questionLinks(input.questionIds) } },
     });
     if (t.published) await announceTest(t);
     return ok({ id: t.id });
@@ -381,7 +384,7 @@ export const testService: TestService = {
       await tx.testQuestion.deleteMany({ where: { testId: id } });
       return tx.test.update({
         where: { id },
-        data: { ...testData(input), published: input.published, publishedAt: input.published ? (rec.publishedAt ?? new Date()) : rec.publishedAt, questions: { create: questionLinks(input.questionIds) } },
+        data: { ...testData(input, rec.kind === "exam"), published: input.published, publishedAt: input.published ? (rec.publishedAt ?? new Date()) : rec.publishedAt, questions: { create: questionLinks(input.questionIds) } },
       });
     });
     if (next.published && !rec.published) await announceTest(next);
@@ -406,7 +409,8 @@ export const testService: TestService = {
       data: {
         id: newId("test"), subjectSlug: t.subjectSlug, topicId: t.topicId, kind: t.kind, title: `${t.title} (copy)`.slice(0, 160), description: t.description,
         durationMinutes: t.durationMinutes, passMark: t.passMark, attemptsAllowed: t.attemptsAllowed, randomizeQuestions: t.randomizeQuestions,
-        randomizeAnswers: t.randomizeAnswers, published: false, questions: { create: questionLinks(t.questions.map((x) => x.questionId)) },
+        randomizeAnswers: t.randomizeAnswers, published: false, opensAt: t.opensAt, closesAt: t.closesAt, reviewPolicy: t.reviewPolicy,
+        questions: { create: questionLinks(t.questions.map((x) => x.questionId)) },
       },
     });
     return ok({ id: copy.id });

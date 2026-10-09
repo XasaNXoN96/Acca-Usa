@@ -9,6 +9,7 @@ import {
 import { activeCertificate, createCertificate, issueIfEarned, toIssuedCertificate } from "./certs-core";
 import { notifyUser, recordActivity } from "./events";
 import { publicName } from "../domain/names";
+import { windowStatus } from "../domain/exams";
 import { loadCalcDb, loadCalcDbForRead } from "./load";
 
 const err = (code: string, field?: string) => ({ ok: false as const, code, field });
@@ -220,24 +221,25 @@ export const examService: ExamService = {
       include: { subject: { include: { level: true } } },
     });
     const best = new Map<string, number>();
+    const used = new Map<string, number>();
     const enrolled = new Set<string>();
     if (userId) {
       const [scores, mine] = await Promise.all([
-        prisma.testAttempt.groupBy({ by: ["testId"], where: { userId, status: "SUBMITTED", testId: { in: rows.map((t) => t.id) } }, _max: { scorePercent: true } }),
+        prisma.testAttempt.groupBy({ by: ["testId"], where: { userId, status: "SUBMITTED", testId: { in: rows.map((t) => t.id) } }, _max: { scorePercent: true }, _count: { _all: true } }),
         prisma.enrollment.findMany({ where: { userId, status: { in: ["FREE", "ACTIVE"] }, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }, select: { platformSlug: true } }),
       ]);
-      for (const r of scores) if (r._max.scorePercent !== null) best.set(r.testId, r._max.scorePercent);
+      for (const r of scores) { if (r._max.scorePercent !== null) best.set(r.testId, r._max.scorePercent); used.set(r.testId, r._count._all); }
       for (const e of mine) enrolled.add(e.platformSlug);
     }
     return rows.map<Exam>((t) => {
       const startsAt = (t.opensAt ?? t.createdAt).getTime();
-      const closed = t.closesAt ? t.closesAt.getTime() < now : false;
-      const status = closed ? "completed" : startsAt <= now ? "open" : "scheduled";
+      const status = windowStatus({ opensAt: t.opensAt?.toISOString(), closesAt: t.closesAt?.toISOString() }, now);
       const platform = t.subject.level.platformSlug;
       return {
         id: t.id, title: t.title, platform: platform as PlatformSlug, subjectSlug: t.subjectSlug, startsAt: new Date(startsAt).toISOString(),
-        durationMinutes: t.durationMinutes, status, score: best.get(t.id), startable: status === "open" && enrolled.has(platform),
+        closesAt: t.closesAt?.toISOString(), durationMinutes: t.durationMinutes, status, score: best.get(t.id), startable: status === "open" && enrolled.has(platform),
+        passMark: t.passMark, attemptsAllowed: t.attemptsAllowed, attemptsUsed: userId ? (used.get(t.id) ?? 0) : undefined,
       };
-    });
+    }).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   },
 };

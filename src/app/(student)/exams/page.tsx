@@ -42,6 +42,8 @@ export default async function ExamsPage() {
           columns={[
             { key: "title", header: c("name"), mobile: "title" },
             { key: "starts", header: t("starts") },
+            { key: "ends", header: t("info.closes") },
+            { key: "attempts", header: t("info.attempts") },
             { key: "duration", header: t("durationHeader") },
             { key: "status", header: c("status") },
             { key: "score", header: t("score"), align: "right" },
@@ -57,6 +59,8 @@ export default async function ExamsPage() {
                 </span>
               ),
               starts: formatDateTime(e.startsAt, locale),
+              ends: e.closesAt ? formatDateTime(e.closesAt, locale) : "—",
+              attempts: e.attemptsAllowed === undefined ? "—" : e.attemptsAllowed === 0 ? t("info.unlimited") : `${e.attemptsUsed ?? 0} / ${e.attemptsAllowed}`,
               duration: t("duration", { count: e.durationMinutes }),
               status: <Badge variant={statusVariant[e.status]}>{t(`status.${e.status}`)}</Badge>,
               score: e.score !== undefined ? `${e.score}%` : "—",

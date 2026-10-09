@@ -22,6 +22,7 @@ export function serviceErrorKey(code: string): string {
     case "NOTES_REQUIRED": return "notesRequired";
     case "FILE_REQUIRED": return "fileRequired";
     case "FILE_TYPE": return "fileType";
+    case "WINDOW_INVALID": return "windowInvalid";
     case "FILE_NOT_READY": return "fileNotReady";
     case "NOT_ENROLLED": return "notEnrolled";
     case "CERT_EXISTS": return "certExists";

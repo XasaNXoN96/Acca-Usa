@@ -90,6 +90,30 @@ export const testSchema = z.object({
   questionIds: z.array(z.string().max(120)).min(1, "questionsRequired").max(200, "invalidChoice"),
 });
 
+const datetime = z.string().trim().regex(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})?$/, "invalidChoice").optional().default("");
+
+/** Exam = a test with an availability window (UTC), a review policy and an attempt limit; questions come from the bank. */
+export const examSchema = z
+  .object({
+    title: text(3, 160),
+    description: optionalText(2000),
+    subject: id,
+    durationMinutes: int(1, 480),
+    passMark: int(1, 100),
+    attemptsAllowed: int(0, 99),
+    randomizeQuestions: z.boolean().default(false),
+    randomizeAnswers: z.boolean().default(false),
+    published: z.boolean().default(false),
+    questionIds: z.array(z.string().max(120)).min(1, "questionsRequired").max(200, "invalidChoice"),
+    opensAt: datetime,
+    closesAt: datetime,
+    reviewPolicy: z.enum(["IMMEDIATE", "AFTER_CLOSE", "NEVER"], { message: "invalidChoice" }).default("IMMEDIATE"),
+  })
+  .superRefine((v, ctx) => {
+    if (v.opensAt && v.closesAt && v.closesAt <= v.opensAt) ctx.addIssue({ code: "custom", path: ["closesAt"], message: "windowInvalid" });
+    if (v.reviewPolicy === "AFTER_CLOSE" && !v.closesAt) ctx.addIssue({ code: "custom", path: ["closesAt"], message: "required" });
+  });
+
 const email = z.string().trim().min(1, "required").email("emailInvalid").max(254, "emailInvalid");
 const roles = ["STUDENT", "ADMIN"] as const;
 const statuses = ["active", "suspended"] as const;
@@ -134,9 +158,10 @@ export type TopicForm = z.infer<typeof topicSchema>;
 export type MaterialForm = z.infer<typeof materialSchema>;
 export type QuestionForm = z.infer<typeof questionSchema>;
 export type TestForm = z.infer<typeof testSchema>;
+export type ExamForm = z.infer<typeof examSchema>;
 export type StudentForm = z.infer<ReturnType<typeof studentSchemaFor>>;
 
-export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "students", "access", "certificates"] as const;
+export const editableResources = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "access", "certificates"] as const;
 export type EditableResource = (typeof editableResources)[number];
 
 export function schemaFor(resource: EditableResource, isNew: boolean) {
@@ -147,6 +172,7 @@ export function schemaFor(resource: EditableResource, isNew: boolean) {
     case "materials": return materialSchema;
     case "question-bank": return questionSchema;
     case "tests": return testSchema;
+    case "exams": return examSchema;
     case "students": return studentSchemaFor(isNew);
     case "access": return accessSchema;
     case "certificates": return certificateSchema;

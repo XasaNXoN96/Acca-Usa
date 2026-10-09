@@ -4,7 +4,7 @@ import type { EditableResource } from "@/lib/validators/admin";
 export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "access", "certificates", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
-export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file" | "date";
+export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file" | "date" | "datetime";
 
 export interface FieldDef {
   name: string;
@@ -92,7 +92,21 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
       { name: "published", kind: "checkbox" },
     ],
   },
-  exams: { permission: "manage_tests", canCreate: false, filters: [], columns: ["title", "platform", "startsAt", "duration", "status"], fields: [] },
+  exams: {
+    permission: "manage_tests", editPermission: "manage_tests", canCreate: true, filters: ["subject", "status"],
+    columns: ["title", "subject", "questions", "window", "duration", "passMark", "attempts", "status"],
+    fields: [
+      { name: "title", kind: "text", required: true }, { name: "description", kind: "textarea" },
+      { name: "subject", kind: "select", required: true },
+      { name: "durationMinutes", kind: "number", required: true }, { name: "passMark", kind: "number", required: true, default: "70" },
+      { name: "attemptsAllowed", kind: "number", required: true, default: "1" },
+      { name: "opensAt", kind: "datetime" }, { name: "closesAt", kind: "datetime" },
+      { name: "reviewPolicy", kind: "select", required: true, default: "IMMEDIATE" },
+      { name: "randomizeQuestions", kind: "checkbox" }, { name: "randomizeAnswers", kind: "checkbox" },
+      { name: "questionIds", kind: "questionPicker", required: true, dependsOn: "subject" },
+      { name: "published", kind: "checkbox" },
+    ],
+  },
   students: {
     permission: "view_students", editPermission: "manage_students", canCreate: true, filters: ["role", "status"],
     columns: ["name", "email", "role", "progress", "status"],
