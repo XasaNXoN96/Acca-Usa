@@ -78,7 +78,6 @@ await step("General file: student sees name / type / size and the TEXT, with no 
   for (const name of ["Open", "Download"]) assert((await s.getByRole("link", { name }).count()) === 0, `${name} link present`);
   const dl = await sc.request.get("/api/files/seed-bt-glossary?download=1"); assert(dl.status() === 403, `student download status ${dl.status()}`); assert(!/attachment/.test(dl.headers()["content-disposition"] ?? ""), "attachment for a student");
   const ok = await sc.request.get("/api/files/seed-bt-glossary"); assert(ok.status() === 200 && /inline/.test(ok.headers()["content-disposition"]), "inline text");
-  assert((await ac.request.get("/api/files/seed-bt-glossary?download=1")).headers()["content-disposition"]?.startsWith("attachment"), "admin cannot download");
 });
 await step("View-only policy on every material page: no download / open-original / print control for the student; direct download URLs refused", async () => {
   for (const k of ["notes", "video", "pdf", "audio", "diagram", "glossary"]) {
@@ -141,7 +140,9 @@ await step("wrong topic/material ids → 404; locked topic → locked state; fil
 });
 await step("admin opens a material and the viewer works for admin", async () => {
   const ac = await ctx(); const a = await ac.newPage(); await demo(a, "Admin"); await a.waitForURL(/admin$/);
-  await a.goto(M("video")); await a.locator("video").waitFor(); await a.goto(M("diagram")); await a.locator("main img[alt]").first().waitFor(); await ac.close();
+  await a.goto(M("video")); await a.locator("video").waitFor(); await a.goto(M("diagram")); await a.locator("main img[alt]").first().waitFor();
+  assert((await ac.request.get("/api/files/seed-bt-glossary?download=1")).headers()["content-disposition"]?.startsWith("attachment"), "admin cannot download");
+  await ac.close();
 });
 
 // ---------- responsive ----------
