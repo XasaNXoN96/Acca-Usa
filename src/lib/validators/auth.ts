@@ -12,6 +12,7 @@ export const authErrorKeys = [
   "nameMin",
   "passwordMismatch",
   "termsRequired",
+  "privacyRequired",
 ] as const;
 export type AuthErrorKey = (typeof authErrorKeys)[number];
 
@@ -37,6 +38,9 @@ export const registerSchema = z
     password,
     confirmPassword: z.string().min(1, "required"),
     terms: z.boolean().refine((v) => v === true, "termsRequired"),
+    /** separate, explicit consent to the processing of personal data (not bundled with the terms) */
+    privacy: z.boolean().refine((v) => v === true, "privacyRequired"),
+    marketing: z.boolean().optional(),
   })
   .refine((v) => v.password === v.confirmPassword, { path: ["confirmPassword"], message: "passwordMismatch" });
 export type RegisterInput = z.infer<typeof registerSchema>;

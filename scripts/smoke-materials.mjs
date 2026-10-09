@@ -115,7 +115,7 @@ await step("Breadcrumbs: My Platforms → ACCA → BT → Topic → Material, li
 await step("not-enrolled user: viewer redirects to the platform page, files are 403", async () => {
   const c = await ctx(); const p = await c.newPage(); await p.goto("/register");
   await p.locator("#reg-name").fill("Mat Tester"); await p.locator("#reg-email").fill(`mat.${Date.now()}@example.com`);
-  await p.locator("#reg-password").fill("Mat-pass12345"); await p.locator("#reg-confirm").fill("Mat-pass12345"); await p.locator("#reg-terms").click();
+  await p.locator("#reg-password").fill("Mat-pass12345"); await p.locator("#reg-confirm").fill("Mat-pass12345"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click();
   await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/);
   await p.goto(M("video")); await p.waitForURL(/\/platform\/acca/);
   assert((await c.request.get("/api/files/seed-bt-lecture")).status() === 403, "file not 403");
@@ -207,7 +207,7 @@ await step("transcript + subtitles: speech-to-text shows NOT CONNECTED (nothing 
   const vtt = await sc.request.get(`${API}/subtitles/ru`); assert(vtt.status() === 200 && /text\/vtt/.test(vtt.headers()["content-type"]) && (await vtt.text()).includes("Привет, субтитры"), `student vtt ${vtt.status()}`);
   const gc2 = await ctx(); assert((await gc2.request.get(`${API}/subtitles/ru`)).status() === 401, "guest got subtitles"); await gc2.close();
   const nc = await ctx(); const np = await nc.newPage(); await np.goto("/register");
-  await np.locator("#reg-name").fill("Sub Tester"); await np.locator("#reg-email").fill(`sub.${Date.now()}@example.com`); await np.locator("#reg-password").fill("Sub-pass12345"); await np.locator("#reg-confirm").fill("Sub-pass12345"); await np.locator("#reg-terms").click();
+  await np.locator("#reg-name").fill("Sub Tester"); await np.locator("#reg-email").fill(`sub.${Date.now()}@example.com`); await np.locator("#reg-password").fill("Sub-pass12345"); await np.locator("#reg-confirm").fill("Sub-pass12345"); await np.locator("#reg-terms").click(); await np.locator("#reg-privacy").click();
   await np.getByRole("button", { name: "Create account" }).click(); await np.waitForURL(/dashboard$/);
   assert((await nc.request.get(`${API}/subtitles/ru`)).status() === 403, "not-enrolled student got subtitles");
   assert((await nc.request.get(`${API}/media-text`)).status() === 403, "student read the admin media-text API");

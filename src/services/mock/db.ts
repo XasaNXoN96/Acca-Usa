@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { LEGAL_VERSIONS, REQUIRED_CONSENTS } from "@/lib/legal/consent";
 import type { AuditEventRec } from "@/lib/audit-chain";
 import type { AppNotification, Difficulty, IssuedCertificate, MaterialKind, PlatformSlug } from "@/types";
 import { platforms as seedPlatforms, subjects as seedSubjects, allTopics as seedTopics, materials as seedMaterials } from "@/data/mock/catalog";
@@ -48,6 +49,7 @@ export interface Db {
   mfaRecovery: { userId: string; codeHash: string; usedAt?: string }[];
   /** append-only, hash-chained (lib/audit-chain) */
   audit: AuditEventRec[];
+  consents: { userId: string; kind: string; version: string; granted: boolean; locale: string; source: string; at: string }[];
   transcripts: import("../contracts").TranscriptRecord[];
   subtitles: import("../contracts").SubtitleRecord[];
   materialVersions: MaterialVersionRec[];
@@ -126,6 +128,8 @@ function seed(): Db {
     resetTokens: [],
     mfaRecovery: [],
     audit: [],
+    // DEMO data only: the fictional demo accounts have "accepted" the current texts so the demo is usable. Real accounts accept at registration.
+    consents: seedUsers.flatMap((u) => (REQUIRED_CONSENTS as readonly string[]).map((kind) => ({ userId: u.id, kind, version: LEGAL_VERSIONS[kind as keyof typeof LEGAL_VERSIONS], granted: true, locale: "en", source: "register", at: u.createdAt }))),
     transcripts: [],
     subtitles: [],
     materialVersions: [],

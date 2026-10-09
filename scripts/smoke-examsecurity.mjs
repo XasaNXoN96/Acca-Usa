@@ -75,7 +75,7 @@ await step("taking the exam: result shows the score only; the page carries no re
 await step("another student cannot read someone else's attempt, result or mistakes (IDOR), and a user who is not enrolled cannot start", async () => {
   const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register");
   await o.locator("#reg-name").fill("Sec Other"); await o.locator("#reg-email").fill(`sec.${Date.now()}@example.com`);
-  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click();
+  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click();
   await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   const res = await oc.request.get(ATTEMPT_URL.replace(BASE, "")); const html = await res.text();
   assert(!/100%|Passed|PASSED/.test(await (async () => html.replace(/\s+/g, " "))()) || /no result|haven.t taken|No result/i.test(html), "the other student's result is visible");

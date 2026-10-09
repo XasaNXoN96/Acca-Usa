@@ -41,7 +41,7 @@ await step("registration creates a STUDENT (→ dashboard, no /admin); no role f
   const c = await ctx(); const p = await c.newPage(); await p.goto("/register");
   assert((await p.locator("select, [name=role]").count()) === 0, "role field on register");
   await p.locator("#reg-name").fill("Role Tester"); await p.locator("#reg-email").fill(`role.${Date.now()}@example.com`);
-  await p.locator("#reg-password").fill("Role-pass123"); await p.locator("#reg-confirm").fill("Role-pass123"); await p.locator("#reg-terms").click();
+  await p.locator("#reg-password").fill("Role-pass123"); await p.locator("#reg-confirm").fill("Role-pass123"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click();
   await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/\/dashboard$/);
   await p.goto("/admin"); await p.waitForURL(/\/dashboard$/); await c.close();
 });

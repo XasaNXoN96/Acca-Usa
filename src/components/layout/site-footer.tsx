@@ -46,6 +46,11 @@ export async function SiteFooter() {
       <div className="border-t border-white/15">
         <div className="container-page flex flex-col gap-2 py-5 text-white/75 md:flex-row md:items-center md:justify-between">
           <p className="type-caption max-w-3xl">{t("footer.disclaimer")}</p>
+          <nav aria-label={t("footer.legal")} className="flex flex-wrap gap-x-4 md:justify-end">
+            {[{ href: routes.terms, label: t("legal.docs.terms") }, { href: routes.privacy, label: t("legal.docs.privacy") }, { href: routes.cookies, label: t("legal.docs.cookies") }, { href: routes.refunds, label: t("legal.docs.refunds") }].map((l) => (
+              <Link key={l.href} href={l.href} className="type-caption inline-flex min-h-9 items-center text-white/90 hover:text-white hover:underline">{l.label}</Link>
+            ))}
+          </nav>
           <p className="type-caption md:text-right">
             {t("footer.copyright", { year: new Date().getUTCFullYear() })}{isDemoMode ? ` · ${t("footer.demoBuild")}` : ""}
           </p>

@@ -150,6 +150,7 @@ model User {
   activity         Activity[]
   resetTokens      ResetToken[]
   mfaRecoveryCodes MfaRecoveryCode[]
+  consents         ConsentRecord[]
 
   @@index([role, status])
 }
@@ -742,4 +743,23 @@ model AuditEvent {
   @@index([at(sort: Desc)])
   @@index([action])
   @@index([actorId])
+}
+
+/// Evidence of what a user accepted (terms of use, privacy policy / personal-data consent, optional marketing) and when.
+/// Append-only history — the latest row per (userId, kind) is the current state. Withdrawing marketing adds granted = false.
+model ConsentRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  /// version of the text that was shown (src/lib/legal/consent.ts)
+  version   String
+  granted   Boolean
+  locale    String
+  /// where the decision was made: register | reconsent | settings
+  source    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, createdAt(sort: Desc)])
 }

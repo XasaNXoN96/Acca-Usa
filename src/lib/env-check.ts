@@ -36,6 +36,11 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
   for (const name of ["S3_BUCKET", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"]) need(name, "required in production (object storage)");
   if (has(env.S3_ENDPOINT) && !isUrl(env.S3_ENDPOINT, ["https:", "http:"])) issues.push({ name: "S3_ENDPOINT", reason: "must be an http(s) URL" });
 
+  // The legal pages must name the operator, the privacy contact and where data is stored — never an invented company.
+  for (const name of ["LEGAL_OPERATOR_NAME", "LEGAL_CONTACT_EMAIL", "LEGAL_DATA_LOCATION"]) need(name, "required in production (legal pages)");
+  if (has(env.LEGAL_CONTACT_EMAIL) && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(env.LEGAL_CONTACT_EMAIL!.trim())) issues.push({ name: "LEGAL_CONTACT_EMAIL", reason: "must be an e-mail address" });
+  if (env.LEGAL_TEXTS_REVIEWED && env.LEGAL_TEXTS_REVIEWED !== "1") issues.push({ name: "LEGAL_TEXTS_REVIEWED", reason: "must be 1 (counsel has reviewed the texts) or unset" });
+
   for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "EMAIL_FROM"]) need(name, "required in production (e-mail)");
   if (has(env.SMTP_PORT) && !/^\d{2,5}$/.test(env.SMTP_PORT!)) issues.push({ name: "SMTP_PORT", reason: "must be a port number" });
   if (has(env.EMAIL_FROM) && !/^([^<>\r\n]+<)?[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+>?$/.test(env.EMAIL_FROM!.trim())) issues.push({ name: "EMAIL_FROM", reason: "must be an address like no-reply@example.com or Name <no-reply@example.com>" });

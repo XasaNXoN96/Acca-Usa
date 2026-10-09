@@ -45,7 +45,7 @@ await step("5 correct answers / explanations are NOT in the page, RSC payload or
 });
 await step("6 results are computed on the server and readable only by their owner (another student / a guest opening the result URL sees nothing)", async () => {
   const resultUrl = s.url().replace(BASE, ""); const oc = await ctx(); const o = await oc.newPage();
-  await o.goto("/register"); await o.locator("#reg-name").fill("Sec Tester"); await o.locator("#reg-email").fill(`sec.${Date.now()}@example.com`); await o.locator("#reg-password").fill("Sec-pass123456"); await o.locator("#reg-confirm").fill("Sec-pass123456"); await o.locator("#reg-terms").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
+  await o.goto("/register"); await o.locator("#reg-name").fill("Sec Tester"); await o.locator("#reg-email").fill(`sec.${Date.now()}@example.com`); await o.locator("#reg-password").fill("Sec-pass123456"); await o.locator("#reg-confirm").fill("Sec-pass123456"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   await o.goto("/courses"); await o.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await o.getByText("Enrolled").first().waitFor();
   await o.goto(resultUrl); assert(!(await o.content()).includes("anyone with an interest"), "another user's review is visible");
   const g = await ctx(); assert((await status(g, resultUrl)) === 307, "guest result"); await g.close(); await oc.close();
@@ -55,7 +55,7 @@ await step("7-9 files: unknown id 404, not-enrolled 403, invalid Range 416; unkn
   assert((await status(sc, `/subject/bt/topic/${T1}/material/nope`)) === 404, "unknown material status");
   assert((await status(sc, `/subject/nope/topic/nope/material/nope`)) === 404, "unknown subject chain");
   assert((await status(sc, "/api/files/seed-bt-lecture", { headers: { Range: "bytes=999999999-" } })) === 416, "range");
-  const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register"); await o.locator("#reg-name").fill("Sec Two"); await o.locator("#reg-email").fill(`sec2.${Date.now()}@example.com`); await o.locator("#reg-password").fill("Sec-pass123456"); await o.locator("#reg-confirm").fill("Sec-pass123456"); await o.locator("#reg-terms").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
+  const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register"); await o.locator("#reg-name").fill("Sec Two"); await o.locator("#reg-email").fill(`sec2.${Date.now()}@example.com`); await o.locator("#reg-password").fill("Sec-pass123456"); await o.locator("#reg-confirm").fill("Sec-pass123456"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   assert((await status(oc, "/api/files/seed-bt-lecture")) === 403, "not-enrolled file access"); assert((await status(oc, `/subject/bt/topic/${T1}/material/${T1}-video`)) === 307, "not-enrolled viewer should redirect to the platform page");
   assert((await o.request.get("/api/certificates/cert-demo-bt/pdf")).status() === 404, "foreign certificate"); await o.goto("/certificates/cert-demo-bt"); assert((await o.locator("[data-certificate]").count()) === 0, "foreign certificate visible"); await oc.close();
 });

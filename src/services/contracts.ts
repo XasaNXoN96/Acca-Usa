@@ -1,4 +1,5 @@
 import type { ProcessOutcome, ProviderEvent } from "./payments/contracts";
+import type { ConsentEntry, ConsentSnapshot } from "@/lib/legal/consent";
 import type { AuditEventRec, AuditInput, AuditOutcome, AuditVerification } from "@/lib/audit-chain";
 import type {
   RankingResult,
@@ -65,6 +66,17 @@ export interface AuthService {
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   /** Used by the session layer: re-reads the user on every request (role/status changes apply immediately). */
   getSessionUser(userId: string, tokenVersion: number): Promise<User | null>;
+}
+
+/* ---------------- consent ---------------- */
+
+export interface ConsentHistoryItem { kind: string; version: string; granted: boolean; locale: string; source: string; at: string }
+export interface ConsentService {
+  /** Latest decision per kind. */
+  current(userId: string): Promise<ConsentSnapshot>;
+  /** Appends decisions for the CURRENT text versions. There is no update or delete — history is evidence. */
+  record(userId: string, entries: ConsentEntry[], meta: { locale: string; source: "register" | "reconsent" | "settings" }): Promise<void>;
+  history(userId: string): Promise<ConsentHistoryItem[]>;
 }
 
 /* ---------------- audit log ---------------- */
@@ -494,6 +506,7 @@ export interface Services {
   auth: AuthService;
   mfa: MfaService;
   audit: AuditService;
+  consent: ConsentService;
   users: UserService;
   platforms: PlatformService;
   subjects: SubjectService;

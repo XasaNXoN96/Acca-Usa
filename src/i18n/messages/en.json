@@ -105,7 +105,8 @@
     "account": "Account",
     "disclaimer": "ACCA USA is an independent learning platform. ACCA and FIA are trademarks of their respective owners and are used for identification only.",
     "copyright": "© {year} ACCA USA. All rights reserved.",
-    "demoBuild": "Demo build — content and figures are placeholders."
+    "demoBuild": "Demo build — content and figures are placeholders.",
+    "legal": "Legal"
   },
   "landing": {
     "hero": {
@@ -306,7 +307,8 @@
       "passwordStrength": "Password needs at least one letter and one number.",
       "nameMin": "Enter your full name (at least 2 characters).",
       "passwordMismatch": "Passwords do not match.",
-      "termsRequired": "You must accept the terms to continue."
+      "termsRequired": "You must accept the terms to continue.",
+      "privacyRequired": "Consent to personal data processing is required."
     },
     "passwordRules": {
       "title": "Password requirements",
@@ -1974,5 +1976,45 @@
     "nothingOpenText": "Every mistake in this selection has been resolved. Change the filter to see them.",
     "toCourses": "Go to courses",
     "practiceButton": "Practise {count} mistakes"
+  },
+  "legal": {
+    "draftNotice": "Draft text — not yet reviewed by a qualified lawyer for your jurisdiction. The operator must review and complete it before launch.",
+    "notConfigured": "[not configured by the operator]",
+    "version": "Version {version}",
+    "docs": {
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Notice",
+      "refunds": "Refund Policy"
+    },
+    "consent": {
+      "title": "Please review and accept",
+      "subtitle": "We updated our legal texts, or your account was created by an administrator. To continue, accept the current versions.",
+      "termsLabel": "I accept the <doc>Terms of Use</doc>",
+      "privacyLabel": "I consent to the processing of my personal data as described in the <doc>Privacy Policy</doc>",
+      "marketingLabel": "Send me news and offers by e-mail",
+      "optional": "optional",
+      "termsRequired": "You must accept the Terms of Use to continue.",
+      "privacyRequired": "Consent to personal data processing is required to use the service.",
+      "continue": "Accept and continue",
+      "signOut": "Sign out instead",
+      "failed": "Could not save your choice. Try again."
+    },
+    "settings": {
+      "title": "Privacy and consent",
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy and personal-data consent",
+      "accepted": "Accepted version {version} on {date}",
+      "notAccepted": "Not accepted",
+      "outdated": "a newer text is in force",
+      "marketing": "Send me news and offers by e-mail",
+      "marketingHint": "Optional. Service e-mails (password reset, payments, certificates) are always sent.",
+      "saved": "Saved.",
+      "failed": "Could not save. Try again.",
+      "rights": "To access, correct or delete your data, or to withdraw consent, write to {email}.",
+      "contactMissing": "the operator (contact not configured)",
+      "cookies": "Cookie Notice",
+      "refunds": "Refund Policy"
+    }
   }
 }

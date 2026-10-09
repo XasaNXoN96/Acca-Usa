@@ -7,7 +7,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 const PORT = process.env.SMOKE_PORT ?? "3100";
 const BASE = `http://localhost:${PORT}`;
 const CHROMIUM = process.env.CHROMIUM ?? "/opt/pw-browsers/chromium";
-const suites = ["smoke.mjs", "smoke-nav.mjs", "smoke-roles.mjs", "smoke-courses.mjs", "smoke-subject.mjs", "smoke-materials.mjs", "smoke-contentadmin.mjs", "smoke-versions.mjs", "smoke-materialstats.mjs", "smoke-notes.mjs", "smoke-mistakes.mjs", "smoke-exams.mjs", "smoke-examsecurity.mjs", "smoke-mfa.mjs", "smoke-audit.mjs", "smoke-questionbank.mjs", "smoke-testbuilder.mjs", "smoke-testplayer.mjs", "smoke-results.mjs", "smoke-dashboard.mjs", "smoke-stats.mjs", "smoke-certificates.mjs", "smoke-ranking.mjs", "smoke-notifications.mjs", "smoke-payments.mjs", "smoke-journeys.mjs", "smoke-flow.mjs", "smoke-security.mjs", "smoke-i18n.mjs", "audit-a11y.mjs", "audit-responsive.mjs", "audit-responsive-flows.mjs"];
+const suites = ["smoke.mjs", "smoke-nav.mjs", "smoke-roles.mjs", "smoke-courses.mjs", "smoke-subject.mjs", "smoke-materials.mjs", "smoke-contentadmin.mjs", "smoke-versions.mjs", "smoke-materialstats.mjs", "smoke-notes.mjs", "smoke-mistakes.mjs", "smoke-exams.mjs", "smoke-examsecurity.mjs", "smoke-mfa.mjs", "smoke-audit.mjs", "smoke-legal.mjs", "smoke-questionbank.mjs", "smoke-testbuilder.mjs", "smoke-testplayer.mjs", "smoke-results.mjs", "smoke-dashboard.mjs", "smoke-stats.mjs", "smoke-certificates.mjs", "smoke-ranking.mjs", "smoke-notifications.mjs", "smoke-payments.mjs", "smoke-journeys.mjs", "smoke-flow.mjs", "smoke-security.mjs", "smoke-i18n.mjs", "audit-a11y.mjs", "audit-responsive.mjs", "audit-responsive-flows.mjs"];
 const filter = process.argv[2];
 const todo = suites.filter((s) => !filter || s.includes(filter));
 

@@ -9,8 +9,6 @@ import { FlaskConical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field } from "@/components/ui/field";
 import { PasswordField, TextField } from "@/components/ui/form-fields";
 import {
   forgotSchema, loginSchema, registerSchema, resetSchema,
@@ -18,6 +16,7 @@ import {
 } from "@/lib/validators/auth";
 import { forgotPasswordAction, loginAction, registerAction, resetPasswordAction, type AuthResult } from "./actions";
 import { PasswordRules } from "./password-rules";
+import { ConsentCheckbox } from "@/features/legal/consent-fields";
 import { routes } from "@/lib/routes";
 
 function useErrorText() {
@@ -112,10 +111,12 @@ export function RegisterForm({ next }: { next?: string }) {
   const [failure, setFailure] = useState<string | null>(null);
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false },
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false, privacy: false, marketing: false },
   });
   const { errors } = form.formState;
   const terms = useWatch({ control: form.control, name: "terms" });
+  const privacy = useWatch({ control: form.control, name: "privacy" });
+  const marketing = useWatch({ control: form.control, name: "marketing" }) === true;
   const password = useWatch({ control: form.control, name: "password" });
 
   const onSubmit = form.handleSubmit((values) =>
@@ -138,19 +139,9 @@ export function RegisterForm({ next }: { next?: string }) {
       <PasswordRules value={password} />
       <PasswordField id="reg-confirm" label={t("fields.confirmPassword")} autoComplete="new-password" required registration={form.register("confirmPassword")} error={err(errors.confirmPassword?.message)} />
 
-      <Field label="" htmlFor="reg-terms" error={err(errors.terms?.message)}>
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="reg-terms"
-            checked={terms}
-            onCheckedChange={(v) => form.setValue("terms", v === true, { shouldValidate: form.formState.isSubmitted })}
-            aria-invalid={errors.terms ? true : undefined}
-            aria-describedby={errors.terms ? "reg-terms-error" : undefined}
-            className="mt-0.5"
-          />
-          <label htmlFor="reg-terms" className="type-small cursor-pointer text-muted-foreground">{t("fields.terms")}</label>
-        </div>
-      </Field>
+      <ConsentCheckbox id="reg-terms" kind="terms" checked={terms} onChange={(v) => form.setValue("terms", v, { shouldValidate: form.formState.isSubmitted })} error={err(errors.terms?.message)} />
+      <ConsentCheckbox id="reg-privacy" kind="privacy" checked={privacy} onChange={(v) => form.setValue("privacy", v, { shouldValidate: form.formState.isSubmitted })} error={err(errors.privacy?.message)} />
+      <ConsentCheckbox id="reg-marketing" kind="marketing" checked={marketing} onChange={(v) => form.setValue("marketing", v)} />
 
       <Button type="submit" size="lg" className="w-full" loading={pending}>{t("register.submit")}</Button>
     </form>

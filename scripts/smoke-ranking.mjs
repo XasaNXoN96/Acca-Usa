@@ -30,7 +30,7 @@ await step("ranking: real demo students only, own place highlighted, other learn
 });
 const bc = await ctx(); const b = await bc.newPage();
 await step("scores come from real test results: better result ranks higher; ties share a rank", async () => {
-  await b.goto("/register"); await b.locator("#reg-name").fill("Zed Ranker"); await b.locator("#reg-email").fill(`rk.${Date.now()}@example.com`); await b.locator("#reg-password").fill("Rank-pass12345"); await b.locator("#reg-confirm").fill("Rank-pass12345"); await b.locator("#reg-terms").click(); await b.getByRole("button", { name: "Create account" }).click(); await b.waitForURL(/dashboard$/);
+  await b.goto("/register"); await b.locator("#reg-name").fill("Zed Ranker"); await b.locator("#reg-email").fill(`rk.${Date.now()}@example.com`); await b.locator("#reg-password").fill("Rank-pass12345"); await b.locator("#reg-confirm").fill("Rank-pass12345"); await b.locator("#reg-terms").click(); await b.locator("#reg-privacy").click(); await b.getByRole("button", { name: "Create account" }).click(); await b.waitForURL(/dashboard$/);
   await b.goto("/courses"); await b.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await b.getByText("Enrolled").first().waitFor();
   await takeTest(s, true); await takeTest(b, false);
   await s.goto("/ranking"); let r = await rows(s); const demoRow = r.find((x) => /Demo Student/.test(x)); const zed = r.find((x) => /Zed R\./.test(x));

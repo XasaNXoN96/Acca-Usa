@@ -63,7 +63,7 @@ const baseEnv = {
   NEXT_PUBLIC_APP_MODE: "production", NODE_ENV: "production", PORT,
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
-  SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
+  LEGAL_OPERATOR_NAME: "Acca Test LLC", LEGAL_OPERATOR_ADDRESS: "1 Test Street, Tashkent", LEGAL_OPERATOR_TAX_ID: "123456789", LEGAL_CONTACT_EMAIL: "privacy@acca.example", LEGAL_DATA_LOCATION: "Test datacentre, Tashkent", LEGAL_GOVERNING_LAW: "Test law", LEGAL_REFUND_WINDOW: "14 days", SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
   PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
 };
 const startServer = (env) => {
@@ -109,7 +109,7 @@ try {
   await step("register → real session cookie (httpOnly, Secure) → dashboard; welcome e-mail goes out over SMTP", async () => {
     studentCtx = await ctx(); studentPage = await studentCtx.newPage(); studentEmail = `learner.${Date.now()}@example.com`;
     await studentPage.goto("/register"); await studentPage.locator("#reg-name").fill("Prod Learner"); await studentPage.locator("#reg-email").fill(studentEmail);
-    await studentPage.locator("#reg-password").fill("Learner-pass123"); await studentPage.locator("#reg-confirm").fill("Learner-pass123"); await studentPage.locator("#reg-terms").click();
+    await studentPage.locator("#reg-password").fill("Learner-pass123"); await studentPage.locator("#reg-confirm").fill("Learner-pass123"); await studentPage.locator("#reg-terms").click(); await studentPage.locator("#reg-privacy").click();
     await studentPage.getByRole("button", { name: "Create account" }).click(); await studentPage.waitForURL(/dashboard$/);
     const cookie = (await studentCtx.cookies()).find((x) => x.name === "acca_session"); assert(cookie?.httpOnly && cookie.secure && cookie.sameSite === "Lax", `cookie flags ${JSON.stringify(cookie)}`);
     const welcome = await lastMail("Prod Learner"); assert(/Welcome to ACCA USA/.test(welcome) && welcome.includes(studentEmail), "welcome mail");
@@ -137,8 +137,10 @@ try {
   let adminIp = 0; // own client address per sign-in so the per-client login limit (8 / 10 min) does not mask what is tested
   const adminLogin = async () => {
     const c = await browser.newContext({ baseURL: BASE, viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { "x-forwarded-for": `10.8.0.${++adminIp}` } }); const p = await c.newPage(); await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345");
-    await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/admin|login\/mfa/);
-    if (p.url().includes("/login/mfa")) { await p.locator("#mfa-code").fill(await freshCode()); await p.getByRole("button", { name: "Verify" }).click(); await p.waitForURL(/admin/); }
+    const settle = async (re) => { await p.waitForURL(re); await p.waitForLoadState("networkidle"); }; // /admin may redirect on to /consent
+    await p.getByRole("button", { name: "Sign in", exact: true }).click(); await settle(/admin|login\/mfa|consent/);
+    if (p.url().includes("/login/mfa")) { await p.locator("#mfa-code").fill(await freshCode()); await p.getByRole("button", { name: "Verify" }).click(); await settle(/admin|consent/); }
+    if (p.url().includes("/consent")) { await p.locator("#consent-terms").click(); await p.locator("#consent-privacy").click(); await p.getByRole("button", { name: "Accept and continue" }).click(); await settle(/admin/); }
     return { c, p };
   };
   await step("production: a new administrator gets NOTHING under /admin except mandatory two-step enrolment; after it, sign-in needs the code", async () => {
@@ -324,13 +326,30 @@ try {
   await step("e-mail outage: with the SMTP server down registration still succeeds, the failure is logged as a CODE only, credentials never appear in logs, counters show it", async () => {
     await new Promise((r) => sink.close(r)); // nobody listens on the SMTP port any more
     const c = await ctx(); const p = await c.newPage(); await p.goto("/register"); await p.locator("#reg-name").fill("Outage Learner"); await p.locator("#reg-email").fill(`outage.${Date.now()}@example.com`);
-    await p.locator("#reg-password").fill("Learner-pass123"); await p.locator("#reg-confirm").fill("Learner-pass123"); await p.locator("#reg-terms").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/); await c.close();
+    await p.locator("#reg-password").fill("Learner-pass123"); await p.locator("#reg-confirm").fill("Learner-pass123"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/); await c.close();
     const failedRe = /"event":"email\.send_failed","provider":"smtp","failure":"CONNECTION"/;
     for (let i = 0; i < 40 && !failedRe.test(server.output()); i++) await sleep(250); // the welcome mail is sent after the response
     const log = server.output(); assert(failedRe.test(log), `no classified failure in the log: ${log.slice(-400)}`);
     assert(!log.includes("smtp-secret-pw-8231") && !log.includes("smtp-user-77"), "SMTP credentials in the server log");
     const { c: c2, p: p2 } = await adminLogin(); await p2.goto("/admin/settings"); const counters = await p2.locator("[data-email-counters]").innerText();
     assert(/Failed: [1-9]/.test(counters) && /cannot connect to the mail server/.test(counters), `counters: ${counters}`); await c2.close();
+  });
+  await step("legal: pages name the configured operator, consent evidence is stored per account, and an outdated version asks for acceptance again", async () => {
+    const c0 = await ctx(); const p0 = await c0.newPage(); await p0.goto("/privacy"); const txt = await p0.locator("[data-legal-document]").innerText();
+    for (const v of ["Acca Test LLC", "1 Test Street, Tashkent", "123456789", "privacy@acca.example", "Test datacentre, Tashkent"]) assert(txt.includes(v), `legal page misses the configured value ${v}`);
+    assert(!txt.includes("not configured by the operator"), "unconfigured marker shown although everything is configured");
+    await p0.goto("/refunds"); assert((await p0.locator("[data-legal-document]").innerText()).includes("14 days"), "refund window not rendered"); await p0.goto("/terms"); assert((await p0.locator("[data-legal-document]").innerText()).includes("Test law"), "governing law not rendered"); await c0.close();
+    const mail = `consent.${Date.now()}@example.com`;
+    const c = await ctx(); const p = await c.newPage(); await p.goto("/register"); await p.locator("#reg-name").fill("Consent Learner"); await p.locator("#reg-email").fill(mail);
+    await p.locator("#reg-password").fill("Learner-pass123"); await p.locator("#reg-confirm").fill("Learner-pass123"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/); await c.close();
+    const u = await db.user.findUnique({ where: { email: mail } }); const rows = await db.consentRecord.findMany({ where: { userId: u.id } });
+    assert(rows.length === 2 && rows.every((r) => r.granted && r.version === "2026-10-12" && r.source === "register" && r.locale === "en"), `consent evidence: ${JSON.stringify(rows)}`);
+    const admin = await db.user.findUnique({ where: { email: "owner@acca.example" } }); assert((await db.consentRecord.count({ where: { userId: admin.id, source: "reconsent" } })) >= 2, "the CLI-created administrator was not asked to accept");
+    await db.consentRecord.updateMany({ where: { userId: u.id }, data: { version: "2020-01-01" } }); // as if the text had changed since they accepted
+    const c2 = await ctx(); const p2 = await c2.newPage(); await p2.goto("/login"); await p2.locator("#login-email").fill(mail); await p2.locator("#login-password").fill("Learner-pass123"); await p2.getByRole("button", { name: "Sign in", exact: true }).click(); await p2.waitForURL(/\/consent/);
+    assert((await (await c2.request.get("/courses", { maxRedirects: 0 })).headers().location ?? "").includes("/consent"), "outdated consent did not close the site");
+    await p2.locator("#consent-terms").click(); await p2.locator("#consent-privacy").click(); await p2.getByRole("button", { name: "Accept and continue" }).click(); await p2.waitForURL(/dashboard$/);
+    const after = await db.consentRecord.findMany({ where: { userId: u.id }, orderBy: { createdAt: "asc" } }); assert(after.length === 4 && after.slice(2).every((r) => r.version === "2026-10-12" && r.source === "reconsent"), "re-acceptance not recorded as new history"); await c2.close();
   });
   await step("audit log: operator CLIs, sign-ins, MFA, e-mail test and payment events are recorded without secrets; the chain verifies; the database refuses rewrites; tampering is detected", async () => {
     const events = await db.auditEvent.findMany({ orderBy: { seq: "asc" } }); const actions = new Set(events.map((e) => e.action));

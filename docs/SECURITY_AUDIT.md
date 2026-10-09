@@ -70,6 +70,14 @@ server-generated object keys, private bucket, `nosniff`, forced download for non
 `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`,
 `Content-Security-Policy: frame-ancestors 'self'; base-uri 'self'; form-action 'self'`, HSTS in production. `X-Powered-By` removed.
 
+## Administrator hardening, audit and consent (phases 19–27)
+
+* **Second factor** (TOTP, recovery codes) is enforced in the session layer — an administrator session without the verified claim is *no session*; the password step only issues a separately-signed 5-minute challenge cookie. Details and limits: `docs/AUTH.md`.
+* **Audit log**: append-only (database triggers reject UPDATE/DELETE/TRUNCATE), keyed hash chain, read-only admin view, `npm run audit:verify`. Limits (tail truncation, privileged database user with the key): `docs/AUDIT.md`.
+* **Consent gate**: required legal consents for the current text versions or no session (fail closed), evidence kept per account: `docs/LEGAL.md`.
+* **Payments**: Stripe test-mode only verified against a local test double; webhook signature / replay / amount / refund rules in `docs/PAYMENTS.md`. **E-mail**: classified failures, no credentials in logs: `docs/EMAIL.md`.
+* **Backups** are encrypted when a passphrase is set, restored only into an empty database, and verified (counts, migrations, audit chain): `docs/BACKUP_RESTORE.md`.
+
 ## Known limits and recommendations
 
 * **CSP has no `script-src`.** A strict nonce-based policy needs per-request nonces on Next.js's inline scripts; it was not

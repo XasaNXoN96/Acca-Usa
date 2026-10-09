@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import type { Role } from "@/types";
 import { routes } from "@/lib/routes";
-import { getSession } from "./session";
+import { getSession, getSessionForConsent } from "./session";
 import type { Session } from "@/services";
 
 export const ANY_ROLE: readonly Role[] = ["STUDENT", "ADMIN"];
@@ -14,7 +14,11 @@ export const STAFF_ROLES: readonly Role[] = ["ADMIN"];
  */
 export async function requireSession(roles: readonly Role[] = ANY_ROLE): Promise<Session> {
   const session = await getSession();
-  if (!session) redirect(routes.login);
+  if (!session) {
+    const pending = await getSessionForConsent();
+    if (pending?.consentRequired) redirect(routes.consent); // signed in, but must accept the current legal texts first
+    redirect(routes.login);
+  }
   if (!roles.includes(session.user.role)) redirect(session.user.role === "STUDENT" ? routes.dashboard : routes.admin);
   return session;
 }

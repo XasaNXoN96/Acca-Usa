@@ -27,7 +27,7 @@ try {
     await p.goto("/test/bt-stakeholders-test"); await p.getByRole("button", { name: /Start test|Resume test/ }).click(); await p.getByText("Question 1 of 8").waitFor();
     await p.getByRole("radio").nth(1).click(); await p.waitForTimeout(3500); await p.waitForLoadState("networkidle"); // autosave interval
     state = await c.storageState();
-    const r = await browser.newContext({ baseURL: `http://localhost:${PORT}` }); const rp = await r.newPage(); await rp.goto("/register"); await rp.locator("#reg-name").fill("Restart Tester"); await rp.locator("#reg-email").fill("restart@example.com"); await rp.locator("#reg-password").fill("Restart-pass123"); await rp.locator("#reg-confirm").fill("Restart-pass123"); await rp.locator("#reg-terms").click(); await rp.getByRole("button", { name: "Create account" }).click(); await rp.waitForURL(/dashboard$/); await r.close(); await c.close();
+    const r = await browser.newContext({ baseURL: `http://localhost:${PORT}` }); const rp = await r.newPage(); await rp.goto("/register"); await rp.locator("#reg-name").fill("Restart Tester"); await rp.locator("#reg-email").fill("restart@example.com"); await rp.locator("#reg-password").fill("Restart-pass123"); await rp.locator("#reg-confirm").fill("Restart-pass123"); await rp.locator("#reg-terms").click(); await rp.locator("#reg-privacy").click(); await rp.getByRole("button", { name: "Create account" }).click(); await rp.waitForURL(/dashboard$/); await r.close(); await c.close();
   });
   pg.stop(); await down(PORT);
   pg = start(PORT, { DATA_PROVIDER: "prisma" }); await up(PORT);

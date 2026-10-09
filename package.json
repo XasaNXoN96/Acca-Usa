@@ -34,6 +34,7 @@
     "test:exams": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/exams.ts",
     "test:mfa": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/mfa.ts && NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/mfa-service.ts",
     "test:audit": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/audit.ts",
+    "test:legal": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/consent.ts",
     "test:admin": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/admin-bootstrap.ts",
     "email:test": "tsx scripts/email-test.ts",
     "test:notes": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/notes.ts",

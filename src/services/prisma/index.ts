@@ -4,6 +4,7 @@ export { paymentService } from "./payments";
 export { authService, userService } from "./auth-users";
 export { mfaService } from "./mfa";
 export { auditService } from "./audit";
+export { consentService } from "./consent";
 export { enrollmentService, materialService, platformService, searchService, subjectService, topicService } from "./catalog";
 export { questionService, testResultService, testService } from "./assessment";
 export { certificateService, examService, progressService, rankingService } from "./learning";

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { services, type Session } from "@/services";
 import { MFA_PENDING_COOKIE, MFA_PENDING_TTL_SECONDS, SESSION_COOKIE, SESSION_TTL_SECONDS, signPendingMfa, signSession, verifyPendingMfa, verifySession, type PendingClaims } from "./token";
 import { mfaRequiredFor } from "./mfa-policy";
+import { missingConsents } from "@/lib/legal/consent";
 import { APP_MODE, isDemoMode } from "@/lib/app-mode";
 import type { User } from "@/types";
 
@@ -36,7 +37,7 @@ export async function clearMfaChallenge() {
   (await cookies()).set(MFA_PENDING_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
 }
 
-type Loaded = { session: Session; setupRequired: boolean } | null;
+type Loaded = { session: Session; setupRequired: boolean; consentRequired: boolean } | null;
 
 /**
  * Authoritative session lookup: verifies the signature, then RE-READS the user, so a suspended
@@ -58,15 +59,22 @@ const loadSession = cache(async (): Promise<Loaded> => {
     if (enabled && claims.m !== true) return null;
     setupRequired = !enabled && mfaRequiredFor(user.role);
   }
-  return { session: { user, isDemo: isDemoMode }, setupRequired };
+  // Legal consent (terms + personal-data consent for the CURRENT text): until it is given nothing but the consent page works.
+  const consentRequired = missingConsents(await services.consent.current(user.id)).length > 0;
+  return { session: { user, isDemo: isDemoMode }, setupRequired, consentRequired };
 });
 
 export async function getSession(): Promise<Session | null> {
   const l = await loadSession();
-  return l && !l.setupRequired ? l.session : null;
+  return l && !l.setupRequired && !l.consentRequired ? l.session : null;
 }
 
 /** Only for the enrolment screen / action: returns the session even while the mandatory second factor is not set up yet. */
-export async function getSessionForMfaSetup(): Promise<{ session: Session; setupRequired: boolean } | null> {
+export async function getSessionForMfaSetup(): Promise<{ session: Session; setupRequired: boolean; consentRequired: boolean } | null> {
+  return loadSession();
+}
+
+/** For the consent page / action only: the signed-in user even though a required consent is still missing. */
+export async function getSessionForConsent(): Promise<{ session: Session; consentRequired: boolean; setupRequired: boolean } | null> {
   return loadSession();
 }

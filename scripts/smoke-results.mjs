@@ -55,7 +55,7 @@ await step("retake is offered while attempts remain; attempts history appears af
 });
 await step("review answers are only reachable by their owner (another student gets no result)", async () => {
   const c = await ctx(); const p = await c.newPage(); await p.goto("/register"); await p.locator("#reg-name").fill("Res Tester"); await p.locator("#reg-email").fill(`res.${Date.now()}@example.com`);
-  await p.locator("#reg-password").fill("Res-pass12345"); await p.locator("#reg-confirm").fill("Res-pass12345"); await p.locator("#reg-terms").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/);
+  await p.locator("#reg-password").fill("Res-pass12345"); await p.locator("#reg-confirm").fill("Res-pass12345"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/);
   const url = s.url(); await p.goto(url.replace(BASE, "")); assert(!(await p.content()).includes("63%"), "another student sees someone else's result"); await c.close();
 });
 
@@ -63,7 +63,7 @@ await step("review answers are only reachable by their owner (another student ge
 const pc = await ctx(); const p = await pc.newPage();
 await step("progress: completing all materials of a topic counts 50 %, the test the other 50 %", async () => {
   await p.goto("/register"); await p.locator("#reg-name").fill("Prog Tester"); await p.locator("#reg-email").fill(`prog.${Date.now()}@example.com`);
-  await p.locator("#reg-password").fill("Prog-pass12345"); await p.locator("#reg-confirm").fill("Prog-pass12345"); await p.locator("#reg-terms").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/);
+  await p.locator("#reg-password").fill("Prog-pass12345"); await p.locator("#reg-confirm").fill("Prog-pass12345"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click(); await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard$/);
   await p.goto("/courses"); await p.getByRole("button", { name: "Enroll (free in demo)" }).first().click(); await p.getByText("Enrolled").first().waitFor();
   await p.goto("/subject/bt"); await p.getByRole("link", { name: /Business organisations and their stakeholders/ }).first().waitFor();
   for (const x of ["notes", "video", "pdf", "audio", "diagram", "glossary", "summary"]) { await p.goto(mat(x)); await p.getByRole("button", { name: "Mark as completed" }).click(); await p.getByRole("button", { name: "Completed" }).waitFor(); }

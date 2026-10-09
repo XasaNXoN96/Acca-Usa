@@ -22,6 +22,7 @@ export const services: Services = {
   auth: provider.authService,
   mfa: provider.mfaService,
   audit: provider.auditService,
+  consent: provider.consentService,
   users: provider.userService,
   platforms: provider.platformService,
   subjects: provider.subjectService,

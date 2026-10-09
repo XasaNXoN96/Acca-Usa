@@ -114,7 +114,7 @@ await step("same behaviour for other subjects/platforms (MA, FA, LW, FIA FAB)", 
 await step("signed-in user WITHOUT access sees locked outline with an Enroll CTA", async () => {
   const c = await ctx(); const p = await c.newPage(); const email = `subj.${Date.now()}@example.com`;
   await p.goto("/register"); await p.locator("#reg-name").fill("Subject Tester"); await p.locator("#reg-email").fill(email);
-  await p.locator("#reg-password").fill("Subject-pass1"); await p.locator("#reg-confirm").fill("Subject-pass1"); await p.locator("#reg-terms").click();
+  await p.locator("#reg-password").fill("Subject-pass1"); await p.locator("#reg-confirm").fill("Subject-pass1"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click();
   await p.getByRole("button", { name: "Create account" }).click(); await p.waitForURL(/dashboard/);
   await p.goto("/subject/bt"); await p.getByRole("heading", { name: "Course Topics" }).waitFor();
   await rows(p).first().locator("button").first().click();
@@ -127,7 +127,7 @@ await step("register keeps ?next (new account returns to the chosen topic route)
   const c = await ctx(); const p = await c.newPage();
   await p.goto("/register?next=%2Fsubject%2Fbt%2Ftopic%2Fbt-business-environment");
   await p.locator("#reg-name").fill("Next Tester"); await p.locator("#reg-email").fill(`next.${Date.now()}@example.com`);
-  await p.locator("#reg-password").fill("Next-pass12"); await p.locator("#reg-confirm").fill("Next-pass12"); await p.locator("#reg-terms").click();
+  await p.locator("#reg-password").fill("Next-pass12"); await p.locator("#reg-confirm").fill("Next-pass12"); await p.locator("#reg-terms").click(); await p.locator("#reg-privacy").click();
   await p.getByRole("button", { name: "Create account" }).click();
   await p.waitForURL(/\/platform\/acca/); // not enrolled yet → the platform gate; the topic route itself was reached
   await c.close();

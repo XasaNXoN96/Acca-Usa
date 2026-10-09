@@ -13,7 +13,7 @@ const T4 = "bt-governance-ethics-and-sustainability";
 const nc = await ctx(); const n = await nc.newPage();
 await step("new student: empty states, zero stats, no fake data", async () => {
   await n.goto("/register"); await n.locator("#reg-name").fill("Dash Tester"); await n.locator("#reg-email").fill(`dash.${Date.now()}@example.com`);
-  await n.locator("#reg-password").fill("Dash-pass12345"); await n.locator("#reg-confirm").fill("Dash-pass12345"); await n.locator("#reg-terms").click(); await n.getByRole("button", { name: "Create account" }).click(); await n.waitForURL(/dashboard$/);
+  await n.locator("#reg-password").fill("Dash-pass12345"); await n.locator("#reg-confirm").fill("Dash-pass12345"); await n.locator("#reg-terms").click(); await n.locator("#reg-privacy").click(); await n.getByRole("button", { name: "Create account" }).click(); await n.waitForURL(/dashboard$/);
   await n.getByText("Enroll in a platform to see your progress by subject.").waitFor(); await n.getByText("No results yet").first().waitFor();
   assert((await n.locator("[data-continue-material]").count()) === 0, "continue card without activity"); assert((await n.locator("[data-subject-progress]").count()) === 0, "subject progress without enrolment");
   const stats = await n.locator("main").innerText(); assert(/Subjects\s*\n?\s*0|0\s*\n\s*Subjects/i.test(stats) || /\b0\b/.test(stats), "zero stats");

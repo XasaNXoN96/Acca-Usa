@@ -102,6 +102,10 @@ export async function registerAction(input: unknown, next?: string | null): Prom
     locale: isLocale(locale) ? locale : "en",
   });
   if (!created.ok) return { ok: false, code: "EMAIL_TAKEN" };
+  // Evidence of what was accepted, for the text versions that were on screen. Marketing only if the box was ticked (never pre-ticked).
+  await services.consent.record(created.data.id, [
+    { kind: "terms", granted: true }, { kind: "privacy", granted: true }, ...(parsed.data.marketing === true ? [{ kind: "marketing" as const, granted: true }] : []),
+  ], { locale: isLocale(locale) ? locale : "en", source: "register" });
   // After the response: a slow or failing mail server must not delay (or break) registration.
   after(() => sendEmail({ email: created.data.email, locale: created.data.locale }, { kind: "welcome", name: created.data.name }));
 

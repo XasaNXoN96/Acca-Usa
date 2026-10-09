@@ -43,7 +43,7 @@ await step("GUEST: home → all courses → ACCA → subject → topic → locke
   await l.locator("[data-topic-row] button").first().click(); await l.waitForTimeout(350); await l.locator("[data-material-row] button").first().click();
   await l.getByRole("dialog").getByText("To study this material, sign in to your account.").waitFor(); await l.getByRole("dialog").getByRole("link", { name: "Sign in" }).click(); await l.waitForURL(/\/login\?next=/);
   await l.getByRole("link", { name: /Register|Create/i }).first().click(); await l.waitForURL(/\/register/);
-  await l.locator("#reg-name").fill("Journey Learner"); await l.locator("#reg-email").fill(email); await l.locator("#reg-password").fill("Journey-pass123"); await l.locator("#reg-confirm").fill("Journey-pass123"); await l.locator("#reg-terms").click();
+  await l.locator("#reg-name").fill("Journey Learner"); await l.locator("#reg-email").fill(email); await l.locator("#reg-password").fill("Journey-pass123"); await l.locator("#reg-confirm").fill("Journey-pass123"); await l.locator("#reg-terms").click(); await l.locator("#reg-privacy").click();
   await l.getByRole("button", { name: "Create account" }).click(); await l.waitForURL((u) => /\/(dashboard|subject)/.test(u.pathname), { timeout: 15000 });
   await l.goto("/dashboard"); await h1(l);
 });

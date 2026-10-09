@@ -90,7 +90,7 @@ await step("My notes page lists the student's own notes, supports search, and ma
 await step("privacy: another student sees none of these notes", async () => {
   const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register");
   await o.locator("#reg-name").fill("Other Student"); await o.locator("#reg-email").fill(`other.${Date.now()}@example.com`);
-  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click();
+  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click();
   await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   await o.goto("/notes"); await o.getByText("No notes yet").waitFor();
   const html = await o.content(); assert(!html.includes("See the cost table") && !html.includes("Definition at two seconds"), "another student's notes leaked");

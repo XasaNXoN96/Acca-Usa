@@ -105,7 +105,8 @@
     "account": "Hisob",
     "disclaimer": "ACCA USA — mustaqil o‘quv platformasi. ACCA va FIA o‘z egalarining tovar belgilari bo‘lib, faqat identifikatsiya uchun ishlatiladi.",
     "copyright": "© {year} ACCA USA. Barcha huquqlar himoyalangan.",
-    "demoBuild": "Demo versiya — kontent va raqamlar vaqtinchalik."
+    "demoBuild": "Demo versiya — kontent va raqamlar vaqtinchalik.",
+    "legal": "Huquqiy ma’lumot"
   },
   "landing": {
     "hero": {
@@ -306,7 +307,8 @@
       "passwordStrength": "Parolda kamida bitta harf va bitta raqam bo‘lishi kerak.",
       "nameMin": "To‘liq ismingizni kiriting (kamida 2 belgi).",
       "passwordMismatch": "Parollar mos kelmadi.",
-      "termsRequired": "Davom etish uchun shartlarni qabul qiling."
+      "termsRequired": "Davom etish uchun shartlarni qabul qiling.",
+      "privacyRequired": "Shaxsiy ma’lumotlarni qayta ishlashga rozilik talab etiladi."
     },
     "passwordRules": {
       "title": "Parol talablari",
@@ -1974,5 +1976,45 @@
     "nothingOpenText": "Bu tanlovdagi barcha xatolar tuzatilgan. Ularni ko‘rish uchun filtrni o‘zgartiring.",
     "toCourses": "Kurslarga o‘tish",
     "practiceButton": "{count} ta xatoni mashq qilish"
+  },
+  "legal": {
+    "draftNotice": "Qoralama matn — hali sizning yurisdiksiyangiz uchun malakali yurist tomonidan ko‘rib chiqilmagan. Operator uni ishga tushirishdan oldin ko‘rib chiqishi va to‘ldirishi shart.",
+    "notConfigured": "[operator ko‘rsatmagan]",
+    "version": "Tahrir {version}",
+    "docs": {
+      "terms": "Foydalanish shartlari",
+      "privacy": "Maxfiylik siyosati",
+      "cookies": "Cookie xabarnomasi",
+      "refunds": "Pulni qaytarish siyosati"
+    },
+    "consent": {
+      "title": "Ko‘rib chiqing va qabul qiling",
+      "subtitle": "Huquqiy matnlarni yangiladik yoki hisobingizni administrator yaratgan. Davom etish uchun amaldagi tahrirlarni qabul qiling.",
+      "termsLabel": "Men <doc>Foydalanish shartlarini</doc> qabul qilaman",
+      "privacyLabel": "Shaxsiy ma’lumotlarimni <doc>Maxfiylik siyosatida</doc> tavsiflangandek qayta ishlashga roziman",
+      "marketingLabel": "Yangiliklar va takliflarni e-pochta orqali yuboring",
+      "optional": "ixtiyoriy",
+      "termsRequired": "Davom etish uchun Foydalanish shartlarini qabul qiling.",
+      "privacyRequired": "Xizmatdan foydalanish uchun shaxsiy ma’lumotlarni qayta ishlashga rozilik talab etiladi.",
+      "continue": "Qabul qilish va davom etish",
+      "signOut": "Chiqish",
+      "failed": "Tanlovni saqlab bo‘lmadi. Qayta urinib ko‘ring."
+    },
+    "settings": {
+      "title": "Maxfiylik va rozilik",
+      "terms": "Foydalanish shartlari",
+      "privacy": "Maxfiylik siyosati va ma’lumotlarni qayta ishlashga rozilik",
+      "accepted": "{date} sanasida {version} tahriri qabul qilingan",
+      "notAccepted": "Qabul qilinmagan",
+      "outdated": "yangiroq matn kuchda",
+      "marketing": "Yangiliklar va takliflarni e-pochta orqali yuboring",
+      "marketingHint": "Ixtiyoriy. Xizmat xatlari (parolni tiklash, to‘lovlar, sertifikatlar) har doim yuboriladi.",
+      "saved": "Saqlandi.",
+      "failed": "Saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "rights": "Ma’lumotlarga kirish, ularni tuzatish yoki o‘chirish yoxud rozilikni qaytarib olish uchun {email} manziliga yozing.",
+      "contactMissing": "operatorga (aloqa sozlanmagan)",
+      "cookies": "Cookie xabarnomasi",
+      "refunds": "Pulni qaytarish siyosati"
+    }
   }
 }

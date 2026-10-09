@@ -8,6 +8,7 @@
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { platforms, subjects, allTopics, materials } from "../src/data/mock/catalog";
 import { btQuestions, questionBank, testRecords } from "../src/data/mock/assessments";
+import { LEGAL_VERSIONS, REQUIRED_CONSENTS } from "../src/lib/legal/consent";
 import { DEMO_STUDENT_ID, notifications, payments, seedUsers } from "../src/data/mock/people";
 
 if (process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_APP_MODE === "production") {
@@ -72,6 +73,10 @@ async function main() {
       id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, locale: u.locale, passwordHash: u.passwordHash, createdAt: new Date(u.createdAt),
     })),
     skipDuplicates: true,
+  });
+  // DEMO data only: the fictional demo accounts have "accepted" the current texts so the demo is usable.
+  await prisma.consentRecord.createMany({
+    data: seedUsers.flatMap((u) => REQUIRED_CONSENTS.map((kind) => ({ userId: u.id, kind, version: LEGAL_VERSIONS[kind], granted: true, locale: "en", source: "register", createdAt: new Date(u.createdAt) }))),
   });
   await prisma.enrollment.createMany({ data: [{ userId: DEMO_STUDENT_ID, platformSlug: "acca", status: "ACTIVE", source: "admin", createdAt: hoursAgo(900) }], skipDuplicates: true });
 

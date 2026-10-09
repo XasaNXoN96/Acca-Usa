@@ -4,7 +4,7 @@ import { assertEnv, validateEnv } from "../../src/lib/env-check";
 
 const full = {
   NEXT_PUBLIC_APP_MODE: "production", DATA_PROVIDER: "prisma", DATABASE_URL: "postgresql://u:p@h:5432/d", AUTH_SECRET: "x".repeat(48), APP_URL: "https://acca.example",
-  S3_BUCKET: "b", S3_REGION: "r", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", SMTP_HOST: "h", SMTP_PORT: "587", SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "a@b.co",
+  S3_BUCKET: "b", S3_REGION: "r", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", LEGAL_OPERATOR_NAME: "Example LLC", LEGAL_CONTACT_EMAIL: "privacy@example.com", LEGAL_DATA_LOCATION: "Tashkent, Uzbekistan", SMTP_HOST: "h", SMTP_PORT: "587", SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "a@b.co",
   PAYMENT_SECRET_KEY: "sk_test_abc", PAYMENT_WEBHOOK_SECRET: "whsec_abc",
 };
 const names = (env: Record<string, string | undefined>) => validateEnv(env).issues.map((i) => i.name).sort();
@@ -35,4 +35,10 @@ try { assertEnv({ ...full, AUTH_SECRET: "super-secret-but-short" }); assert.fail
   const msg = String((e as Error).message);
   assert.ok(msg.includes("AUTH_SECRET") && !msg.includes("super-secret-but-short"), "names are listed, values never");
 }
+for (const n of ["LEGAL_OPERATOR_NAME", "LEGAL_CONTACT_EMAIL", "LEGAL_DATA_LOCATION"]) {
+  const { [n]: _omit, ...rest } = full as Record<string, string>; void _omit;
+  assert.ok(names(rest).includes(n), `${n} is required in production (legal pages must name the operator)`);
+}
+assert.ok(names({ ...full, LEGAL_CONTACT_EMAIL: "not-an-email" }).includes("LEGAL_CONTACT_EMAIL"), "malformed privacy contact");
+assert.ok(names({ ...full, LEGAL_TEXTS_REVIEWED: "yes" }).includes("LEGAL_TEXTS_REVIEWED"), "the review attestation is exactly 1");
 console.log("env-check: all checks passed");

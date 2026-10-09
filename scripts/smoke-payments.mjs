@@ -45,7 +45,7 @@ await step("a payment cannot be completed twice; the checkout page then says so"
 });
 await step("another student cannot see, open or complete this payment (IDOR)", async () => {
   const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register"); await o.locator("#reg-name").fill("Pay Tester"); await o.locator("#reg-email").fill(`pay.${Date.now()}@example.com`);
-  await o.locator("#reg-password").fill("Pay-pass12345"); await o.locator("#reg-confirm").fill("Pay-pass12345"); await o.locator("#reg-terms").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
+  await o.locator("#reg-password").fill("Pay-pass12345"); await o.locator("#reg-confirm").fill("Pay-pass12345"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click(); await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   await o.goto(`/payments/demo-checkout/${firstPaymentId}`); await o.getByText(/not found/i).first().waitFor(); assert((await o.getByRole("button", { name: /Simulate/ }).count()) === 0 && !(await o.content()).includes("FIA — full access"), "other student opened the checkout");
   await o.goto(`/payments?paid=${paidId}`); assert((await o.getByText("Payment confirmed").count()) === 0, "other student sees the banner of a foreign payment"); await o.getByText("No payments yet.").waitFor();
   await o.goto("/courses"); await o.getByRole("button", { name: /Buy access/ }).waitFor(); await oc.close();

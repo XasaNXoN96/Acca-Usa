@@ -88,7 +88,7 @@ await step("subject filter works and mistakes of another student are not visible
   await s.goto("/mistakes?show=all&subject=does-not-exist"); assert((await s.locator("[data-mistake]").count()) === 3, "unknown subject should fall back to all");
   const oc = await ctx(); const o = await oc.newPage(); await o.goto("/register");
   await o.locator("#reg-name").fill("Other Mistakes"); await o.locator("#reg-email").fill(`mist.${Date.now()}@example.com`);
-  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click();
+  await o.locator("#reg-password").fill("Other-pass12345"); await o.locator("#reg-confirm").fill("Other-pass12345"); await o.locator("#reg-terms").click(); await o.locator("#reg-privacy").click();
   await o.getByRole("button", { name: "Create account" }).click(); await o.waitForURL(/dashboard$/);
   await o.goto("/mistakes?show=all"); await o.getByText("No mistakes yet").waitFor(); await oc.close();
   const gc = await ctx(); const g = await gc.newPage(); await g.goto("/mistakes"); await g.waitForURL(/\/login/); await g.goto("/mistakes/practice"); await g.waitForURL(/\/login/); await gc.close();

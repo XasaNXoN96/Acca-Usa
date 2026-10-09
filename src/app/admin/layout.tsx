@@ -19,7 +19,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     getSessionForMfaSetup(),
   ]);
   if (!loaded) redirect(routes.login);
-  const { session, setupRequired } = loaded;
+  const { session, setupRequired, consentRequired } = loaded;
+  if (consentRequired) redirect(routes.consent);
   if (session.user.role !== "ADMIN") redirect(routes.dashboard);
   const unread = await services.notifications.unreadCount(session.user.id);
   const labels: Record<string, string> = {
