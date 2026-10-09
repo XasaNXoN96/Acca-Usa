@@ -1024,12 +1024,21 @@
           "topic": "Mavzu (ixtiyoriy)",
           "body": "Konspekt matni",
           "file": "Fayl",
-          "fileId": "Fayl"
+          "fileId": "Fayl",
+          "visibility": "Ko‘rinish",
+          "publishAt": "Nashr sanasi",
+          "position": "Mavzudagi tartib (kichigi — oldin)"
         },
         "filters": {
           "kind": "Turi",
           "subject": "Fan"
-        }
+        },
+        "visibility": {
+          "published": "Nashr etilgan",
+          "draft": "Qoralama (talabalarga ko‘rinmaydi)",
+          "scheduled": "Rejalashtirilgan"
+        },
+        "preview": "Talaba ko‘zi bilan ko‘rish"
       },
       "question-bank": {
         "title": "Savollar banki",
@@ -1257,7 +1266,8 @@
       "datePast": "Sana kelajakda bo‘lishi kerak.",
       "paymentRequired": "Bu platforma pullik — kirish to‘lov yakunlangach ochiladi.",
       "accessRevoked": "Bu platformaga kirish administrator tomonidan bekor qilingan.",
-      "duplicate": "Bunday yozuv allaqachon mavjud."
+      "duplicate": "Bunday yozuv allaqachon mavjud.",
+      "fileNotReady": "Yangi fayl tayyor emas (hali qayta ishlanmoqda, xato yoki rad etilgan). Tayyor bo‘lgach saqlang."
     },
     "statistics": {
       "title": "Statistika",
@@ -1465,6 +1475,58 @@
         "TOO_MANY_CUES": "Juda ko‘p qatorlar (5000 gacha).",
         "FAILED": "Xatolik yuz berdi. Qayta urinib ko‘ring."
       }
+    },
+    "bulk": {
+      "title": "Ommaviy yuklash",
+      "description": "Bir vaqtda ko‘p fayl qo‘shing. Har bir fayl tanlangan fan va mavzuda material bo‘ladi; video va audio keyin qayta ishlanadi.",
+      "back": "Materiallarga qaytish",
+      "subject": "Fan",
+      "topic": "Mavzu (ixtiyoriy)",
+      "visibility": "Ko‘rinish",
+      "draft": "Qoralama (talabalarga ko‘rinmaydi)",
+      "published": "Nashr etilgan",
+      "choose": "Tanlang…",
+      "drop": "Fayllarni shu yerga tashlang",
+      "pick": "Fayllarni tanlash",
+      "hint": "Video, audio, PDF, rasm, slayd va hujjatlar. Har bir faylni server tekshiradi.",
+      "files": "Fayllar",
+      "titleOf": "{name} uchun nom",
+      "badType": "Bu fayl turi qabul qilinmaydi.",
+      "empty": "Fayl bo‘sh.",
+      "tooLarge": "Fayl juda katta ({max} gacha).",
+      "failed": "Yuklab bo‘lmadi.",
+      "saveFailed": "Fayl yuklandi, ammo materialni saqlab bo‘lmadi.",
+      "needSubject": "Avval fanni tanlang.",
+      "start": "Yuklash va material yaratish",
+      "working": "Bajarilmoqda…",
+      "clearDone": "Tugallanganlarni olib tashlash",
+      "states": {
+        "queued": "Kutmoqda",
+        "uploading": "Yuklanmoqda…",
+        "saving": "Saqlanmoqda…",
+        "done": "Tayyor",
+        "error": "Xatolik"
+      },
+      "link": "Ommaviy yuklash"
+    },
+    "versions": {
+      "title": "Versiyalar",
+      "for": "Material nomi: {title}",
+      "back": "Materiallarga qaytish",
+      "help": "Faylni almashtirsangiz (yoki konspekt matnini o‘zgartirsangiz), avvalgi mazmun shu yerda saqlanadi. Talabalar faqat joriy versiyani ko‘radi. Versiyani tiklaganda, uning o‘rniga kelgan versiya ham saqlanadi.",
+      "none": "Hozircha avvalgi versiyalar yo‘q.",
+      "current": "Joriy versiya",
+      "restore": "Tiklash",
+      "restoring": "Tiklanmoqda…",
+      "restored": "Versiya tiklandi.",
+      "confirm": "Bu versiyani tiklaysizmi? Joriy mazmun versiya sifatida saqlanadi.",
+      "open": "Ochish",
+      "by": "O‘zgartirgan: {name}",
+      "file": "Fayl",
+      "notes": "Konspekt matni",
+      "notReady": "Bu versiya fayli tayyor emas.",
+      "limit": "Oxirgi {count} ta versiya saqlanadi.",
+      "link": "Versiyalar"
     }
   },
   "states": {

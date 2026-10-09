@@ -137,7 +137,8 @@ export interface TopicService {
    */
   listPublic(subjectSlug: string): Promise<PublicTopic[]>;
   listForSubject(subjectSlug: string, userId: string): Promise<TopicWithStatus[]>;
-  getContext(topicId: string, userId: string): Promise<TopicContext | null>;
+  /** `includeHidden` (admin preview only): also lists draft / scheduled materials. */
+  getContext(topicId: string, userId: string, includeHidden?: boolean): Promise<TopicContext | null>;
   listAll(): Promise<{ id: string; title: string; subjectSlug: string; order: number; durationMinutes: number; description: string; lessonCount: number; archived: boolean }[]>;
   create(input: TopicInput): Promise<ServiceResult<{ id: string }>>;
   update(id: string, input: TopicInput): Promise<ServiceResult>;
@@ -151,6 +152,11 @@ export interface MaterialInput {
   topicId?: string;
   fileId?: string;
   body?: string;
+  /** default true; false = draft */
+  published?: boolean;
+  /** ISO time; with published = scheduled */
+  publishAt?: string | null;
+  position?: number;
 }
 export interface MaterialService {
   listForSubject(subjectSlug: string): Promise<Material[]>;
@@ -159,8 +165,32 @@ export interface MaterialService {
   /** The non-archived material that uses this storage file (one indexed lookup — used by the file route on every request). */
   getByFileId(fileId: string): Promise<Material | null>;
   create(input: MaterialInput): Promise<ServiceResult<Material>>;
-  update(id: string, input: MaterialInput): Promise<ServiceResult>;
+  /** `actorId` = the administrator making the change (recorded on the version that preserves the old content). */
+  update(id: string, input: MaterialInput, actorId?: string): Promise<ServiceResult>;
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
+}
+
+/** A previous state of a material, kept when its file / text is replaced. */
+export interface MaterialVersionInfo {
+  id: string;
+  materialId: string;
+  kind: MaterialKind;
+  title: string;
+  fileId?: string;
+  fileName?: string;
+  fileMime?: string;
+  fileSize?: number;
+  fileStatus?: "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
+  /** first characters of a notes body */
+  bodyPreview?: string;
+  createdAt: string;
+  createdById?: string;
+}
+export interface MaterialVersionService {
+  /** Newest first. */
+  list(materialId: string): Promise<MaterialVersionInfo[]>;
+  /** Makes a past version current. The state it replaces is kept as a new version — nothing is lost. */
+  restore(materialId: string, versionId: string, actorId?: string): Promise<ServiceResult>;
 }
 
 /* ---------------- transcripts & subtitles ---------------- */
@@ -390,6 +420,7 @@ export interface Services {
   topics: TopicService;
   materials: MaterialService;
   mediaText: MediaTextService;
+  materialVersions: MaterialVersionService;
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;

@@ -1,4 +1,5 @@
 import "server-only";
+import { materialLive, byPosition } from "../domain/records";
 import type { DashboardService, NotificationService } from "../contracts";
 import type { DashboardOverview, PlatformSlug } from "@/types";
 import { getDb, platformOfSubject, topicVisible, userNotifications, userProgress } from "./db";
@@ -84,11 +85,11 @@ export const dashboardService: DashboardService = {
     // "Continue learning": the last material the learner opened — only if it is still visible and the topic is not locked.
     let lastMaterial: DashboardOverview["lastMaterial"] = null;
     const last = db.lastMaterial.get(userId);
-    const lm = last && db.materials.find((m) => m.id === last.materialId && !m.deletedAt);
+    const lm = last && db.materials.find((m) => m.id === last.materialId && materialLive(m));
     const lt = lm?.topicId ? db.topics.find((t) => t.id === lm.topicId) : undefined;
     const ls = lt && subjects.find((x) => x.slug === lt.subjectSlug);
     if (lm && lt && ls && topicVisible(db, lt)) {
-      const siblings = db.materials.filter((m) => m.topicId === lt.id && !m.deletedAt);
+      const siblings = byPosition(db.materials.filter((m) => m.topicId === lt.id && materialLive(m)));
       const topicsOf = visibleTopicsOf(db, ls.slug);
       lastMaterial = {
         materialId: lm.id, materialTitle: lm.title, materialNumber: siblings.findIndex((m) => m.id === lm.id) + 1, materialTotal: siblings.length,

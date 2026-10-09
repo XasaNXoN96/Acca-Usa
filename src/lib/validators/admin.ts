@@ -34,8 +34,12 @@ export const materialSchema = z
     topic: optionalId,
     body: z.string().max(20000, "max:20000").optional().default(""),
     fileId: z.string().trim().max(80).optional().default(""),
+    visibility: z.enum(["published", "draft", "scheduled"], { message: "invalidChoice" }).optional().default("published"),
+    publishAt: z.string().trim().regex(/^(\d{4}-\d{2}-\d{2})?$/, "invalidChoice").optional().default(""),
+    position: int(0, 9999).optional().default(0),
   })
   .superRefine((v, ctx) => {
+    if (v.visibility === "scheduled" && !v.publishAt) ctx.addIssue({ code: "custom", path: ["publishAt"], message: "required" });
     if (v.kind === "notes") {
       if (v.body.trim().length < 10) ctx.addIssue({ code: "custom", path: ["body"], message: "notesRequired" });
     } else if (!v.fileId) {

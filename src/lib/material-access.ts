@@ -10,6 +10,7 @@ export async function canReadMaterial(session: Session, materialId: string): Pro
   const material = await services.materials.getById(materialId);
   if (!material || material.archived) return "notfound";
   if (session.user.role !== "STUDENT") return "ok";
+  if (material.published === false || (material.publishAt && new Date(material.publishAt).getTime() > Date.now())) return "notfound"; // draft / scheduled
   const subject = await services.subjects.getBySlug(material.subjectSlug);
   if (!subject) return "notfound";
   if (!(await services.enrollments.isEnrolled(session.user.id, subject.platform))) return "forbidden";

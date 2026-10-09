@@ -2,6 +2,7 @@ import "server-only";
 import type { DashboardService, NotificationService } from "../contracts";
 import type { AppNotification, DashboardOverview, NotificationCode, NotificationTarget, PlatformSlug } from "@/types";
 import { getPrisma } from "@/lib/prisma";
+import { materialLive } from "../domain/records";
 import { activePlatformsOf, platformOfSubject, platformProgress, subjectProgress, topicPercent, topicVisible, visibleSubjects, visibleTopicsOf } from "../domain/calc";
 import { toUser } from "./auth-users";
 import { certificateService, progressService, rankingService } from "./learning";
@@ -89,11 +90,11 @@ export const dashboardService: DashboardService = {
 
     // "Continue learning": the last material the learner opened — only if it is still visible and the topic is not locked.
     let lastMaterial: DashboardOverview["lastMaterial"] = null;
-    const lm = last && calc.materials.find((m) => m.id === last.materialId && !m.deletedAt);
+    const lm = last && calc.materials.find((m) => m.id === last.materialId && materialLive(m));
     const lt = lm?.topicId ? calc.topics.find((t) => t.id === lm.topicId) : undefined;
     const ls = lt && subjects.find((x) => x.slug === lt.subjectSlug);
     if (lm && lt && ls && topicVisible(calc, lt)) {
-      const siblings = await prisma.material.findMany({ where: { topicId: lt.id, deletedAt: null }, orderBy: { createdAt: "asc" }, select: { id: true, title: true } });
+      const siblings = await prisma.material.findMany({ where: { topicId: lt.id, deletedAt: null, published: true, OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }] }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true, title: true } });
       const lmTitle = siblings.find((m) => m.id === lm.id)?.title ?? "";
       lastMaterial = {
         materialId: lm.id, materialTitle: lmTitle, materialNumber: siblings.findIndex((m) => m.id === lm.id) + 1, materialTotal: siblings.length,

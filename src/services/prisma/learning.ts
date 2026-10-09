@@ -48,7 +48,7 @@ export const progressService: ProgressService = {
     }
   },
   async touchMaterial(userId, materialId) {
-    const m = await getPrisma().material.findFirst({ where: { id: materialId, deletedAt: null, topicId: { not: null } }, select: { id: true } });
+    const m = await getPrisma().material.findFirst({ where: { id: materialId, deletedAt: null, published: true, OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }], topicId: { not: null } }, select: { id: true } });
     if (m) await getPrisma().lastMaterial.upsert({ where: { userId }, create: { userId, materialId }, update: { materialId, at: new Date() } });
   },
   async listCompletedMaterials(userId, materialIds) {

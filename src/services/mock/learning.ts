@@ -1,4 +1,5 @@
 import "server-only";
+import { materialLive } from "../domain/records";
 import type { CertificateService, ExamService, ProgressService, RankingService } from "../contracts";
 import type { Certificate, RankingEntry } from "@/types";
 import type { PlatformSlug } from "@/types";
@@ -42,7 +43,7 @@ export const progressService: ProgressService = {
   },
   async touchMaterial(userId, materialId) {
     const db = getDb();
-    const m = db.materials.find((x) => x.id === materialId && !x.deletedAt);
+    const m = db.materials.find((x) => x.id === materialId && materialLive(x));
     if (m?.topicId) db.lastMaterial.set(userId, { materialId, at: nowIso() });
   },
   async listCompletedMaterials(userId, materialIds) {

@@ -1,4 +1,5 @@
 import "server-only";
+import { materialLive } from "../domain/records";
 import type { StatsService } from "../contracts";
 import type { AdminStats, PlatformSlug } from "@/types";
 import { getDb, platformOfSubject, subjectVisible, topicVisible } from "./db";
@@ -26,7 +27,7 @@ export const statsService: StatsService = {
     const platformsInScope = new Set<PlatformSlug>(subjects.map((s) => platformOfSubject(db, s)));
     const topics = db.topics.filter((t) => subjectSlugs.has(t.subjectSlug) && topicVisible(db, t));
     const topicIds = new Set(topics.map((t) => t.id));
-    const materials = db.materials.filter((m) => !m.deletedAt && subjectSlugs.has(m.subjectSlug));
+    const materials = db.materials.filter((m) => materialLive(m) && subjectSlugs.has(m.subjectSlug));
     const materialIds = new Set(materials.map((m) => m.id));
     const tests = db.tests.filter((t) => !t.deletedAt && subjectSlugs.has(t.subjectSlug));
     const testIds = new Set(tests.map((t) => t.id));

@@ -23,7 +23,7 @@ type Params = Promise<{ subject: string; topic: string }>;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { topic } = await params;
   const session = await getSession();
-  const ctx = session ? await services.topics.getContext(topic, session.user.id) : null;
+  const ctx = session ? await services.topics.getContext(topic, session.user.id, session.user.role === "ADMIN") : null;
   return { title: ctx?.topic.title ?? "—" };
 }
 
@@ -39,7 +39,7 @@ export default async function TopicPage({ params }: { params: Params }) {
 
 async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; topicId: string }) {
   const session = await requireSession();
-  const ctx = await services.topics.getContext(topicId, session.user.id);
+  const ctx = await services.topics.getContext(topicId, session.user.id, session.user.role === "ADMIN");
   if (!ctx) notFound();
 
   const [t, n, c, tests, completedMaterials] = await Promise.all([

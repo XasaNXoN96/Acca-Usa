@@ -85,6 +85,12 @@ export interface Material {
   /** Media-pipeline state of the attached file; anything but READY is not playable yet. */
   /** Languages of enabled subtitle tracks (video); filled by the pages that render the player. */
   subtitleLangs?: Locale[];
+  /** false = draft. Absent = published (legacy data). */
+  published?: boolean;
+  /** with published: ISO time from which students see it (scheduled while in the future) */
+  publishAt?: string;
+  /** order inside the topic (lower first) */
+  position?: number;
   fileStatus?: "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
   /** Text content for kind = "notes" (rendered as plain text, never as HTML). */
   body?: string;

@@ -10,6 +10,7 @@ import { getPrisma } from "@/lib/prisma";
 import { getStorage } from "../storage";
 import { formatDuration } from "../storage/media-info";
 import { uploadKindFor, uploadRules } from "../storage/validation";
+import { MAX_MATERIAL_VERSIONS, contentChanged } from "../domain/records";
 import { enrollmentActive, platformProgress, topicsWithStatus, visibleTopicsOf } from "../domain/calc";
 import { slugify } from "../domain/ids";
 import { notifyEnrolled, notifyUser, recordActivity } from "./events";
@@ -21,7 +22,13 @@ const err = (code: string, field?: string) => ({ ok: false as const, code, field
 
 const visibleSubjectWhere: Prisma.SubjectWhereInput = { deletedAt: null, level: { platform: { deletedAt: null } } };
 const visibleTopicWhere: Prisma.TopicWhereInput = { deletedAt: null, subject: visibleSubjectWhere };
-const visibleMaterialWhere: Prisma.MaterialWhereInput = { deletedAt: null, subject: visibleSubjectWhere, OR: [{ topicId: null }, { topic: { deletedAt: null } }] };
+/** Students' view of a material: not archived, not a draft, not scheduled for later, in a visible subject / topic. */
+const liveMaterialWhere = (): Prisma.MaterialWhereInput => ({ deletedAt: null, published: true, OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }] });
+const visibleMaterialWhere = (): Prisma.MaterialWhereInput => ({
+  ...liveMaterialWhere(), subject: visibleSubjectWhere,
+  AND: [{ OR: [{ topicId: null }, { topic: { deletedAt: null } }] }],
+});
+const materialOrder: Prisma.MaterialOrderByWithRelationInput[] = [{ position: "asc" }, { createdAt: "asc" }];
 
 /* ---------------- platforms ---------------- */
 
@@ -125,7 +132,7 @@ async function toMaterial(r: DbMaterial): Promise<Material> {
   }
   return {
     id: r.id, subjectSlug: r.subjectSlug, topicId: r.topicId ?? undefined, kind: r.kind, title: r.title, meta,
-    fileId: r.fileId ?? undefined, fileMime, fileStatus, body: r.body ?? undefined, createdAt: r.createdAt.toISOString(), archived: !!r.deletedAt,
+    fileId: r.fileId ?? undefined, fileMime, fileStatus, published: r.published, publishAt: iso(r.publishAt), position: r.position, body: r.body ?? undefined, createdAt: r.createdAt.toISOString(), archived: !!r.deletedAt,
   };
 }
 
@@ -146,20 +153,34 @@ async function checkMaterial(input: MaterialInput) {
   return null;
 }
 
+/** Keeps the current content of a material as a version (before it is replaced); drops the oldest beyond the limit. */
+export async function snapshotVersion(rec: DbMaterial, actorId?: string) {
+  const prisma = getPrisma();
+  await prisma.materialVersion.create({ data: { materialId: rec.id, kind: rec.kind, title: rec.title, fileId: rec.fileId, fileMime: rec.fileMime, body: rec.body, createdById: actorId ?? null } });
+  const extra = await prisma.materialVersion.findMany({ where: { materialId: rec.id }, orderBy: { createdAt: "desc" }, skip: MAX_MATERIAL_VERSIONS });
+  for (const old of extra) {
+    await prisma.materialVersion.delete({ where: { id: old.id } });
+    if (old.fileId) {
+      const used = (await prisma.material.count({ where: { fileId: old.fileId } })) + (await prisma.materialVersion.count({ where: { fileId: old.fileId } }));
+      if (!used) await getStorage().delete(old.fileId).catch(() => undefined);
+    }
+  }
+}
+
 export const materialService: MaterialService = {
   async listForSubject(slug) {
-    const rows = await getPrisma().material.findMany({ where: { subjectSlug: slug, ...visibleMaterialWhere }, orderBy: { createdAt: "asc" } });
+    const rows = await getPrisma().material.findMany({ where: { subjectSlug: slug, ...visibleMaterialWhere() }, orderBy: materialOrder });
     return Promise.all(rows.map(toMaterial));
   },
   async listAll() {
-    return Promise.all((await getPrisma().material.findMany({ orderBy: { createdAt: "asc" } })).map(toMaterial));
+    return Promise.all((await getPrisma().material.findMany({ orderBy: materialOrder })).map(toMaterial));
   },
   async getById(id) {
     const r = await getPrisma().material.findUnique({ where: { id } });
     return r ? toMaterial(r) : null;
   },
   async getByFileId(fileId) {
-    const r = await getPrisma().material.findFirst({ where: { fileId, deletedAt: null } });
+    const r = await getPrisma().material.findFirst({ where: { fileId, ...liveMaterialWhere() } });
     return r ? toMaterial(r) : null;
   },
   async create(input) {
@@ -170,11 +191,12 @@ export const materialService: MaterialService = {
       data: {
         id: newId("mat"), subjectSlug: input.subjectSlug, topicId: input.topicId || null, kind: input.kind, title: input.title.trim(),
         fileId: input.kind === "notes" ? null : (input.fileId ?? null), body: input.kind === "notes" ? input.body : null,
+        published: input.published !== false, publishAt: input.publishAt ? new Date(input.publishAt) : null, position: input.position ?? 0,
       },
     });
     if (rec.fileId) await getStorage().markAttached(rec.fileId, true);
     const subject = await prisma.subject.findUnique({ where: { slug: rec.subjectSlug }, include: { level: true } });
-    if (subject) {
+    if (subject && rec.published && (!rec.publishAt || rec.publishAt <= new Date())) {
       await notifyEnrolled(subject.level.platformSlug as PlatformSlug, {
         code: "material_added", params: { material: rec.title, subject: subject.code },
         target: rec.topicId ? { kind: "material", subjectSlug: rec.subjectSlug, topicId: rec.topicId, id: rec.id } : { kind: "subject", slug: rec.subjectSlug },
@@ -182,20 +204,29 @@ export const materialService: MaterialService = {
     }
     return { ok: true, data: await toMaterial(rec) };
   },
-  async update(id, input) {
+  async update(id, input, actorId) {
     const prisma = getPrisma();
     const rec = await prisma.material.findUnique({ where: { id } });
     if (!rec) return err("NOT_FOUND");
     const bad = await checkMaterial(input);
     if (bad) return bad;
     const nextFile = input.kind === "notes" ? null : (input.fileId ?? null);
-    if (rec.fileId && rec.fileId !== nextFile) await getStorage().delete(rec.fileId); // replaced or removed
+    const nextBody = input.kind === "notes" ? (input.body ?? null) : null;
+    if (nextFile && nextFile !== rec.fileId) {
+      // Safe replacement: the old file keeps serving until the new one is fully processed.
+      const f = await getStorage().stat(nextFile);
+      if ((f?.status ?? "READY") !== "READY") return err("FILE_NOT_READY", "fileId");
+    }
+    if (contentChanged(rec, { kind: input.kind, fileId: nextFile, body: nextBody })) await snapshotVersion(rec, actorId); // the previous content is kept, not deleted
     if (nextFile && nextFile !== rec.fileId) await getStorage().markAttached(nextFile, true);
     await prisma.material.update({
       where: { id },
       data: {
         title: input.title.trim(), kind: input.kind as MaterialKind, subjectSlug: input.subjectSlug, topicId: input.topicId || null,
         fileId: nextFile, fileMime: null, body: input.kind === "notes" ? input.body : null,
+        ...(input.published !== undefined ? { published: input.published } : {}),
+        ...(input.publishAt !== undefined ? { publishAt: input.publishAt ? new Date(input.publishAt) : null } : {}),
+        ...(input.position !== undefined ? { position: input.position } : {}),
       },
     });
     return { ok: true, data: undefined };
@@ -212,14 +243,14 @@ export const topicService: TopicService = {
   async listPublic(subjectSlug) {
     const topics = await getPrisma().topic.findMany({
       where: { subjectSlug, ...visibleTopicWhere }, orderBy: { order: "asc" },
-      include: { materials: { where: { deletedAt: null }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, kind: true } } },
+      include: { materials: { where: liveMaterialWhere(), orderBy: materialOrder, select: { id: true, title: true, kind: true } } },
     });
     return topics.map((t, i) => ({ id: t.id, order: i + 1, title: t.title, materials: t.materials }));
   },
   async listForSubject(subjectSlug, userId) {
     return topicsWithStatus(await loadCalcDbForRead([userId]), userId, subjectSlug);
   },
-  async getContext(topicId, userId) {
+  async getContext(topicId, userId, includeHidden = false) {
     const prisma = getPrisma();
     const rec = await prisma.topic.findFirst({ where: { id: topicId, ...visibleTopicWhere } });
     if (!rec) return null;
@@ -229,7 +260,7 @@ export const topicService: TopicService = {
     const idx = list.findIndex((t) => t.id === topicId);
     const current = list[idx];
     if (!current) return null;
-    const mats = await prisma.material.findMany({ where: { topicId, ...visibleMaterialWhere }, orderBy: { createdAt: "asc" } });
+    const mats = await prisma.material.findMany({ where: includeHidden ? { topicId, deletedAt: null } : { topicId, ...visibleMaterialWhere() }, orderBy: materialOrder });
     return { topic: current, subject: toSubject(subject), previous: list[idx - 1] ?? null, next: list[idx + 1] ?? null, materials: await Promise.all(mats.map(toMaterial)) };
   },
   async listAll() {
@@ -372,7 +403,7 @@ export const searchService: SearchService = {
     const [subjects, topics, materials] = await Promise.all([
       prisma.subject.findMany({ where: { ...visibleSubjectWhere, OR: [{ code: contains }, { name: contains }] }, include: { level: true }, take: 30 }),
       prisma.topic.findMany({ where: { ...visibleTopicWhere, title: contains }, include: { subject: true }, take: 30 }),
-      prisma.material.findMany({ where: { ...visibleMaterialWhere, title: contains }, include: { subject: true }, take: 30 }),
+      prisma.material.findMany({ where: { ...visibleMaterialWhere(), title: contains }, include: { subject: true }, take: 30 }),
     ]);
     return [
       ...subjects.map((s) => ({ kind: "subject" as const, id: s.slug, title: `${s.code} — ${s.name}`, context: s.level.platformSlug.toUpperCase(), href: routes.subject(s.slug) })),

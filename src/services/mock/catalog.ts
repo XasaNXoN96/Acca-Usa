@@ -1,4 +1,5 @@
 import "server-only";
+import { MAX_MATERIAL_VERSIONS, byPosition, contentChanged, materialLive } from "../domain/records";
 import type {
   EnrollmentService, MaterialInput, MaterialService, PlatformService, SearchService, SubjectService, TopicService,
 } from "../contracts";
@@ -128,7 +129,7 @@ async function toMaterial(r: MaterialRec): Promise<Material> {
       fileStatus = f.status ?? "READY";
     }
   }
-  return { ...rest, meta, fileMime, fileStatus, archived: !!deletedAt };
+  return { ...rest, meta, fileMime, fileStatus, published: r.published !== false, publishAt: r.publishAt, position: r.position ?? 0, archived: !!deletedAt };
 }
 
 function formatSize(bytes: number): string {
@@ -137,7 +138,7 @@ function formatSize(bytes: number): string {
 }
 
 function materialVisible(db: Db, m: MaterialRec): boolean {
-  if (m.deletedAt || !subjectVisible(db, db.subjects.find((s) => s.slug === m.subjectSlug))) return false;
+  if (!materialLive(m) || !subjectVisible(db, db.subjects.find((s) => s.slug === m.subjectSlug))) return false;
   return !m.topicId || topicVisible(db, db.topics.find((t) => t.id === m.topicId));
 }
 
@@ -161,20 +162,31 @@ async function checkMaterial(db: Db, input: MaterialInput): Promise<{ ok: false;
   return null;
 }
 
+/** Keeps the current content of `rec` as a version (before it is replaced). Oldest versions beyond the limit are dropped. */
+export async function snapshotVersion(db: Db, rec: MaterialRec, actorId?: string) {
+  db.materialVersions.push({ id: newId("ver"), materialId: rec.id, kind: rec.kind, title: rec.title, fileId: rec.fileId, fileMime: rec.fileMime, body: rec.body, createdAt: nowIso(), createdById: actorId });
+  const mine = db.materialVersions.filter((v) => v.materialId === rec.id);
+  for (const old of mine.slice(0, Math.max(0, mine.length - MAX_MATERIAL_VERSIONS))) {
+    db.materialVersions = db.materialVersions.filter((v) => v !== old);
+    const stillUsed = old.fileId && (db.materials.some((m) => m.fileId === old.fileId) || db.materialVersions.some((v) => v.fileId === old.fileId));
+    if (old.fileId && !stillUsed) await getStorage().delete(old.fileId).catch(() => undefined);
+  }
+}
+
 export const materialService: MaterialService = {
   async listForSubject(slug) {
     const db = getDb();
-    return Promise.all(db.materials.filter((m) => m.subjectSlug === slug && materialVisible(db, m)).map(toMaterial));
+    return Promise.all(byPosition(db.materials.filter((m) => m.subjectSlug === slug && materialVisible(db, m))).map(toMaterial));
   },
   async listAll() {
-    return Promise.all(getDb().materials.map(toMaterial));
+    return Promise.all(byPosition(getDb().materials).map(toMaterial));
   },
   async getById(id) {
     const r = getDb().materials.find((m) => m.id === id);
     return r ? toMaterial(r) : null;
   },
   async getByFileId(fileId) {
-    const r = getDb().materials.find((m) => m.fileId === fileId && !m.deletedAt);
+    const r = getDb().materials.find((m) => m.fileId === fileId && materialLive(m));
     return r ? toMaterial(r) : null;
   },
   async create(input) {
@@ -185,11 +197,12 @@ export const materialService: MaterialService = {
       id: newId("mat"), subjectSlug: input.subjectSlug, topicId: input.topicId || undefined, kind: input.kind,
       title: input.title.trim(), fileId: input.kind === "notes" ? undefined : input.fileId,
       body: input.kind === "notes" ? input.body : undefined, createdAt: nowIso(),
+      published: input.published !== false, publishAt: input.publishAt || undefined, position: input.position ?? 0,
     };
     db.materials.push(rec);
     if (rec.fileId) await getStorage().markAttached(rec.fileId, true);
     const subject = db.subjects.find((s) => s.slug === rec.subjectSlug);
-    if (subject) {
+    if (subject && materialLive(rec)) {
       notifyEnrolled(db, platformOfSubject(db, subject), {
         code: "material_added", params: { material: rec.title, subject: subject.code },
         target: rec.topicId ? { kind: "material", subjectSlug: rec.subjectSlug, topicId: rec.topicId, id: rec.id } : { kind: "subject", slug: rec.subjectSlug },
@@ -197,18 +210,27 @@ export const materialService: MaterialService = {
     }
     return { ok: true, data: await toMaterial(rec) };
   },
-  async update(id, input) {
+  async update(id, input, actorId) {
     const db = getDb();
     const rec = db.materials.find((m) => m.id === id);
     if (!rec) return { ok: false, code: "NOT_FOUND" };
     const bad = await checkMaterial(db, input);
     if (bad) return bad;
     const nextFile = input.kind === "notes" ? undefined : input.fileId;
-    if (rec.fileId && rec.fileId !== nextFile) await getStorage().delete(rec.fileId); // replaced or removed
+    const nextBody = input.kind === "notes" ? input.body : undefined;
+    if (nextFile && nextFile !== rec.fileId) {
+      // Safe replacement: the old file keeps serving until the new one is fully processed.
+      const f = await getStorage().stat(nextFile);
+      if ((f?.status ?? "READY") !== "READY") return { ok: false, code: "FILE_NOT_READY", field: "fileId" };
+    }
+    if (contentChanged(rec, { kind: input.kind, fileId: nextFile, body: nextBody })) await snapshotVersion(db, rec, actorId); // the previous content is kept, not deleted
     if (nextFile && nextFile !== rec.fileId) await getStorage().markAttached(nextFile, true);
     Object.assign(rec, {
       title: input.title.trim(), kind: input.kind as MaterialKind, subjectSlug: input.subjectSlug,
       topicId: input.topicId || undefined, fileId: nextFile, body: input.kind === "notes" ? input.body : undefined,
+      ...(input.published !== undefined ? { published: input.published } : {}),
+      ...(input.publishAt !== undefined ? { publishAt: input.publishAt || undefined } : {}),
+      ...(input.position !== undefined ? { position: input.position } : {}),
     });
     return { ok: true, data: undefined };
   },
@@ -229,15 +251,14 @@ export const topicService: TopicService = {
       id: t.id,
       order: i + 1,
       title: t.title,
-      materials: db.materials
-        .filter((m) => m.topicId === t.id && materialVisible(db, m))
+      materials: byPosition(db.materials.filter((m) => m.topicId === t.id && materialVisible(db, m)))
         .map((m) => ({ id: m.id, title: m.title, kind: m.kind })),
     }));
   },
   async listForSubject(subjectSlug, userId) {
     return topicsWithStatus(getDb(), userId, subjectSlug);
   },
-  async getContext(topicId, userId) {
+  async getContext(topicId, userId, includeHidden = false) {
     const db = getDb();
     const rec = db.topics.find((t) => t.id === topicId);
     if (!topicVisible(db, rec)) return null;
@@ -247,7 +268,7 @@ export const topicService: TopicService = {
     const idx = list.findIndex((t) => t.id === topicId);
     const current = list[idx];
     if (!current) return null;
-    const mats = await Promise.all(db.materials.filter((m) => m.topicId === topicId && materialVisible(db, m)).map(toMaterial));
+    const mats = await Promise.all(byPosition(db.materials.filter((m) => m.topicId === topicId && (includeHidden ? !m.deletedAt : materialVisible(db, m)))).map(toMaterial));
     return { topic: current, subject: toSubject(db, subRec), previous: list[idx - 1] ?? null, next: list[idx + 1] ?? null, materials: mats };
   },
   async listAll() {

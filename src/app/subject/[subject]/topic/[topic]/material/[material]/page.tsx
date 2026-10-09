@@ -24,7 +24,7 @@ type Params = Promise<{ subject: string; topic: string; material: string }>;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { topic, material } = await params;
   const session = await getSession();
-  const ctx = session ? await services.topics.getContext(topic, session.user.id) : null;
+  const ctx = session ? await services.topics.getContext(topic, session.user.id, session.user.role === "ADMIN") : null;
   return { title: ctx?.materials.find((m) => m.id === material)?.title ?? "—" };
 }
 
@@ -41,7 +41,7 @@ const formatSize = (bytes: number) => (bytes < 1024 * 1024 ? `${Math.max(1, Math
 
 async function MaterialContent({ params }: { params: Awaited<Params> }) {
   const session = await requireSession();
-  const ctx = await services.topics.getContext(params.topic, session.user.id);
+  const ctx = await services.topics.getContext(params.topic, session.user.id, session.user.role === "ADMIN");
   if (!ctx) notFound();
   const { topic, subject, materials } = ctx;
   if (subject.slug !== params.subject) redirect(routes.subjectMaterial(subject.slug, topic.id, params.material));

@@ -1024,12 +1024,21 @@
           "topic": "Topic (optional)",
           "body": "Notes text",
           "file": "File",
-          "fileId": "File"
+          "fileId": "File",
+          "visibility": "Visibility",
+          "publishAt": "Publish on",
+          "position": "Order in topic (lower first)"
         },
         "filters": {
           "kind": "Type",
           "subject": "Subject"
-        }
+        },
+        "visibility": {
+          "published": "Published",
+          "draft": "Draft (hidden from students)",
+          "scheduled": "Scheduled"
+        },
+        "preview": "Preview as student"
       },
       "question-bank": {
         "title": "Question bank",
@@ -1257,7 +1266,8 @@
       "datePast": "The date must be in the future.",
       "paymentRequired": "This platform is paid — access comes with a completed payment.",
       "accessRevoked": "Access to this platform was revoked by an administrator.",
-      "duplicate": "A record with the same name already exists here."
+      "duplicate": "A record with the same name already exists here.",
+      "fileNotReady": "The new file is not ready (still processing, failed or rejected). Save after it is marked ready."
     },
     "statistics": {
       "title": "Statistics",
@@ -1465,6 +1475,58 @@
         "TOO_MANY_CUES": "Too many cues (max 5000).",
         "FAILED": "Something went wrong. Please try again."
       }
+    },
+    "bulk": {
+      "title": "Bulk upload",
+      "description": "Add many files at once. Each file becomes a material in the chosen subject and topic; videos and audio are processed afterwards.",
+      "back": "Back to materials",
+      "subject": "Subject",
+      "topic": "Topic (optional)",
+      "visibility": "Visibility",
+      "draft": "Draft (hidden from students)",
+      "published": "Published",
+      "choose": "Choose…",
+      "drop": "Drag files here",
+      "pick": "Choose files",
+      "hint": "Videos, audio, PDF, images, slides and documents. Each file is checked by the server.",
+      "files": "Files",
+      "titleOf": "Title for {name}",
+      "badType": "This file type is not accepted.",
+      "empty": "The file is empty.",
+      "tooLarge": "The file is too large (max {max}).",
+      "failed": "Upload failed.",
+      "saveFailed": "The file was uploaded but the material could not be saved.",
+      "needSubject": "Choose a subject first.",
+      "start": "Upload and create materials",
+      "working": "Working…",
+      "clearDone": "Clear finished",
+      "states": {
+        "queued": "Waiting",
+        "uploading": "Uploading…",
+        "saving": "Saving…",
+        "done": "Done",
+        "error": "Error"
+      },
+      "link": "Bulk upload"
+    },
+    "versions": {
+      "title": "Versions",
+      "for": "Material: {title}",
+      "back": "Back to materials",
+      "help": "When you replace a file (or change the notes text) the previous content is kept here. Students only ever see the current version. Restoring a version keeps the one it replaces.",
+      "none": "No earlier versions yet.",
+      "current": "Current version",
+      "restore": "Restore",
+      "restoring": "Restoring…",
+      "restored": "Version restored.",
+      "confirm": "Restore this version? The current content will be kept as a version.",
+      "open": "Open",
+      "by": "Changed by {name}",
+      "file": "File",
+      "notes": "Notes text",
+      "notReady": "The file of this version is not ready.",
+      "limit": "The latest {count} versions are kept.",
+      "link": "Versions"
     }
   },
   "states": {

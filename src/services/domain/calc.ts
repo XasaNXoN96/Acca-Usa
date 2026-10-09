@@ -1,5 +1,5 @@
 import type { PlatformSlug, TopicStatus, TopicWithStatus } from "@/types";
-import type { CalcDb as Db, EnrollmentStatusValue, ProgressEntry, SubjectRec, TopicRec } from "./records";
+import { materialLive, type CalcDb as Db, type EnrollmentStatusValue, type ProgressEntry, type SubjectRec, type TopicRec } from "./records";
 
 /* ---------- visibility helpers (soft delete cascades at read time) ---------- */
 
@@ -50,7 +50,7 @@ function topicTests(db: Db, topicId: string) {
 export function topicPercent(db: Db, userId: string, topicId: string): number {
   const stored = userProgress(db, userId).get(topicId)?.percent ?? 0;
   if (stored >= 100) return 100;
-  const materials = db.materials.filter((m) => m.topicId === topicId && !m.deletedAt);
+  const materials = db.materials.filter((m) => m.topicId === topicId && materialLive(m));
   const tests = topicTests(db, topicId);
   const parts: number[] = [];
   if (materials.length) {
@@ -69,7 +69,7 @@ export function topicPercent(db: Db, userId: string, topicId: string): number {
 
 /** True when every material of the topic is completed and (if the topic has a test) a test was passed. */
 export function topicEarned(db: Db, userId: string, topicId: string): boolean {
-  const materials = db.materials.filter((m) => m.topicId === topicId && !m.deletedAt);
+  const materials = db.materials.filter((m) => m.topicId === topicId && materialLive(m));
   if (!materials.length) return false;
   if (!materials.every((m) => db.materialProgress.some((p) => p.userId === userId && p.materialId === m.id))) return false;
   const tests = topicTests(db, topicId);

@@ -4,7 +4,7 @@ import type { EditableResource } from "@/lib/validators/admin";
 export const resourceKeys = ["platforms", "subjects", "topics", "materials", "question-bank", "tests", "exams", "students", "access", "certificates", "payments"] as const;
 export type ResourceKey = (typeof resourceKeys)[number];
 
-export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file";
+export type FieldKind = "text" | "email" | "textarea" | "number" | "select" | "multiselect" | "questionPicker" | "checkbox" | "password" | "file" | "date";
 
 export interface FieldDef {
   name: string;
@@ -61,6 +61,9 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
       { name: "subject", kind: "select", required: true }, { name: "topic", kind: "select", dependsOn: "subject" },
       { name: "body", kind: "textarea", showIf: { field: "kind", in: ["notes"] } },
       { name: "fileId", kind: "file", showIf: { field: "kind", notIn: ["notes"] } },
+      { name: "visibility", kind: "select", required: true, default: "published" },
+      { name: "publishAt", kind: "date", showIf: { field: "visibility", in: ["scheduled"] } },
+      { name: "position", kind: "number", default: "0" },
     ],
   },
   "question-bank": {

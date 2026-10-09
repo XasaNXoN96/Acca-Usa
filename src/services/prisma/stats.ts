@@ -27,7 +27,7 @@ export const statsService: StatsService = {
     const platformsInScope = new Set<PlatformSlug>(subjects.map((s) => platformOfSubject(calc, s)));
     const topics = calc.topics.filter((t) => subjectSlugs.has(t.subjectSlug) && topicVisible(calc, t));
     const topicIds = topics.map((t) => t.id);
-    const materialRows = await prisma.material.findMany({ where: { deletedAt: null, subjectSlug: { in: [...subjectSlugs] } }, select: { id: true } });
+    const materialRows = await prisma.material.findMany({ where: { deletedAt: null, published: true, OR: [{ publishAt: null }, { publishAt: { lte: new Date() } }], subjectSlug: { in: [...subjectSlugs] } }, select: { id: true } });
     const tests = await prisma.test.findMany({ where: { deletedAt: null, kind: "topic_test", subjectSlug: { in: [...subjectSlugs] } }, select: { id: true, title: true, subjectSlug: true } });
 
     // Students in scope: every student account; with a platform / subject filter only those enrolled in the platform(s).

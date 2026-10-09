@@ -16,6 +16,10 @@ export * from "../domain/records";
 import type { ActivityRec, AttemptRec, EnrollmentRec, LevelRec, MaterialRec, PlatformRec, ProgressEntry, QuestionRec, ResetTokenRec, SubjectRec, TestRec, TopicRec, UserRec } from "../domain/records";
 import type { PaymentRec } from "../payments/contracts";
 
+export interface MaterialVersionRec {
+  id: string; materialId: string; kind: MaterialKind; title: string; fileId?: string; fileMime?: string; body?: string; createdAt: string; createdById?: string;
+}
+
 export interface Db {
   users: UserRec[];
   platforms: PlatformRec[];
@@ -42,6 +46,7 @@ export interface Db {
   resetTokens: ResetTokenRec[];
   transcripts: import("../contracts").TranscriptRecord[];
   subtitles: import("../contracts").SubtitleRecord[];
+  materialVersions: MaterialVersionRec[];
 }
 
 const g = globalThis as unknown as { __accaDb?: Db };
@@ -114,6 +119,7 @@ function seed(): Db {
     resetTokens: [],
     transcripts: [],
     subtitles: [],
+    materialVersions: [],
   };
 
   const p = new Map<string, ProgressEntry>();

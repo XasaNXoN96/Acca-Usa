@@ -245,6 +245,12 @@ model Material {
   fileId      String?
   fileMime    String?
   body        String?      @db.Text // kind = notes: plain text, never rendered as HTML
+  /// false = draft (students never see it). Existing rows stay published.
+  published   Boolean      @default(true)
+  /// published AND publishAt in the future = scheduled: becomes visible to students at that time
+  publishAt   DateTime?
+  /// order inside the topic (lower first, ties by creation time)
+  position    Int          @default(0)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   deletedAt   DateTime?
@@ -254,10 +260,29 @@ model Material {
   progress   MaterialProgress[]
   transcript Transcript?
   subtitles  Subtitle[]
+  versions   MaterialVersion[]
 
   @@index([subjectSlug])
   @@index([topicId])
   @@index([fileId])
+}
+
+/// A PREVIOUS state of a material (file / text), kept when the file is replaced so it can be restored. The current
+/// state always lives on Material. Version files stay in storage (attached) and are readable by staff only.
+model MaterialVersion {
+  id          String       @id @default(cuid())
+  materialId  String
+  kind        MaterialKind
+  title       String
+  fileId      String?
+  fileMime    String?
+  body        String?      @db.Text
+  createdAt   DateTime     @default(now())
+  createdById String?
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId, createdAt])
 }
 
 enum TranscriptStatus {

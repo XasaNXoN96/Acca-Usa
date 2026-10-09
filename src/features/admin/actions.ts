@@ -75,8 +75,11 @@ export async function saveResourceAction(resource: string, id: string | null, ra
       const input = {
         title: String(d.title), kind: d.kind as never, subjectSlug: String(d.subject), topicId: d.topic ? String(d.topic) : undefined,
         fileId: d.fileId ? String(d.fileId) : undefined, body: d.body ? String(d.body) : undefined,
+        published: d.visibility !== "draft",
+        publishAt: d.visibility === "scheduled" && d.publishAt ? `${String(d.publishAt)}T00:00:00.000Z` : null,
+        position: Number(d.position ?? 0),
       };
-      res = id ? await services.materials.update(id, input) : await services.materials.create(input);
+      res = id ? await services.materials.update(id, input, session.user.id) : await services.materials.create(input);
       break;
     }
     case "question-bank": {
@@ -173,5 +176,16 @@ export async function duplicateTestAction(id: string): Promise<AdminActionResult
   const res = await services.tests.duplicate(id);
   if (!res.ok) return fail(res);
   refresh("tests");
+  return { ok: true };
+}
+
+/** Makes a past version of a material current (the replaced content is kept as a version). */
+export async function restoreMaterialVersionAction(materialId: string, versionId: string): Promise<AdminActionResult> {
+  const session = await authorize("materials");
+  if (!session || typeof materialId !== "string" || typeof versionId !== "string" || materialId.length > 160 || versionId.length > 160) return { ok: false, code: "FORBIDDEN" };
+  const res = await services.materialVersions.restore(materialId, versionId, session.user.id);
+  if (!res.ok) return fail(res);
+  revalidatePath(`/admin/materials/${materialId}/versions`);
+  refresh("materials");
   return { ok: true };
 }

@@ -19,6 +19,19 @@ export interface LevelRec { id: string; platform: PlatformSlug; name: string; or
 export interface SubjectRec { slug: string; code: string; name: string; levelId: string; createdAt: string; deletedAt?: string }
 export interface TopicRec extends Omit<Topic, "archived"> { createdAt: string; deletedAt?: string }
 export interface MaterialRec extends Omit<Material, "archived" | "meta"> { deletedAt?: string }
+
+export const MAX_MATERIAL_VERSIONS = 20;
+/** A change worth a version: the file, the notes text or the kind differs from what is stored now. */
+export const contentChanged = (prev: { kind: string; fileId?: string | null; body?: string | null }, next: { kind: string; fileId?: string | null; body?: string | null }) =>
+  prev.kind !== next.kind || (prev.fileId ?? null) !== (next.fileId ?? null) || (prev.body ?? "") !== (next.body ?? "");
+
+/** Stable order by `position` (lower first); equal positions keep their creation order. */
+export const byPosition = <T extends { position?: number }>(list: T[]): T[] =>
+  list.map((m, i) => [m, i] as const).sort((a, b) => (a[0].position ?? 0) - (b[0].position ?? 0) || a[1] - b[1]).map(([m]) => m);
+
+/** Visible to students: not archived, not a draft, and not scheduled for later. The ONE rule every student path uses. */
+export const materialLive = (m: { deletedAt?: string; published?: boolean; publishAt?: string }, now = Date.now()) =>
+  !m.deletedAt && m.published !== false && (!m.publishAt || new Date(m.publishAt).getTime() <= now);
 export interface QuestionRec {
   id: string;
   subjectSlug: string;
@@ -92,7 +105,7 @@ export interface CalcDb {
   levels: LevelRec[];
   subjects: SubjectRec[];
   topics: TopicRec[];
-  materials: Pick<MaterialRec, "id" | "topicId" | "deletedAt">[];
+  materials: Pick<MaterialRec, "id" | "topicId" | "deletedAt" | "published" | "publishAt">[];
   questions: Pick<QuestionRec, "id" | "deletedAt" | "status">[];
   tests: Pick<TestRec, "id" | "topicId" | "published" | "deletedAt" | "questionIds">[];
   enrollments: Pick<EnrollmentRec, "userId" | "platform" | "status" | "expiresAt">[];

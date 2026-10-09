@@ -43,6 +43,9 @@ try {
     sql(urlB, `INSERT INTO "Platform"(slug,name,"fullName","updatedAt") VALUES ('acca','ACCA','Assoc',now())`);
     sql(urlB, `INSERT INTO "User"(id,name,email,"updatedAt") VALUES ('u1','Old User','old@example.com',now())`);
     sql(urlB, `INSERT INTO "Payment"(id,"userId","platformSlug",description,"amountCents",provider,"updatedAt") VALUES ('p1','u1','acca','ACCA',14900,'stripe',now())`);
+    sql(urlB, `INSERT INTO "Level"(id,"platformSlug","order",name) VALUES ('l1','acca',1,'Applied Knowledge')`);
+    sql(urlB, `INSERT INTO "Subject"(slug,code,name,"levelId","updatedAt") VALUES ('bt','BT','Business and Technology','l1',now())`);
+    sql(urlB, `INSERT INTO "Material"(id,"subjectSlug",kind,title,body,"updatedAt") VALUES ('m-legacy-1','bt','notes','Legacy notes','Some text that existed before publication states',now())`);
     sql(urlB, `INSERT INTO "StoredFile"(id,"storageKey",name,mime,size,"ownerId") VALUES ('f-legacy-1','files/f-legacy-1','lecture.mp4','video/mp4',1234,'u1')`);
     // now apply everything that is pending using the REAL migration folder
     must("npx", ["prisma", "migrate", "deploy"], { DATABASE_URL: urlB });
@@ -51,6 +54,10 @@ try {
     assert.equal(sql(urlB, `SELECT "amountCents" FROM "Payment" WHERE id='p1'`), "14900", "payment untouched");
     assert.equal(sql(urlB, `SELECT "priceCents" FROM "Platform" WHERE slug='acca'`), "0", "new price column defaults to free (0)");
     assert.equal(sql(urlB, `SELECT "checkoutUrl" IS NULL FROM "Payment" WHERE id='p1'`), "t", "new nullable column");
+    assert.equal(sql(urlB, `SELECT published FROM "Material" WHERE id='m-legacy-1'`), "t", "materials that existed before stay PUBLISHED (students keep seeing them)");
+    assert.equal(sql(urlB, `SELECT "publishAt" IS NULL AND position = 0 FROM "Material" WHERE id='m-legacy-1'`), "t");
+    assert.equal(sql(urlB, `SELECT body FROM "Material" WHERE id='m-legacy-1'`), "Some text that existed before publication states", "content untouched");
+    assert.equal(sql(urlB, `SELECT count(*) FROM "MaterialVersion"`), "0");
     assert.equal(sql(urlB, `SELECT status FROM "StoredFile" WHERE id='f-legacy-1'`), "READY", "files uploaded before the media pipeline stay servable (READY)");
     assert.equal(sql(urlB, `SELECT attempts FROM "StoredFile" WHERE id='f-legacy-1'`), "0"); assert.equal(sql(urlB, `SELECT "playbackFileId" IS NULL FROM "StoredFile" WHERE id='f-legacy-1'`), "t");
   });

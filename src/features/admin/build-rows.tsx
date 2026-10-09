@@ -86,19 +86,30 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
       const [materials, topics] = await Promise.all([services.materials.listAll(), services.topics.listAll()]);
       const storage = getStorage();
       const kindOptions: Option[] = materialKinds.map((k) => ({ value: k, label: kinds(k) }));
+      const mt = await getTranslations("admin.resources.materials");
+      const visibilityOptions: Option[] = (["published", "draft", "scheduled"] as const).map((v) => ({ value: v, label: mt(`visibility.${v}`) }));
+      const now = Date.now();
+      const vt = await getTranslations("admin.versions");
       const topicName = (id?: string) => topics.find((x) => x.id === id)?.title ?? "—";
       const rows = await Promise.all(
         materials.map(async (m) => {
           const stored = m.fileId ? await storage.stat(m.fileId) : null;
+          const visibility = m.published === false ? "draft" : m.publishAt && new Date(m.publishAt).getTime() > now ? "scheduled" : "published";
+          const subj = m.subjectSlug;
           return mk(m.id, {
-            title: bold(m.title), kind: <Badge variant="outline">{kinds(m.kind)}</Badge>, subject: subjectCode(m.subjectSlug), topic: topicName(m.topicId),
+            title: <span className="flex flex-col gap-1"><span className="font-semibold">{m.title}</span>
+              <span className="flex flex-wrap items-center gap-2">
+                <Badge variant={visibility === "published" ? "success" : visibility === "draft" ? "warning" : "info"}>{mt(`visibility.${visibility}`)}{visibility === "scheduled" && m.publishAt ? ` · ${formatDate(m.publishAt, locale)}` : ""}</Badge>
+                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/versions`} className="type-caption text-primary hover:underline">{vt("link")}</Link>
+                {m.topicId ? <Link href={`/subject/${encodeURIComponent(subj)}/topic/${encodeURIComponent(m.topicId)}/material/${encodeURIComponent(m.id)}`} className="type-caption text-primary hover:underline">{mt("preview")}</Link> : null}
+              </span></span>, kind: <Badge variant="outline">{kinds(m.kind)}</Badge>, subject: subjectCode(m.subjectSlug), topic: topicName(m.topicId),
             meta: m.kind === "video" || m.kind === "audio" ? (
               <span className="flex flex-col gap-1">
                 <span>{m.meta}{stored?.status && stored.status !== "READY" ? <> · <Badge variant={stored.status === "FAILED" || stored.status === "REJECTED" ? "destructive" : "warning"}>{ts(`mediaText.statuses.${stored.status === "UPLOADED" ? "QUEUED" : stored.status === "PROCESSING" ? "PROCESSING" : "FAILED"}` as never)}</Badge></> : null}</span>
                 <Link href={`/admin/materials/${encodeURIComponent(m.id)}/media`} className="text-primary hover:underline">{ts("mediaText.link")}</Link>
               </span>
             ) : m.meta,
-          }, { title: m.title, kind: m.kind, subject: m.subjectSlug, topic: m.topicId ?? "", body: m.body ?? "", fileId: m.fileId ?? "" },
+          }, { title: m.title, kind: m.kind, subject: m.subjectSlug, topic: m.topicId ?? "", body: m.body ?? "", fileId: m.fileId ?? "", visibility, publishAt: visibility === "scheduled" && m.publishAt ? m.publishAt.slice(0, 10) : "", position: String(m.position ?? 0) },
           [m.title, m.kind, m.subjectSlug], m.title, !!m.archived, { kind: m.kind, subject: m.subjectSlug },
           stored ? { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size } : undefined);
         }),
@@ -106,7 +117,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
       return {
         rows, filters: { kind: kindOptions, subject: subjectOptions },
         options: {
-          kind: kindOptions, subject: subjectOptions,
+          kind: kindOptions, subject: subjectOptions, visibility: visibilityOptions,
           topic: [{ value: "", label: "—" }, ...topics.filter((x) => !x.archived).map((x) => ({ value: x.id, label: x.title, group: x.subjectSlug }))],
         },
       };
