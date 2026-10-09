@@ -1,5 +1,6 @@
 import * as React from "react";
 import { getLocale, getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { services } from "@/services";
@@ -90,7 +91,13 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
         materials.map(async (m) => {
           const stored = m.fileId ? await storage.stat(m.fileId) : null;
           return mk(m.id, {
-            title: bold(m.title), kind: <Badge variant="outline">{kinds(m.kind)}</Badge>, subject: subjectCode(m.subjectSlug), topic: topicName(m.topicId), meta: m.meta,
+            title: bold(m.title), kind: <Badge variant="outline">{kinds(m.kind)}</Badge>, subject: subjectCode(m.subjectSlug), topic: topicName(m.topicId),
+            meta: m.kind === "video" || m.kind === "audio" ? (
+              <span className="flex flex-col gap-1">
+                <span>{m.meta}{stored?.status && stored.status !== "READY" ? <> · <Badge variant={stored.status === "FAILED" || stored.status === "REJECTED" ? "destructive" : "warning"}>{ts(`mediaText.statuses.${stored.status === "UPLOADED" ? "QUEUED" : stored.status === "PROCESSING" ? "PROCESSING" : "FAILED"}` as never)}</Badge></> : null}</span>
+                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/media`} className="text-primary hover:underline">{ts("mediaText.link")}</Link>
+              </span>
+            ) : m.meta,
           }, { title: m.title, kind: m.kind, subject: m.subjectSlug, topic: m.topicId ?? "", body: m.body ?? "", fileId: m.fileId ?? "" },
           [m.title, m.kind, m.subjectSlug], m.title, !!m.archived, { kind: m.kind, subject: m.subjectSlug },
           stored ? { id: stored.id, name: stored.name, mime: stored.mime, size: stored.size } : undefined);

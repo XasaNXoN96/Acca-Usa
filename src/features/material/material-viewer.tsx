@@ -2,13 +2,15 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, Maximize2, Music } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fileUrl } from "@/lib/file-url";
 import { PdfReader } from "./pdf-reader";
 import { WatermarkOverlay } from "./watermark-overlay";
-import type { MaterialKind } from "@/types";
+import type { Locale, MaterialKind } from "@/types";
+
+const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", ru: "Русский", uz: "O‘zbekcha" };
 
 export interface ViewerFile {
   name: string;
@@ -30,7 +32,7 @@ export interface ViewerMaterial {
  * topic checked on the server) — there is no public URL for a locked material. Text is rendered as plain text blocks,
  * never as HTML.
  */
-export function MaterialViewer({ material, file, canDownload = false, watermark = null, fileStatus }: {
+export function MaterialViewer({ material, file, canDownload = false, watermark = null, fileStatus, subtitleLangs = [] }: {
   material: ViewerMaterial; file: ViewerFile | null;
   /** ADMIN only (server-decided). Students never get a download / open-original control. */
   canDownload?: boolean;
@@ -38,6 +40,8 @@ export function MaterialViewer({ material, file, canDownload = false, watermark 
   watermark?: string | null;
   /** Media-pipeline state; undefined = READY (legacy). Not READY → a status message instead of a player. */
   fileStatus?: string;
+  /** Enabled subtitle tracks of a video (served by /api/materials/[id]/subtitles/[lang], access-checked). */
+  subtitleLangs?: Locale[];
 }) {
   const t = useTranslations("material");
   const { kind, fileId, body, title } = material;
@@ -48,7 +52,7 @@ export function MaterialViewer({ material, file, canDownload = false, watermark 
   if (fileStatus && fileStatus !== "READY") {
     return <p role="status" className="rounded-xl border border-dashed border-border p-6 text-center text-muted-foreground">{fileStatus === "UPLOADED" || fileStatus === "PROCESSING" ? t("processing") : t("unavailable")}</p>;
   }
-  if (kind === "video") return <VideoViewer id={fileId} title={title} watermark={watermark} />;
+  if (kind === "video") return <VideoViewer id={fileId} materialId={material.id} title={title} watermark={watermark} subtitleLangs={subtitleLangs} />;
   if (kind === "audio") return <AudioViewer id={fileId} title={title} />;
   if (kind === "image") return <ImageViewer id={fileId} title={title} watermark={watermark} />;
   if (file.mime === "application/pdf") {
@@ -76,8 +80,9 @@ function OpenButtons({ id }: { id: string }) {
   );
 }
 
-function VideoViewer({ id, title, watermark }: { id: string; title: string; watermark: string | null }) {
+function VideoViewer({ id, materialId, title, watermark, subtitleLangs }: { id: string; materialId: string; title: string; watermark: string | null; subtitleLangs: Locale[] }) {
   const t = useTranslations("material");
+  const locale = useLocale();
   const [failed, setFailed] = useState(false);
   return (
     <div className="space-y-3" data-protected>
@@ -95,6 +100,9 @@ function VideoViewer({ id, title, watermark }: { id: string; title: string; wate
           className="aspect-video max-h-[75dvh] w-full rounded-xl bg-black"
         >
           <source src={fileUrl(id)} onError={() => setFailed(true)} />
+          {subtitleLangs.map((l) => (
+            <track key={l} kind="subtitles" srcLang={l} label={LANGUAGE_NAMES[l]} src={`/api/materials/${encodeURIComponent(materialId)}/subtitles/${l}`} default={l === locale} />
+          ))}
           {t("videoUnsupported")}
         </video>
         {watermark ? <WatermarkOverlay text={watermark} /> : null}

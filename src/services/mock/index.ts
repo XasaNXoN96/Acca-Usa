@@ -6,3 +6,4 @@ export { enrollmentService, materialService, platformService, searchService, sub
 export { questionService, testResultService, testService } from "./assessment";
 export { certificateService, examService, progressService, rankingService } from "./learning";
 export { statsService } from "./stats";
+export { mediaTextService } from "./media-text";

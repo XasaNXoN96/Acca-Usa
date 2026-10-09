@@ -25,6 +25,7 @@ export const services: Services = {
   subjects: provider.subjectService,
   topics: provider.topicService,
   materials: provider.materialService,
+  mediaText: provider.mediaTextService,
   enrollments: provider.enrollmentService,
   questions: provider.questionService,
   tests: provider.testService,

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/states";
 import { StudentShell } from "@/components/layout/student-shell";
 import { MaterialViewer, type ViewerFile } from "@/features/material/material-viewer";
 import { MaterialCompleteButton } from "@/features/material/complete-button";
+import { TranscriptPanel } from "@/features/material/transcript-panel";
 import { MaterialTouch } from "@/features/material/material-touch";
 import { watermarkText } from "@/features/material/watermark";
 import { services } from "@/services";
@@ -91,6 +92,11 @@ async function MaterialContent({ params }: { params: Awaited<Params> }) {
     }
   }
 
+  const isMedia = material.kind === "video" || material.kind === "audio";
+  const [tracks, transcript] = isMedia ? await Promise.all([services.mediaText.listSubtitles(material.id), services.mediaText.getTranscript(material.id)]) : [[], null];
+  const subtitleLangs = tracks.filter((s) => s.enabled).map((s) => s.language);
+  const transcriptLines = transcript?.status === "COMPLETED" ? transcript.segments.map((s) => ({ start: s.start, text: s.text })) : [];
+
   const prev = materials[index - 1];
   const next = materials[index + 1];
   const href = (id: string) => routes.subjectMaterial(subject.slug, topic.id, id);
@@ -111,8 +117,9 @@ async function MaterialContent({ params }: { params: Awaited<Params> }) {
       </header>
 
       <div className="min-w-0" data-material-kind={material.kind}>
-        <MaterialViewer material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }} file={file} canDownload={isAdmin} watermark={watermarkText(session.user)} />
+        <MaterialViewer material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }} file={file} canDownload={isAdmin} watermark={watermarkText(session.user)} fileStatus={material.fileStatus} subtitleLangs={subtitleLangs} />
       </div>
+      <TranscriptPanel lines={transcriptLines} />
 
       <div className="space-y-4 border-t border-border pt-5">
         <MaterialCompleteButton materialId={material.id} completed={completed} />

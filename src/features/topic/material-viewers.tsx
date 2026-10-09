@@ -18,6 +18,7 @@ export function MaterialCard({ material, canDownload, watermark, fileInfo }: {
         material={{ id: material.id, title: material.title, kind: material.kind, fileId: material.fileId, body: material.body }}
         file={fileInfo ?? (material.fileId ? { name: material.title, mime: material.fileMime ?? "application/octet-stream", sizeLabel: "", typeLabel: material.kind.toUpperCase() } : null)}
         fileStatus={material.fileStatus}
+        subtitleLangs={material.subtitleLangs}
         canDownload={canDownload}
         watermark={watermark}
       />

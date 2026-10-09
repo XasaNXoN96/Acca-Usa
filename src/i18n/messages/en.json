@@ -1409,6 +1409,62 @@
       "self": "Self-service",
       "payment": "Payment",
       "admin": "Administrator"
+    },
+    "mediaText": {
+      "link": "Transcript & subtitles",
+      "title": "Transcript & subtitles",
+      "back": "Back to materials",
+      "for": "Material: {title}",
+      "sttOn": "Speech-to-text: connected",
+      "sttOff": "Speech-to-text: NOT CONNECTED. Nothing is generated automatically — write the transcript by hand, or set STT_PROVIDER and STT_API_KEY on the server (see docs/SPEECH_TO_TEXT.md).",
+      "transcriptTitle": "Transcript",
+      "language": "Language",
+      "transcriptHelp": "One phrase per line: MM:SS text (or HH:MM:SS text). Students can read it next to the video and click a time to jump there.",
+      "save": "Save transcript",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "generate": "Generate with speech-to-text",
+      "remove": "Delete transcript",
+      "status": "Status",
+      "provider": "Source",
+      "manual": "Written by an administrator",
+      "statuses": {
+        "QUEUED": "Queued",
+        "PROCESSING": "Processing…",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed"
+      },
+      "subtitlesTitle": "Subtitles",
+      "subtitlesHelp": "One track per language. Upload WebVTT (.vtt) or SRT (.srt). A video without subtitles still plays.",
+      "upload": "Upload .vtt / .srt",
+      "fromTranscript": "Create from transcript",
+      "enabled": "Visible to students",
+      "delete": "Delete",
+      "none": "No subtitle tracks yet.",
+      "noMedia": "This material has no video or audio.",
+      "errors": {
+        "STT_NOT_CONNECTED": "Speech-to-text is not connected.",
+        "STT_REQUEST_FAILED": "The speech-to-text service did not accept the request.",
+        "STT_BAD_RESPONSE": "The speech-to-text service returned no usable text.",
+        "STT_TIMEOUT": "The speech-to-text service took too long.",
+        "FFMPEG_NOT_AVAILABLE": "FFmpeg is not installed on the server.",
+        "TRANSCODE_FAILED": "The audio could not be prepared.",
+        "SOURCE_MISSING": "The media file is missing from storage.",
+        "NOT_FOUND": "Not found.",
+        "NOT_MEDIA": "This material has no video or audio.",
+        "FILE_NOT_READY": "The media file is not processed yet.",
+        "ALREADY_RUNNING": "A transcription is already running.",
+        "BAD_LINE": "Line {line}: expected “MM:SS text”.",
+        "NO_TRANSCRIPT": "Create a transcript first.",
+        "TYPE": "Only .vtt and .srt files are accepted.",
+        "SIZE": "The file is too large (max 1 MB).",
+        "EMPTY": "The file is empty.",
+        "SIGNATURE": "This is not a text file.",
+        "NOT_SUBTITLES": "No subtitle cues found in the file.",
+        "BAD_TIMES": "The file has invalid cue times.",
+        "TOO_MANY_CUES": "Too many cues (max 5000).",
+        "FAILED": "Something went wrong. Please try again."
+      }
     }
   },
   "states": {
@@ -1541,7 +1597,11 @@
       "viewOnly": "View-only document. It cannot be downloaded or printed."
     },
     "processing": "This lecture is being prepared. Please check back in a few minutes.",
-    "unavailable": "This file is temporarily unavailable."
+    "unavailable": "This file is temporarily unavailable.",
+    "transcript": {
+      "title": "Transcript",
+      "seek": "Jump to {time}"
+    }
   },
   "email": {
     "footer": "You receive this e-mail because you have an ACCA USA account.",

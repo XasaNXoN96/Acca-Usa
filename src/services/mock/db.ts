@@ -40,6 +40,8 @@ export interface Db {
   notifications: Map<string, AppNotification[]>;
   activity: ActivityRec[];
   resetTokens: ResetTokenRec[];
+  transcripts: import("../contracts").TranscriptRecord[];
+  subtitles: import("../contracts").SubtitleRecord[];
 }
 
 const g = globalThis as unknown as { __accaDb?: Db };
@@ -110,6 +112,8 @@ function seed(): Db {
     notifications: new Map(),
     activity: [],
     resetTokens: [],
+    transcripts: [],
+    subtitles: [],
   };
 
   const p = new Map<string, ProgressEntry>();

@@ -83,6 +83,8 @@ export interface Material {
   fileId?: string;
   fileMime?: string;
   /** Media-pipeline state of the attached file; anything but READY is not playable yet. */
+  /** Languages of enabled subtitle tracks (video); filled by the pages that render the player. */
+  subtitleLangs?: Locale[];
   fileStatus?: "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "REJECTED";
   /** Text content for kind = "notes" (rendered as plain text, never as HTML). */
   body?: string;

@@ -163,6 +163,29 @@ export interface MaterialService {
   setArchived(id: string, archived: boolean): Promise<ServiceResult>;
 }
 
+/* ---------------- transcripts & subtitles ---------------- */
+
+export interface TranscriptSegment { start: number; end: number; text: string }
+export type TranscriptStatus = "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+export interface TranscriptRecord {
+  materialId: string; language: Locale; status: TranscriptStatus;
+  /** "manual" or the SpeechToTextProvider name */
+  provider: string; segments: TranscriptSegment[]; errorCode?: string; updatedAt: string;
+}
+export interface SubtitleRecord { materialId: string; language: Locale; fileId: string; enabled: boolean; createdAt: string }
+
+export interface MediaTextService {
+  getTranscript(materialId: string): Promise<TranscriptRecord | null>;
+  saveTranscript(input: { materialId: string; language: Locale; status: TranscriptStatus; provider: string; segments: TranscriptSegment[]; errorCode?: string }): Promise<void>;
+  deleteTranscript(materialId: string): Promise<void>;
+  listSubtitles(materialId: string): Promise<SubtitleRecord[]>;
+  /** Adds / replaces the track of a language; returns the id of the file it replaced (the caller deletes it from storage). */
+  putSubtitle(materialId: string, language: Locale, fileId: string): Promise<string | null>;
+  setSubtitleEnabled(materialId: string, language: Locale, enabled: boolean): Promise<boolean>;
+  /** Removes the track; returns its file id to delete from storage. */
+  removeSubtitle(materialId: string, language: Locale): Promise<string | null>;
+}
+
 /* ---------------- enrolment & progress ---------------- */
 
 export interface EnrollmentService {
@@ -366,6 +389,7 @@ export interface Services {
   subjects: SubjectService;
   topics: TopicService;
   materials: MaterialService;
+  mediaText: MediaTextService;
   enrollments: EnrollmentService;
   questions: QuestionService;
   tests: TestService;

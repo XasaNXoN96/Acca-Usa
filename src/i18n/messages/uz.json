@@ -1409,6 +1409,62 @@
       "self": "O‘zi",
       "payment": "To‘lov",
       "admin": "Admin tomonidan"
+    },
+    "mediaText": {
+      "link": "Transkript va subtitrlar",
+      "title": "Transkript va subtitrlar",
+      "back": "Materiallarga qaytish",
+      "for": "Material nomi: {title}",
+      "sttOn": "Nutqni matnga aylantirish: ulangan",
+      "sttOff": "Nutqni matnga aylantirish: ULANMAGAN. Hech narsa avtomatik yaratilmaydi — transkriptni qo‘lda yozing yoki serverda STT_PROVIDER va STT_API_KEY ni sozlang (docs/SPEECH_TO_TEXT.md ga qarang).",
+      "transcriptTitle": "Transkript",
+      "language": "Til",
+      "transcriptHelp": "Har qatorda bitta ibora: MM:SS matn (yoki HH:MM:SS matn). Talabalar uni video yonida o‘qiydi va vaqtni bosib o‘tishi mumkin.",
+      "save": "Transkriptni saqlash",
+      "saving": "Saqlanmoqda…",
+      "saved": "Saqlandi.",
+      "generate": "Nutqni aniqlash orqali yaratish",
+      "remove": "Transkriptni o‘chirish",
+      "status": "Holat",
+      "provider": "Manba",
+      "manual": "Administrator yozgan",
+      "statuses": {
+        "QUEUED": "Navbatda",
+        "PROCESSING": "Qayta ishlanmoqda…",
+        "COMPLETED": "Tayyor",
+        "FAILED": "Xatolik"
+      },
+      "subtitlesTitle": "Subtitrlar",
+      "subtitlesHelp": "Har bir til uchun bitta trek. WebVTT (.vtt) yoki SRT (.srt) yuklang. Subtitrsiz video odatdagidek ijro etiladi.",
+      "upload": ".vtt / .srt yuklash",
+      "fromTranscript": "Transkriptdan yaratish",
+      "enabled": "Talabalarga ko‘rinadi",
+      "delete": "O‘chirish",
+      "none": "Hozircha subtitr treklari yo‘q.",
+      "noMedia": "Bu materialda video yoki audio yo‘q.",
+      "errors": {
+        "STT_NOT_CONNECTED": "Nutqni aniqlash ulanmagan.",
+        "STT_REQUEST_FAILED": "Nutqni aniqlash xizmati so‘rovni qabul qilmadi.",
+        "STT_BAD_RESPONSE": "Nutqni aniqlash xizmati yaroqli matn qaytarmadi.",
+        "STT_TIMEOUT": "Nutqni aniqlash xizmati juda uzoq javob berdi.",
+        "FFMPEG_NOT_AVAILABLE": "Serverda FFmpeg o‘rnatilmagan.",
+        "TRANSCODE_FAILED": "Audioni tayyorlab bo‘lmadi.",
+        "SOURCE_MISSING": "Media fayl omborda topilmadi.",
+        "NOT_FOUND": "Topilmadi.",
+        "NOT_MEDIA": "Bu materialda video yoki audio yo‘q.",
+        "FILE_NOT_READY": "Media fayl hali qayta ishlanmagan.",
+        "ALREADY_RUNNING": "Transkriptsiya allaqachon bajarilmoqda.",
+        "BAD_LINE": "{line}-qator: “MM:SS matn” kutilgan.",
+        "NO_TRANSCRIPT": "Avval transkript yarating.",
+        "TYPE": "Faqat .vtt va .srt fayllari qabul qilinadi.",
+        "SIZE": "Fayl juda katta (1 MB gacha).",
+        "EMPTY": "Fayl bo‘sh.",
+        "SIGNATURE": "Bu matnli fayl emas.",
+        "NOT_SUBTITLES": "Faylda subtitr topilmadi.",
+        "BAD_TIMES": "Fayldagi vaqtlar noto‘g‘ri.",
+        "TOO_MANY_CUES": "Juda ko‘p qatorlar (5000 gacha).",
+        "FAILED": "Xatolik yuz berdi. Qayta urinib ko‘ring."
+      }
     }
   },
   "states": {
@@ -1541,7 +1597,11 @@
       "viewOnly": "Hujjat faqat ko‘rish uchun. Uni yuklab olish yoki chop etib bo‘lmaydi."
     },
     "processing": "Bu material tayyorlanmoqda. Bir necha daqiqadan keyin qaytib ko‘ring.",
-    "unavailable": "Fayl vaqtincha mavjud emas."
+    "unavailable": "Fayl vaqtincha mavjud emas.",
+    "transcript": {
+      "title": "Transkript",
+      "seek": "{time} ga o‘tish"
+    }
   },
   "email": {
     "footer": "Siz bu xatni ACCA USA hisobingiz borligi uchun olyapsiz.",

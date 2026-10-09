@@ -180,6 +180,46 @@ await step("media pipeline end-to-end: admin uploads an .mkv → FFmpeg converts
   await ac.close();
 });
 
+await step("transcript + subtitles: speech-to-text shows NOT CONNECTED (nothing generated); admin writes a transcript and uploads SRT/VTT; student sees tracks + transcript; access is enforced", async () => {
+  const MAT = `${T1}-video`; const API = `/api/materials/${MAT}`;
+  const ac = await ctx(); const a = await ac.newPage(); await demo(a, "Admin"); await a.waitForURL(/admin$/);
+  await a.goto(`/admin/materials/${MAT}/media`); await a.getByText(/Speech-to-text: NOT CONNECTED/).waitFor();
+  assert(await a.getByRole("button", { name: "Generate with speech-to-text" }).isDisabled(), "generate enabled without a provider");
+  const gen = await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "generate", language: "en" } });
+  assert(gen.status() === 503 && (await gen.json()).code === "STT_NOT_CONNECTED", `generate ${gen.status()}`);
+  assert(!(await (await ac.request.get(`${API}/media-text`)).json()).transcript, "a transcript appeared without a provider");
+  // transcript by hand
+  const save = await (await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "saveTranscript", language: "en", text: "00:00 Hello students\n00:05 Welcome to the lecture" } })).json();
+  assert(save.ok && save.transcript.provider === "manual" && save.transcript.status === "COMPLETED", JSON.stringify(save));
+  const bad = await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "saveTranscript", language: "en", text: "oops" } }); assert(bad.status() === 422, "bad transcript line accepted");
+  // subtitles: SRT (en) and VTT (ru); rejects wrong type / binary
+  const upload = (name, buf, lang) => ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, multipart: { language: lang, file: { name, mimeType: "text/plain", buffer: Buffer.from(buf) } } });
+  assert((await upload("en.srt", "1\n00:00:01,000 --> 00:00:03,000\nHello subtitles\n", "en")).status() === 200, "srt upload");
+  assert((await upload("ru.vtt", "WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nПривет, субтитры\n", "ru")).status() === 200, "vtt upload");
+  assert((await upload("x.exe", "MZ", "en")).status() === 422, "exe accepted"); assert((await upload("b.vtt", "WEBVTT\0\0\0", "en")).status() === 422, "binary vtt accepted");
+  assert((await upload("e.vtt", "WEBVTT\n\nnot cues", "uz")).status() === 422, "cue-less vtt accepted");
+  // from transcript → uz
+  assert((await (await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "subtitleFromTranscript", language: "uz" } })).json()).subtitles.length === 3, "uz track from transcript");
+  // student sees tracks + transcript; tracks are served only to authorised users
+  await s.goto(M("video")); await s.locator("video").waitFor();
+  assert((await s.locator("video track").count()) === 3, `tracks ${await s.locator("video track").count()}`);
+  await s.locator("[data-transcript] summary").click(); await s.getByText("Welcome to the lecture").waitFor();
+  const vtt = await sc.request.get(`${API}/subtitles/ru`); assert(vtt.status() === 200 && /text\/vtt/.test(vtt.headers()["content-type"]) && (await vtt.text()).includes("Привет, субтитры"), `student vtt ${vtt.status()}`);
+  const gc2 = await ctx(); assert((await gc2.request.get(`${API}/subtitles/ru`)).status() === 401, "guest got subtitles"); await gc2.close();
+  const nc = await ctx(); const np = await nc.newPage(); await np.goto("/register");
+  await np.locator("#reg-name").fill("Sub Tester"); await np.locator("#reg-email").fill(`sub.${Date.now()}@example.com`); await np.locator("#reg-password").fill("Sub-pass12345"); await np.locator("#reg-confirm").fill("Sub-pass12345"); await np.locator("#reg-terms").click();
+  await np.getByRole("button", { name: "Create account" }).click(); await np.waitForURL(/dashboard$/);
+  assert((await nc.request.get(`${API}/subtitles/ru`)).status() === 403, "not-enrolled student got subtitles");
+  assert((await nc.request.get(`${API}/media-text`)).status() === 403, "student read the admin media-text API");
+  assert((await nc.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "deleteTranscript" } })).status() === 403, "student deleted a transcript"); await nc.close();
+  // disable a track → hidden from students; remove → gone
+  await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "toggleSubtitle", language: "ru", enabled: false } });
+  assert((await sc.request.get(`${API}/subtitles/ru`)).status() === 404, "disabled track still served");
+  await s.goto(M("video")); assert((await s.locator("video track").count()) === 2, "disabled track still listed");
+  const rm = await (await ac.request.post(`${API}/media-text`, { headers: { origin: BASE }, data: { action: "removeSubtitle", language: "uz" } })).json(); assert(rm.subtitles.length === 2, "remove");
+  await ac.close();
+});
+
 // ---------- responsive ----------
 const studentState = await sc.storageState(); // reuse the session (login is rate limited)
 await step("responsive 360/390/768/1024/1280/1440: video, PDF, audio, image, text, file — no overflow", async () => {

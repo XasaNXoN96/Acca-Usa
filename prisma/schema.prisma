@@ -251,11 +251,51 @@ model Material {
 
   subject  Subject            @relation(fields: [subjectSlug], references: [slug], onDelete: Restrict)
   topic    Topic?             @relation(fields: [topicId], references: [id], onDelete: Restrict)
-  progress MaterialProgress[]
+  progress   MaterialProgress[]
+  transcript Transcript?
+  subtitles  Subtitle[]
 
   @@index([subjectSlug])
   @@index([topicId])
   @@index([fileId])
+}
+
+enum TranscriptStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+/// One transcript per video / audio material. `segments` = [{start,end,text}] (seconds). provider = "manual" or the
+/// SpeechToTextProvider that produced it; nothing is ever generated without a connected provider.
+model Transcript {
+  id         String           @id @default(cuid())
+  materialId String           @unique
+  language   String
+  status     TranscriptStatus @default(QUEUED)
+  provider   String
+  segments   Json             @default("[]")
+  errorCode  String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+/// Subtitle track (WebVTT file in storage) of a material, one per language (en / ru / uz).
+model Subtitle {
+  id         String   @id @default(cuid())
+  materialId String
+  language   String
+  /// StoredFile id of the .vtt
+  fileId     String
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, language])
 }
 
 /// Metadata of an object kept by the production StorageProvider. Bytes never live in PostgreSQL. Referenced by

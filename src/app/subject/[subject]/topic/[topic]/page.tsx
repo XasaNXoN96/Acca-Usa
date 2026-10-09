@@ -84,6 +84,8 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
   const completed = topic.status === "completed";
   const nextHref = next && (completed || next.status !== "locked") ? routes.subjectTopic(subject.slug, next.id) : null;
 
+  const materialsWithTracks = await Promise.all(ctx.materials.map(async (m) => (m.kind === "video" ? { ...m, subtitleLangs: (await services.mediaText.listSubtitles(m.id)).filter((s) => s.enabled).map((s) => s.language) } : m)));
+
   return (
     <div className="space-y-6">
       <Breadcrumbs label={c("breadcrumb")} items={crumbs} />
@@ -94,7 +96,7 @@ async function TopicContent({ subjectSlug, topicId }: { subjectSlug: string; top
       <TopicWorkspace
         description={topic.description}
         keyPoints={topic.keyPoints}
-        materials={ctx.materials}
+        materials={materialsWithTracks}
         testId={testId}
         canDownload={isAdmin}
         watermark={watermarkText(session.user)}

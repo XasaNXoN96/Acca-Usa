@@ -34,6 +34,9 @@ async function withServer(fn) {
 /** With DATA_PROVIDER=prisma the database persists between servers, so reload the demo dataset before every suite. */
 const usingDb = process.env.DATA_PROVIDER === "prisma";
 function resetDb() {
+  // Apply pending (additive) migrations first so a stale local database cannot cause confusing failures.
+  const m = spawnSync("npx", ["prisma", "migrate", "deploy"], { stdio: "inherit", env: process.env });
+  if (m.status !== 0) throw new Error("prisma migrate deploy failed");
   for (const script of ["prisma/reset-dev.ts", "prisma/seed.ts"]) {
     const r = spawnSync("npx", ["tsx", script], { stdio: "inherit", env: process.env });
     if (r.status !== 0) throw new Error(`${script} failed`);
