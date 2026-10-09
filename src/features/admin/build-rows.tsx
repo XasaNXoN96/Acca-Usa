@@ -100,8 +100,8 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
             title: <span className="flex flex-col gap-1"><span className="font-semibold">{m.title}</span>
               <span className="flex flex-wrap items-center gap-2">
                 <Badge variant={visibility === "published" ? "success" : visibility === "draft" ? "warning" : "info"}>{mt(`visibility.${visibility}`)}{visibility === "scheduled" && m.publishAt ? ` · ${formatDate(m.publishAt, locale)}` : ""}</Badge>
-                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/versions`} className="type-caption text-primary hover:underline">{vt("link")}</Link>
-                {m.topicId ? <Link href={`/subject/${encodeURIComponent(subj)}/topic/${encodeURIComponent(m.topicId)}/material/${encodeURIComponent(m.id)}`} className="type-caption text-primary hover:underline">{mt("preview")}</Link> : null}
+                <Link href={`/admin/materials/${encodeURIComponent(m.id)}/versions`} className="type-caption inline-flex min-h-8 items-center text-primary hover:underline">{vt("link")}</Link>
+                {m.topicId ? <Link href={`/subject/${encodeURIComponent(subj)}/topic/${encodeURIComponent(m.topicId)}/material/${encodeURIComponent(m.id)}`} className="type-caption inline-flex min-h-8 items-center text-primary hover:underline">{mt("preview")}</Link> : null}
               </span></span>, kind: <Badge variant="outline">{kinds(m.kind)}</Badge>, subject: subjectCode(m.subjectSlug), topic: topicName(m.topicId),
             meta: m.kind === "video" || m.kind === "audio" ? (
               <span className="flex flex-col gap-1">

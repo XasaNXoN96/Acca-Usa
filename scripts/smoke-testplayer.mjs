@@ -96,7 +96,9 @@ await step("question image: served to an enrolled student only once the question
 await step("mobile 360/390: timer visible, navigator usable, no overflow, Next/Submit reachable", async () => {
   for (const w of [360, 390]) {
     const c = await browser.newContext({ baseURL: BASE, viewport: { width: w, height: 800 }, hasTouch: true, storageState: await sc.storageState() }); const p = await c.newPage();
-    await p.goto(`/test/${T}`); const btn = p.getByRole("button", { name: /Start test|Resume test/ }); if (await btn.count()) await btn.click(); await p.getByText(/Question 1 of 9/).waitFor();
+    await p.goto(`/test/${T}`); const btn = p.getByRole("button", { name: /Start test|Resume test/ });
+    await btn.or(p.getByText(/Question 1 of 9/)).first().waitFor(); // wait for hydration before deciding whether a start click is needed
+    if (await btn.count()) await btn.click(); await p.getByText(/Question 1 of 9/).waitFor();
     const over = () => p.evaluate(() => document.documentElement.scrollWidth - innerWidth); assert((await over()) <= 0, `${w}: overflow`);
     const tb = await p.getByRole("timer").boundingBox(); assert(tb && tb.x >= 0 && tb.x + tb.width <= w && tb.y >= 0, `${w}: timer clipped`);
     const nav = p.getByRole("button", { name: /Go to question 9/ }); await nav.scrollIntoViewIfNeeded(); const nb = await nav.boundingBox(); assert(nb.height >= 40 && nb.width >= 40, `${w}: navigator target ${nb.width}x${nb.height}`);

@@ -1,15 +1,9 @@
 /**
  * DEMO DATA — fictional people, payments, notifications. None of this is real.
  */
-import type { AppNotification, Exam, Locale, Payment, PlatformSlug, Role, UserStatus } from "@/types";
+import type { AppNotification, Locale, Payment, PlatformSlug, Role, UserStatus } from "@/types";
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
-const daysFromNow = (d: number, hour = 9) => {
-  const x = new Date();
-  x.setUTCDate(x.getUTCDate() + d);
-  x.setUTCHours(hour, 0, 0, 0);
-  return x.toISOString();
-};
 
 /**
  * Seed accounts for DEMO MODE. Only salted scrypt hashes live here — never plaintext.
@@ -59,7 +53,6 @@ export const seedStudentSummary: Record<string, { platforms: PlatformSlug[]; pro
 export const notifications: AppNotification[] = [
   { id: "n1", code: "topic_unlocked", params: { topic: "Cost classification" }, createdAt: hoursAgo(2), read: false, target: { kind: "topic", id: "ma-cost-classification" } },
   { id: "n2", code: "result_ready", params: { test: "Introduction to management accounting — quiz" }, createdAt: hoursAgo(26), read: false, target: { kind: "result", id: "ma-introduction" } },
-  { id: "n3", code: "exam_scheduled", params: { exam: "ACCA MA — Mock Exam 1" }, createdAt: hoursAgo(50), read: true, target: { kind: "exam", id: "ex-ma-1" } },
   { id: "n4", code: "certificate_issued", params: { title: "BT" }, createdAt: hoursAgo(120), read: true, target: { kind: "certificate", id: "cert-demo-bt" } },
   { id: "n5", code: "payment_received", createdAt: hoursAgo(300), read: true, target: { kind: "payment" } },
   { id: "n6", code: "welcome", createdAt: hoursAgo(700), read: true, target: { kind: "none" } },
@@ -70,12 +63,6 @@ export const payments: Payment[] = [
   { id: "p3", description: "FIA — full access (demo)", amountCents: 2900, currency: "USD", status: "pending", createdAt: "2026-09-30T10:00:00.000Z", studentName: "Maria Lopez" },
   { id: "p4", description: "ACCA — full access (demo)", amountCents: 14900, currency: "USD", status: "refunded", createdAt: "2026-05-19T10:00:00.000Z", studentName: "Jasur Rahimov" },
   { id: "p5", description: "ACCA — full access (demo)", amountCents: 14900, currency: "USD", status: "failed", createdAt: "2026-08-02T10:00:00.000Z", studentName: "Daniil Sokolov" },
-];
-
-export const exams: Exam[] = [
-  { id: "ex-ma-1", title: "ACCA MA — Mock Exam 1", platform: "acca", subjectSlug: "ma", startsAt: daysFromNow(3, 10), durationMinutes: 120, status: "scheduled" },
-  { id: "ex-bt-1", title: "ACCA BT — Mock Exam 1", platform: "acca", subjectSlug: "bt", startsAt: daysFromNow(-20, 10), durationMinutes: 120, status: "completed" },
-  { id: "ex-fa-1", title: "ACCA FA — Mock Exam 1", platform: "acca", subjectSlug: "fa", startsAt: daysFromNow(10, 10), durationMinutes: 120, status: "scheduled" },
 ];
 
 export const activitySeeds = [

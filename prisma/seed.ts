@@ -8,7 +8,7 @@
 import { PrismaClient, type Prisma } from "@prisma/client";
 import { platforms, subjects, allTopics, materials } from "../src/data/mock/catalog";
 import { btQuestions, questionBank, testRecords } from "../src/data/mock/assessments";
-import { DEMO_STUDENT_ID, exams, notifications, payments, seedUsers } from "../src/data/mock/people";
+import { DEMO_STUDENT_ID, notifications, payments, seedUsers } from "../src/data/mock/people";
 
 if (process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_APP_MODE === "production") {
   console.error("prisma/seed.ts is for development / demo databases only. Refusing to run in production.");
@@ -67,20 +67,6 @@ async function main() {
       },
     });
   }
-  // Demo exams: tests of kind "exam" (scheduling window = opensAt / closesAt).
-  for (const e of exams) {
-    if (await prisma.test.findUnique({ where: { id: e.id } })) continue;
-    const start = new Date(e.startsAt);
-    const questionIds = e.subjectSlug === "ma" ? questionBank.map((q) => q.id) : e.subjectSlug === "bt" ? btQuestions.map((q) => q.id) : [];
-    await prisma.test.create({
-      data: {
-        id: e.id, kind: "exam", subjectSlug: e.subjectSlug, title: e.title, durationMinutes: e.durationMinutes, passMark: 50, published: true, publishedAt: created,
-        opensAt: start, closesAt: e.status === "completed" ? new Date(start.getTime() + day) : null,
-        questions: { create: questionIds.map((questionId, position) => ({ questionId, position })) },
-      },
-    });
-  }
-
   await prisma.user.createMany({
     data: seedUsers.map((u) => ({
       id: u.id, name: u.name, email: u.email, role: u.role, status: u.status, locale: u.locale, passwordHash: u.passwordHash, createdAt: new Date(u.createdAt),
