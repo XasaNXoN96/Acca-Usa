@@ -31,7 +31,9 @@
     "build:prod-test": "NEXT_PUBLIC_APP_MODE=production NEXT_DIST_DIR=.next-prod next build",
     "test:production": "node scripts/test-production-mode.mjs",
     "test:env": "tsx scripts/integration/env-check.ts",
-    "test:integration": "npm run test:env && npm run test:media && npm run test:pdf && npm run test:email && npm run test:payments && npm run test:storage"
+    "test:integration": "npm run test:env && npm run test:media && npm run test:pdf && npm run test:email && npm run test:payments && npm run test:storage",
+    "test:migrations": "node scripts/test-migrations.mjs",
+    "test:pg-restart": "node scripts/test-pg-restart.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1148.0",
