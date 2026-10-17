@@ -1790,7 +1790,10 @@
       "NO_DURATION": "The duration of the file could not be determined.",
       "TOO_LONG": "The file is longer than 6 hours.",
       "TOO_LARGE_RESOLUTION": "The resolution is higher than 4K.",
-      "SOURCE_MISSING": "The uploaded file is missing from storage."
+      "SOURCE_MISSING": "The uploaded file is missing from storage.",
+      "NO_DISK_SPACE": "The server is out of disk space. Free some space and retry.",
+      "STORAGE_ERROR": "The file storage did not respond. Retry later.",
+      "SHUTDOWN": "Processing was interrupted by a server restart and will resume automatically."
     }
   },
   "publicSubject": {

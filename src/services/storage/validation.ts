@@ -72,16 +72,26 @@ export function sanitizeFileName(name: string): string {
   return cleaned.slice(0, 120) || "file";
 }
 
+/**
+ * The checks that need only the file NAME and its first bytes — usable while the body is still streaming in:
+ * allow-listed extension for the kind, magic bytes of the family. (The size cap is enforced by counting bytes.)
+ */
+export function checkUploadHead(kind: UploadKind, fileName: string, head: Uint8Array): UploadCheck {
+  if (head.length === 0) return { ok: false, code: "EMPTY" };
+  const safeName = sanitizeFileName(fileName);
+  const ext = safeName.includes(".") ? safeName.split(".").pop()!.toLowerCase() : "";
+  if (!ext || !uploadRules[kind].exts.includes(ext)) return { ok: false, code: "TYPE" };
+  if (sniff(head.subarray(0, 64)) !== extFamily[ext]) return { ok: false, code: "SIGNATURE" };
+  return { ok: true, ext, mime: extMime[ext] ?? "application/octet-stream", safeName };
+}
+
 export async function validateUpload(kind: UploadKind, file: File): Promise<UploadCheck> {
   if (!file || file.size === 0) return { ok: false, code: "EMPTY" };
   const safeName = sanitizeFileName(file.name);
   const ext = safeName.includes(".") ? safeName.split(".").pop()!.toLowerCase() : "";
-  const rule = uploadRules[kind];
-  if (!ext || !rule.exts.includes(ext)) return { ok: false, code: "TYPE" };
-  if (file.size > rule.maxBytes) return { ok: false, code: "SIZE" };
-  const head = new Uint8Array(await file.slice(0, 64).arrayBuffer());
-  if (sniff(head) !== extFamily[ext]) return { ok: false, code: "SIGNATURE" };
-  return { ok: true, ext, mime: extMime[ext] ?? "application/octet-stream", safeName };
+  if (!ext || !uploadRules[kind].exts.includes(ext)) return { ok: false, code: "TYPE" };
+  if (file.size > uploadRules[kind].maxBytes) return { ok: false, code: "SIZE" };
+  return checkUploadHead(kind, file.name, new Uint8Array(await file.slice(0, 64).arrayBuffer()));
 }
 
 /** Which upload rule a material kind uses. */

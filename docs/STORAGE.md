@@ -53,3 +53,7 @@ files (see `docs/MEDIA.md`). Video/audio are probed with ffprobe and converted w
 bucket-event scanner) would run between `UPLOADED` and `READY` and set `REJECTED` (`statusCode: MALWARE`) on a detection.
 Until one is wired in, uploads are protected only by the extension allow-list, size caps, magic-byte checks, sanitised
 names, server-generated object keys, no executable/SVG/HTML types, and staff-only upload rights.
+
+## Upload path (streaming)
+
+`POST /api/uploads` does not buffer the body: the first 4 KB are checked (extension allow-list + magic bytes), then the rest is streamed to the provider through a counter that stops at the per-type limit (`putStream`). The S3 provider uses multipart upload (8 MB parts, 4 in flight) and aborts and deletes on failure; the database row is written only after the object exists. MinIO/S3-compatible endpoints get `requestChecksumCalculation=WHEN_REQUIRED`. Verified against the moto emulator only — repeat on your real storage (`docs/VPS_DEPLOYMENT.md` §10).

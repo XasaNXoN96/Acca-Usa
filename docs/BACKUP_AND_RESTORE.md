@@ -1,4 +1,4 @@
-# PostgreSQL backup and restore
+# Backup and restore (PostgreSQL + uploaded files)
 
 Status: **tools implemented; restore proven end-to-end on a local PostgreSQL 16 (`npm run test:backup`, 9 checks).** Not verified: a managed PostgreSQL service (RDS, Supabase, Neon, …), very large databases, point-in-time recovery, object-storage backups, an actual production backup schedule. An untested backup is not a backup — run the drill below on **your** infrastructure before relying on it.
 
@@ -58,6 +58,34 @@ Exit codes: `0` restored and verified · `1` usage · `3` backup rejected (check
 ### Restore drill (do this before launch and quarterly)
 
 Take a fresh production backup → restore into a scratch database → `npm run db:restore` must end with "verified" → start the app against it (`DATABASE_URL=<scratch>`, staging `AUTH_SECRET`) and sign in → record the date, backup name, duration and result in your runbook.
+
+## Self-hosted VPS: what is automated, what is not
+
+| Part | Tool | Status |
+|---|---|---|
+| PostgreSQL dump, encrypted, with manifest + SHA-256 | `npm run db:backup` (run nightly by `deploy/systemd/acca-usa-backup.timer` → `deploy/backup/backup.sh`) | tool tested locally on PostgreSQL 16 (`npm run test:backup`); the timer/unit files are **not run on a real systemd** |
+| Restore into a new empty DB + verification | `npm run db:restore` | tested locally (same suite) |
+| **Off-server copy of the dumps** | `BACKUP_REMOTE` (rclone `copy`, never deletes remotely) in `backup.sh` | script logic tested with a **stub** `rclone`; real rclone/remote **not tested** |
+| **Uploaded files (bucket)** | `FILES_SOURCE_REMOTE` → `FILES_REPLICA_REMOTE` (rclone `copy` into a second bucket) + provider versioning | script logic tested with a stub only; **no real bucket/MinIO backup has been run**. If you configure neither, the job logs `files_not_configured` — your files then have **no backup at all** |
+| Integrity of dumps | SHA-256 manifest checked at restore time | tested locally |
+| Integrity of file copies | run the "keys in DB exist in bucket" check in `docs/FILES_BACKUP.md` after every restore | procedure only |
+
+Rules: keep `BACKUP_PASSPHRASE` and `AUTH_SECRET` **outside** the server too (password manager) — without them encrypted dumps and MFA secrets are unreadable. Copies go to a different provider/account than the VPS.
+`/etc/acca-usa/backup.env` (root:acca, 0640) holds `BACKUP_DIR=/var/backups/acca-usa`, `BACKUP_PASSPHRASE`, optional `BACKUP_KEEP`, `BACKUP_REMOTE`, `FILES_*`.
+
+### Disaster order (server lost)
+
+1. New VPS: steps 2–5 of `docs/VPS_DEPLOYMENT.md` (hardening, software, PostgreSQL, storage).
+2. Restore the **file bucket** first from the replica / versioned bucket (or leave it if the provider-hosted bucket survived).
+3. Create an empty database, fetch the newest dump + manifest from the off-server copy, `npm run db:restore` into it; read the verification output.
+4. Put the original `AUTH_SECRET` (and `AUDIT_CHAIN_SECRET` if used) into the new env file; `prisma migrate deploy` if the code is newer than the dump.
+5. Run the file check from `docs/FILES_BACKUP.md` (every `MISSING` key = a material to recover), `npm run audit:verify`.
+6. Start `acca-usa-web` and `acca-usa-media-worker`, sign in as an administrator (MFA), spot-check a student and a video; then repoint DNS.
+7. Files in `UPLOADED`/`FAILED` status are picked up by the worker again; derived renditions can be regenerated, originals cannot.
+
+### Drills to schedule (not yet performed by anyone)
+
+DB restore drill (quarterly) · file restore drill (quarterly) · "VPS gone" full rehearsal on a scratch server before launch.
 
 ## What `npm run test:backup` proves (local PostgreSQL 16, seeded demo data)
 

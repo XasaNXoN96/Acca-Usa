@@ -1,0 +1,41 @@
+# ACCA USA web application. Install: sudo cp deploy/systemd/acca-usa-web.service /etc/systemd/system/ && sudo systemctl daemon-reload
+# Assumes: system user `acca`, code in /srv/acca-usa (built with `npm ci && npm run build`), secrets in /etc/acca-usa/acca-usa.env
+# (root:acca, mode 0640 — NOT in the repository, NOT in this file). See docs/VPS_DEPLOYMENT.md. Not run on a real systemd from the repository.
+[Unit]
+Description=ACCA USA web application
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=acca
+Group=acca
+WorkingDirectory=/srv/acca-usa
+EnvironmentFile=/etc/acca-usa/acca-usa.env
+Environment=NODE_ENV=production
+# Listen on loopback only: Nginx is the single public entrance (it also sets the trusted X-Forwarded-For).
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=on-failure
+RestartSec=5
+# A graceful stop lets in-flight requests finish.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+# Refuses to start (and says which variable names are wrong) when the configuration is incomplete; see `journalctl -u acca-usa-web`.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=-/srv/acca-usa/.next/cache
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

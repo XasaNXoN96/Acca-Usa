@@ -76,7 +76,7 @@ server-generated object keys, private bucket, `nosniff`, forced download for non
 * **Audit log**: append-only (database triggers reject UPDATE/DELETE/TRUNCATE), keyed hash chain, read-only admin view, `npm run audit:verify`. Limits (tail truncation, privileged database user with the key): `docs/AUDIT.md`.
 * **Consent gate**: required legal consents for the current text versions or no session (fail closed), evidence kept per account: `docs/LEGAL.md`.
 * **Payments**: Stripe test-mode only verified against a local test double; webhook signature / replay / amount / refund rules in `docs/PAYMENTS.md`. **E-mail**: classified failures, no credentials in logs: `docs/EMAIL.md`.
-* **Backups** are encrypted when a passphrase is set, restored only into an empty database, and verified (counts, migrations, audit chain): `docs/BACKUP_RESTORE.md`.
+* **Backups** are encrypted when a passphrase is set, restored only into an empty database, and verified (counts, migrations, audit chain): `docs/BACKUP_AND_RESTORE.md`.
 
 ## Known limits and recommendations
 

@@ -8,7 +8,7 @@ import "./globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
   return {
-    metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(process.env.AUTH_URL ?? process.env.APP_URL ?? "http://localhost:3000"),
     title: { default: t("title"), template: t("titleTemplate") },
     description: t("description"),
     applicationName: "ACCA USA",

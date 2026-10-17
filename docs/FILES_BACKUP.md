@@ -1,6 +1,6 @@
 # Backing up the learning files (materials, images, subtitles, posters)
 
-`npm run db:backup` saves **only PostgreSQL** (`docs/BACKUP_RESTORE.md`). The study files are in the private S3-compatible bucket
+`npm run db:backup` saves **only PostgreSQL** (`docs/BACKUP_AND_RESTORE.md`). The study files are in the private S3-compatible bucket
 (`S3_*`, `docs/STORAGE.md`); the database holds one `StoredFile` row per object (`storageKey = files/<id>`, size, status,
 attachment). Both halves must be protected, and **nothing in this repository backs up the bucket** — this document is the plan,
 and none of it has been executed against a real provider from this environment.

@@ -46,4 +46,4 @@ export function planMedia(kind: "video" | "audio", ext: string, p: Probe): Plan 
 }
 
 /** Admin-facing explanation keys (translated in the UI). */
-export const statusCodes = ["FFMPEG_NOT_AVAILABLE", "PROBE_FAILED", "TRANSCODE_FAILED", "TIMEOUT", "NO_VIDEO_STREAM", "NO_AUDIO_STREAM", "NO_DURATION", "TOO_LONG", "TOO_LARGE_RESOLUTION", "SOURCE_MISSING"] as const;
+export const statusCodes = ["FFMPEG_NOT_AVAILABLE", "PROBE_FAILED", "TRANSCODE_FAILED", "TIMEOUT", "NO_VIDEO_STREAM", "NO_AUDIO_STREAM", "NO_DURATION", "TOO_LONG", "TOO_LARGE_RESOLUTION", "SOURCE_MISSING", "NO_DISK_SPACE", "STORAGE_ERROR", "SHUTDOWN"] as const;

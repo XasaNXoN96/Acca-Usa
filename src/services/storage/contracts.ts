@@ -1,3 +1,4 @@
+import type { Readable } from "node:stream";
 import type { StoredFile } from "@/types";
 
 /** UPLOADED → PROCESSING → READY | FAILED (retryable) | REJECTED (content failed validation; never served). */
@@ -46,6 +47,18 @@ export interface OpenedFile {
 export interface StorageProvider {
   readonly name: "demo" | "production";
   put(input: { ownerId: string; file: File; mime: string; durationSeconds?: number; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta>;
+  /**
+   * Stores a body that is still arriving (never buffered whole in memory). The caller has validated the name and the first bytes
+   * and passes a stream that already enforces the size cap (see stream-util `countingStream`); a stream error aborts the upload
+   * and leaves no object behind.
+   */
+  putStream(input: { ownerId: string; name: string; mime: string; body: Readable; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta>;
+  /**
+   * Atomically claims a file for processing: UPLOADED, FAILED with attempts left, or PROCESSING since before `staleBefore`
+   * (a worker that died). Exactly one concurrent caller wins (returns the meta); everyone else gets null.
+   * While PROCESSING, `processedAt` is the claim time (it is set again when processing finishes).
+   */
+  claim(id: string, opts: { maxAttempts: number; staleBefore: Date }): Promise<StoredFileMeta | null>;
   /** Updates processing metadata (status, codecs, rendition ids). `null` clears a field. */
   update(id: string, patch: { [K in keyof FileMetaPatch]?: FileMetaPatch[K] | null }): Promise<StoredFileMeta | null>;
   /** Files in the given states, oldest first — the processing queue is the StoredFile table / sidecar files themselves. */

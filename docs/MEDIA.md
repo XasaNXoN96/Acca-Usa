@@ -45,7 +45,7 @@ The queue is the `StoredFile` table itself (`status IN (UPLOADED, FAILED with at
 
 ```
 npm run media:worker            # one pass
-npm run media:worker -- --loop  # poll every 15 s
+npm run media:worker -- --loop  # poll every 15 s (systemd: deploy/systemd/acca-usa-media-worker.service)
 ```
 
 Environment: `MEDIA_TMP_DIR` (temp files, default OS temp), `MEDIA_TRANSCODE_TIMEOUT_MS` (default 30 min).
@@ -79,3 +79,11 @@ real lecture on Chrome, Safari, Firefox (desktop + mobile) in staging.
   (≤ 160 MB). The pipeline itself streams. Direct-to-bucket (presigned multipart) upload would remove this; not implemented.
 * No antivirus is connected (see `docs/STORAGE.md`); content checks are signature + ffprobe only.
 * Subtitles/transcripts: see `docs/SPEECH_TO_TEXT.md`.
+
+## Reliability on a self-hosted server
+
+* Uploads are **streamed** (busboy → byte counter → S3 multipart / temp file); memory stays flat for any file size. Limits per type are enforced on the byte stream; Nginx must allow 170 MB bodies (`deploy/nginx/acca-usa.conf`).
+* Every file is **claimed atomically** before processing, so the web process and any number of workers never process one file twice. A file stuck in `PROCESSING` longer than `MEDIA_STALE_MINUTES` (default: transcode timeout + 5 min) is taken over.
+* `SIGTERM`/`SIGINT` on the worker: FFmpeg is stopped, the file in flight returns to `UPLOADED` (attempt refunded), the process exits 0. A restart continues the queue.
+* Free space is checked before copying the source (`3 × size + MEDIA_MIN_FREE_MB`); failure → `NO_DISK_SPACE`. Storage outages → `STORAGE_ERROR`. Both retry up to 3 times, then wait for *Retry processing*.
+* Tests: `npm run test:upload-stream` (claim race, stale recovery, shutdown, disk space, spoofing, size cap, memory), `npm run test:media-pipeline` (real FFmpeg), `npm run test:production` (HTTP upload rules). What only a VPS can show: `docs/DEPLOYMENT_STATUS.md`.

@@ -1790,7 +1790,10 @@
       "NO_DURATION": "Fayl davomiyligini aniqlab bo‘lmadi.",
       "TOO_LONG": "Fayl 6 soatdan uzun.",
       "TOO_LARGE_RESOLUTION": "Ruxsat 4K dan yuqori.",
-      "SOURCE_MISSING": "Yuklangan fayl omborda topilmadi."
+      "SOURCE_MISSING": "Yuklangan fayl omborda topilmadi.",
+      "NO_DISK_SPACE": "Serverda disk joyi tugadi. Joy bo‘shatib, qayta urinib ko‘ring.",
+      "STORAGE_ERROR": "Fayl ombori javob bermadi. Keyinroq qayta urinib ko‘ring.",
+      "SHUTDOWN": "Qayta ishlash server qayta ishga tushgani sababli to‘xtadi va avtomatik davom etadi."
     }
   },
   "publicSubject": {

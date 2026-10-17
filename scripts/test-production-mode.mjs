@@ -434,6 +434,22 @@ try {
     await c.close();
     const v = spawnSync("npx", ["tsx", "scripts/audit-verify.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET }, encoding: "utf8" }); assert(v.status === 0, `audit chain after manual grants: ${v.stdout}${v.stderr}`);
   });
+  await step("uploads (streaming): staff only; an oversize body is cut off at the cap, a renamed / spoofed file is refused, a dead storage backend gives a clean error; nothing is left in the database", async () => {
+    const png = Buffer.concat([Buffer.from("89504e470d0a1a0a0000000d49484452", "hex"), Buffer.alloc(2048, 1)]);
+    const up = (ctx, kind, name, buf) => ctx.request.post("/api/uploads", { multipart: { kind, file: { name, mimeType: "image/png", buffer: buf } }, headers: { origin: BASE }, maxRedirects: 0, timeout: 60000 });
+    assert((await up(offCtx, "image", "a.png", png)).status() === 403, "a student could upload");
+    const { c } = await adminLogin();
+    const before = await db.storedFile.count();
+    const big = await up(c, "image", "big.png", Buffer.concat([png, Buffer.alloc(6 * 1024 * 1024, 2)]));
+    const bigBody = await big.json(); assert(big.status() === 413 && bigBody.code === "SIZE" && bigBody.max === 5 * 1024 * 1024, `oversize: ${big.status()} ${JSON.stringify(bigBody)}`);
+    const fake = await up(c, "image", "photo.png", Buffer.from("MZ this is not an image".repeat(40)));
+    assert(fake.status() === 422 && (await fake.json()).code === "SIGNATURE", `spoof: ${fake.status()}`);
+    const exe = await up(c, "image", "run.exe", png); assert(exe.status() === 422 && (await exe.json()).code === "TYPE", `type: ${exe.status()}`);
+    const dead = await up(c, "image", "ok.png", png); const deadText = await dead.text();
+    assert(dead.status() === 500 && deadText === '{"ok":false,"code":"FAILED"}', `dead storage: ${dead.status()} ${deadText}`);
+    assert((await db.storedFile.count()) === before, "a failed upload left a database row behind");
+    await c.close();
+  });
   await offCtx.close();
   await db.$disconnect();
 } catch (e) {

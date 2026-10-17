@@ -37,7 +37,7 @@ instances never race). The application tolerates the *previous* schema for one r
 
 ## Backup recommendation
 
-Tooling and the verified restore procedure: **docs/BACKUP_RESTORE.md** (`npm run db:backup`, `npm run db:restore`).
+Tooling and the verified restore procedure: **docs/BACKUP_AND_RESTORE.md** (`npm run db:backup`, `npm run db:restore`).
 
 * Before every production migration: a logical dump (`pg_dump --format=custom`) **and** a verified restore of the latest
   automated snapshot / PITR point (managed PostgreSQL: enable point-in-time recovery, ≥ 7 days).

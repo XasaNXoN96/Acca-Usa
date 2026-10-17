@@ -1,5 +1,5 @@
 import "server-only";
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 
 /**
  * Runs an external media tool (ffmpeg / ffprobe). Arguments are passed as an array (no shell → no injection), output is
@@ -8,6 +8,12 @@ import { spawn } from "node:child_process";
 export interface ToolResult { code: number | null; stdout: string; stderr: string; timedOut: boolean; missing: boolean }
 
 const CAP = 2 * 1024 * 1024;
+const live = new Set<ChildProcess>();
+
+/** Stops every running ffmpeg / ffprobe (worker shutdown). */
+export function killAllTools(): void {
+  for (const c of live) c.kill("SIGKILL");
+}
 const bin = (name: "ffmpeg" | "ffprobe") => (name === "ffmpeg" ? process.env.FFMPEG_PATH : process.env.FFPROBE_PATH) || name;
 
 export function runTool(name: "ffmpeg" | "ffprobe", args: string[], timeoutMs: number): Promise<ToolResult> {
@@ -17,11 +23,12 @@ export function runTool(name: "ffmpeg" | "ffprobe", args: string[], timeoutMs: n
     let timedOut = false;
     let missing = false;
     const child = spawn(bin(name), args, { stdio: ["ignore", "pipe", "pipe"], shell: false });
+    live.add(child);
     const timer = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, timeoutMs);
     child.stdout.on("data", (d: Buffer) => { if (stdout.length < CAP) stdout += d.toString("utf8"); });
     child.stderr.on("data", (d: Buffer) => { stderr = (stderr + d.toString("utf8")).slice(-8192); });
-    child.on("error", (e: NodeJS.ErrnoException) => { missing = e.code === "ENOENT"; clearTimeout(timer); resolve({ code: null, stdout, stderr: String(e.message), timedOut, missing }); });
-    child.on("close", (code) => { clearTimeout(timer); resolve({ code, stdout, stderr, timedOut, missing }); });
+    child.on("error", (e: NodeJS.ErrnoException) => { live.delete(child); missing = e.code === "ENOENT"; clearTimeout(timer); resolve({ code: null, stdout, stderr: String(e.message), timedOut, missing }); });
+    child.on("close", (code) => { live.delete(child); clearTimeout(timer); resolve({ code, stdout, stderr, timedOut, missing }); });
   });
 }
 

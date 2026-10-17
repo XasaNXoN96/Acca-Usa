@@ -122,6 +122,34 @@ export class DemoStorageProvider implements StorageProvider {
     return meta;
   }
 
+  async putStream({ ownerId, name, mime, body, status, attached }: { ownerId: string; name: string; mime: string; body: Readable; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta> {
+    ensureRoot();
+    ensureSeed();
+    gc();
+    const id = randomUUID();
+    try {
+      await pipeline(body, createWriteStream(bin(id), { mode: 0o600 }));
+    } catch (e) {
+      removeFiles(id); // no partial file is left behind
+      throw e;
+    }
+    const meta: StoredFileMeta = { id, name: sanitizeFileName(name), mime, size: statSync(bin(id)).size, createdAt: new Date().toISOString(), ownerId, attached: attached ?? false, status: status ?? "READY" };
+    writeFileSync(metaPath(id), JSON.stringify(meta), { mode: 0o600 });
+    return meta;
+  }
+
+  async claim(id: string, { maxAttempts, staleBefore }: { maxAttempts: number; staleBefore: Date }): Promise<StoredFileMeta | null> {
+    const meta = readMeta(id);
+    if (!meta) return null;
+    const state = meta.status ?? "READY";
+    const since = new Date(meta.processedAt ?? meta.createdAt);
+    const ok = state === "UPLOADED" || (state === "FAILED" && (meta.attempts ?? 0) < maxAttempts) || (state === "PROCESSING" && since < staleBefore);
+    if (!ok) return null;
+    const next: StoredFileMeta = { ...meta, status: "PROCESSING", statusCode: undefined, attempts: (meta.attempts ?? 0) + 1, processedAt: new Date().toISOString() };
+    writeFileSync(metaPath(id), JSON.stringify(next), { mode: 0o600 }); // single process + synchronous write: no other caller can interleave
+    return next;
+  }
+
   async update(id: string, patch: Record<string, unknown>): Promise<StoredFileMeta | null> {
     const meta = readMeta(id);
     if (!meta) return null;

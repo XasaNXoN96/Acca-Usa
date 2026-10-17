@@ -26,7 +26,7 @@ listed separately below as CONNECTED / TESTED / NOT TESTED.
 | 23 | Safe first administrator: `npm run admin:create` (password from env, never argv; refuses a second admin / a student's e-mail without explicit flags), no public admin registration | `docs/AUTH.md` |
 | 24 | Administrator two-step verification (TOTP, recovery codes, encrypted secret, replay protection, rate limits), enforced in the session layer, mandatory in production, `admin:mfa-reset` | `docs/AUTH.md` |
 | 25 | Tamper-evident admin audit log: append-only (DB triggers), keyed hash chain, read-only admin view, `audit:verify` | `docs/AUDIT.md` |
-| 26 | PostgreSQL `db:backup` (checksum manifest, optional AES-256-GCM) and `db:restore` (only into an empty non-live database, single transaction, post-restore verification incl. audit chain) | `docs/BACKUP_RESTORE.md` |
+| 26 | PostgreSQL `db:backup` (checksum manifest, optional AES-256-GCM) and `db:restore` (only into an empty non-live database, single transaction, post-restore verification incl. audit chain) | `docs/BACKUP_AND_RESTORE.md` |
 | 27 | Terms / Privacy+consent / Cookie / Refund pages (EN/RU/UZ, operator details from env), separate versioned consents with evidence, consent gate, privacy settings | `docs/LEGAL.md` |
 
 Security fixes found during verification: simultaneous exam starts could create several attempts (PostgreSQL) — fixed with a

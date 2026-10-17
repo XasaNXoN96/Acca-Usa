@@ -3,7 +3,7 @@
 Automated gates: `npm run check && npm run build`, then `npm run smoke:all` (builds nothing — run `npm run build` first).
 The same suites run against PostgreSQL with `npm run smoke:db` (`DATA_PROVIDER=prisma`, `DATABASE_URL` of a LOCAL development database;
 the runner empties and re-seeds it before every suite). Integration tests without a browser: `npm run test:storage` (needs
-`DATABASE_URL`), `test:media`, `test:pdf`, `test:email`, `test:payments`, `test:mfa`, `test:audit`, `test:legal`, `test:admin`, `test:env` (the service-level ones run on `DATA_PROVIDER=prisma` too), `test:backup` (throw-away local PostgreSQL, see docs/BACKUP_RESTORE.md). Production mode: `npm run build:prod-test && npm run test:production`.
+`DATABASE_URL`), `test:media`, `test:pdf`, `test:email`, `test:payments`, `test:mfa`, `test:audit`, `test:legal`, `test:admin`, `test:env` (the service-level ones run on `DATA_PROVIDER=prisma` too), `test:backup` (throw-away local PostgreSQL, see docs/BACKUP_AND_RESTORE.md). Production mode: `npm run build:prod-test && npm run test:production`.
 `smoke:all` (scripts/run-smokes.mjs) starts a FRESH production server for every suite, because auth endpoints are rate limited and the
 demo database lives in memory. Pass a name fragment to run one suite: `node scripts/run-smokes.mjs results`.
 Browser: Chromium via playwright-core (`CHROMIUM=/path/to/chrome`, default `/opt/pw-browsers/chromium`).

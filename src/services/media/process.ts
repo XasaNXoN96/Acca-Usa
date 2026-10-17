@@ -1,15 +1,16 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { createWriteStream, openAsBlob } from "node:fs";
-import { mkdir, rm, stat as fsStat } from "node:fs/promises";
+import { mkdir, rm, stat as fsStat, statfs } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { logEvent } from "@/lib/log";
 import { getStorage } from "@/services/storage";
 import type { StoredFileMeta } from "@/services/storage/contracts";
 import { planMedia, type Plan, type Probe } from "./plan";
-import { runTool } from "./tools";
+import { killAllTools, runTool } from "./tools";
 
 /**
  * Media pipeline: UPLOADED → PROCESSING → READY | FAILED | REJECTED.
@@ -21,9 +22,15 @@ import { runTool } from "./tools";
  * The queue is the StoredFile status itself; `processPending()` is what a worker process runs.
  */
 const MAX_ATTEMPTS = 3;
-const STALE_PROCESSING_MS = 30 * 60_000;
 const PROBE_TIMEOUT = 60_000;
 const TRANSCODE_TIMEOUT = Number(process.env.MEDIA_TRANSCODE_TIMEOUT_MS ?? 30 * 60_000);
+/** A file that has been PROCESSING longer than a job can legitimately run belongs to a worker that died: it is claimed again. */
+const STALE_PROCESSING_MS = (Number(process.env.MEDIA_STALE_MINUTES) || Math.ceil(TRANSCODE_TIMEOUT / 60_000) + 5) * 60_000;
+
+let shuttingDown = false;
+/** Worker shutdown: stops running ffmpeg; the file in flight goes back to UPLOADED so the next worker picks it up at once. */
+export function requestShutdown(): void { shuttingDown = true; killAllTools(); }
+export const isShuttingDown = () => shuttingDown;
 const CONCURRENCY = Math.max(1, Number(process.env.MEDIA_CONCURRENCY ?? 1));
 
 let running = 0;
@@ -71,25 +78,29 @@ export function processFile(id: string): Promise<ProcessResult> {
 
 async function run(id: string): Promise<ProcessResult> {
   const storage = getStorage();
-  const meta = await storage.stat(id);
+  if (shuttingDown) return { status: "SKIPPED" };
+  // Atomic claim: when the web process and a worker (or two workers) race for the same file, exactly one of them processes it.
+  const meta = await storage.claim(id, { maxAttempts: MAX_ATTEMPTS, staleBefore: new Date(Date.now() - STALE_PROCESSING_MS) });
   if (!meta) return { status: "SKIPPED" };
-  const state = meta.status ?? "READY";
-  const stale = state === "PROCESSING" && meta.processedAt === undefined && Date.now() - new Date(meta.createdAt).getTime() > STALE_PROCESSING_MS;
-  if (state !== "UPLOADED" && state !== "FAILED" && !stale) return { status: "SKIPPED" };
   const kind = meta.mime.startsWith("video/") ? "video" : meta.mime.startsWith("audio/") ? "audio" : null;
   if (!kind) {
     await storage.update(id, { status: "READY", processedAt: new Date().toISOString() });
     return { status: "READY" };
   }
-  await storage.update(id, { status: "PROCESSING", statusCode: null, attempts: (meta.attempts ?? 0) + 1 });
-
   const dir = join(process.env.MEDIA_TMP_DIR || tmpdir(), `acca-media-${randomUUID()}`);
   const fail = async (status: "FAILED" | "REJECTED", code: string): Promise<ProcessResult> => {
+    if (shuttingDown) { // interrupted by a shutdown, not a failure of the file: give the attempt back and queue it again
+      await storage.update(id, { status: "UPLOADED", statusCode: null, attempts: Math.max(0, (meta.attempts ?? 1) - 1) });
+      return { status: "FAILED", code: "SHUTDOWN" };
+    }
     await storage.update(id, { status, statusCode: code });
     return { status, code };
   };
   try {
     await mkdir(dir, { recursive: true, mode: 0o700 });
+    // Free space: the original is copied to disk, the rendition is written next to it. Fail early and say why.
+    const fsInfo = await statfs(dir).catch(() => null);
+    if (fsInfo && Number(fsInfo.bavail) * Number(fsInfo.bsize) < meta.size * 3 + Number(process.env.MEDIA_MIN_FREE_MB ?? 128) * 1024 * 1024) return await fail("FAILED", "NO_DISK_SPACE");
     const src = join(dir, `source.${extOf(meta.name) || "bin"}`);
     const opened = await storage.open(id);
     if (!opened) return await fail("FAILED", "SOURCE_MISSING");
@@ -135,8 +146,11 @@ async function run(id: string): Promise<ProcessResult> {
     }
     await storage.update(id, { ...patch, status: "READY", statusCode: null, processedAt: new Date().toISOString(), playbackFileId: playbackId, thumbnailFileId: thumbId });
     return { status: "READY" };
-  } catch {
-    return await fail("FAILED", "TRANSCODE_FAILED");
+  } catch (e) {
+    const err = e as NodeJS.ErrnoException;
+    const code = err.code === "ENOSPC" ? "NO_DISK_SPACE" : /S3|Upload|NoSuchBucket|AccessDenied|ECONNREFUSED|ENOTFOUND/i.test(`${err.name} ${err.code}`) ? "STORAGE_ERROR" : "TRANSCODE_FAILED";
+    logEvent("error", "media.process_failed", { id, code, error: err.name ?? "Error" });
+    return await fail("FAILED", code);
   } finally {
     await rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }
@@ -145,12 +159,15 @@ async function run(id: string): Promise<ProcessResult> {
 /** Worker entry: process everything that is waiting (UPLOADED, and FAILED files that still have attempts left). */
 export async function processPending(limit = 20): Promise<{ processed: number; results: Record<string, number> }> {
   const storage = getStorage();
+  const staleBefore = Date.now() - STALE_PROCESSING_MS;
   const waiting = [
     ...(await storage.listByStatus(["UPLOADED"], limit)),
+    ...(await storage.listByStatus(["PROCESSING"], limit)).filter((f) => new Date(f.processedAt ?? f.createdAt).getTime() < staleBefore), // a worker died mid-job
     ...(await storage.listByStatus(["FAILED"], limit)).filter((f) => (f.attempts ?? 0) < MAX_ATTEMPTS),
   ].slice(0, limit);
   const results: Record<string, number> = {};
   for (const f of waiting) {
+    if (shuttingDown) break;
     const r = await processFile(f.id);
     results[r.status] = (results[r.status] ?? 0) + 1;
   }

@@ -1,0 +1,16 @@
+# Nightly backup: PostgreSQL (encrypted dump + manifest) — see deploy/backup/backup.sh and docs/BACKUP_AND_RESTORE.md.
+[Unit]
+Description=ACCA USA backup (database + file-store check)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=acca
+Group=acca
+WorkingDirectory=/srv/acca-usa
+EnvironmentFile=/etc/acca-usa/acca-usa.env
+EnvironmentFile=-/etc/acca-usa/backup.env
+ExecStart=/srv/acca-usa/deploy/backup/backup.sh
+Nice=15
+NoNewPrivileges=true
+PrivateTmp=true

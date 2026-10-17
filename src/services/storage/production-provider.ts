@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { Readable } from "node:stream";
+import { PassThrough, Readable } from "node:stream";
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -52,6 +52,9 @@ export class ProductionStorageProvider implements StorageProvider {
       endpoint: config.endpoint,
       forcePathStyle: config.forcePathStyle,
       credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey },
+      // Newer SDK defaults add CRC32 trailers that several S3-compatible servers (MinIO, R2, B2, …) do not all accept.
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
   }
 
@@ -72,6 +75,42 @@ export class ProductionStorageProvider implements StorageProvider {
       await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: storageKey })).catch(() => undefined); // no orphan bytes
       throw e;
     }
+  }
+
+  async putStream({ ownerId, name, mime, body, status, attached }: { ownerId: string; name: string; mime: string; body: Readable; status?: FileStatus; attached?: boolean }): Promise<StoredFileMeta> {
+    const id = randomUUID();
+    const storageKey = `files/${id}`;
+    const counter = new PassThrough();
+    let size = 0;
+    counter.on("data", (c: Buffer) => { size += c.length; });
+    // Unknown length → multipart upload in 8 MB parts, at most 4 parts in memory: bounded RAM whatever the file size.
+    const upload = new Upload({ client: this.client, queueSize: 4, partSize: 8 * 1024 * 1024, leavePartsOnError: false, params: { Bucket: this.bucket, Key: storageKey, Body: counter, ContentType: mime } });
+    const failed = (e: unknown) => { counter.destroy(e instanceof Error ? e : new Error(String(e))); };
+    body.once("error", failed);
+    body.pipe(counter);
+    try {
+      await upload.done();
+    } catch (e) {
+      await upload.abort().catch(() => undefined);
+      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: storageKey })).catch(() => undefined);
+      throw (body.errored ?? e);
+    }
+    try {
+      const row = await getPrisma().storedFile.create({ data: { id, storageKey, name: sanitizeFileName(name), mime, size, ownerId, status: status ?? "READY", attached: attached ?? false } });
+      return toMeta(row);
+    } catch (e) {
+      await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: storageKey })).catch(() => undefined); // no orphan bytes
+      throw e;
+    }
+  }
+
+  async claim(id: string, { maxAttempts, staleBefore }: { maxAttempts: number; staleBefore: Date }): Promise<StoredFileMeta | null> {
+    if (!ID_RE.test(id)) return null;
+    const won = await getPrisma().storedFile.updateMany({
+      where: { id, OR: [{ status: "UPLOADED" }, { status: "FAILED", attempts: { lt: maxAttempts } }, { status: "PROCESSING", processedAt: { lt: staleBefore } }, { status: "PROCESSING", processedAt: null, createdAt: { lt: staleBefore } }] },
+      data: { status: "PROCESSING", statusCode: null, attempts: { increment: 1 }, processedAt: new Date() },
+    });
+    return won.count === 1 ? this.stat(id) : null;
   }
 
   async update(id: string, patch: Record<string, unknown>): Promise<StoredFileMeta | null> {

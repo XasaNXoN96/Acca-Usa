@@ -1,0 +1,40 @@
+# ACCA USA media worker: validates and converts uploaded video / audio with ffprobe + FFmpeg and retries files whose worker died.
+# Runs next to the web service; many workers are safe (each file is claimed atomically). See docs/VPS_DEPLOYMENT.md, docs/MEDIA.md.
+# Set MEDIA_INLINE_PROCESSING=0 in /etc/acca-usa/acca-usa.env if this worker is the only processor (otherwise the web process also tries once per upload — harmless).
+[Unit]
+Description=ACCA USA media worker
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=acca
+Group=acca
+WorkingDirectory=/srv/acca-usa
+EnvironmentFile=/etc/acca-usa/acca-usa.env
+Environment=NODE_ENV=production
+# Scratch space for the source copy and the converted file: needs ~3x the largest video (check MEDIA_MIN_FREE_MB).
+Environment=MEDIA_TMP_DIR=/var/lib/acca-media
+StateDirectory=acca-media
+ExecStart=/usr/bin/node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/media-worker.ts --loop
+Restart=always
+RestartSec=10
+# SIGTERM → the worker stops FFmpeg, puts the file back in the queue and exits 0 within a few seconds.
+KillSignal=SIGTERM
+TimeoutStopSec=60
+# One conversion at a time; keep the web app responsive.
+Nice=10
+CPUQuota=200%
+MemoryHigh=1500M
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target
