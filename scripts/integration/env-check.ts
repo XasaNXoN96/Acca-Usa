@@ -5,7 +5,7 @@ import { assertEnv, validateEnv } from "../../src/lib/env-check";
 const full = {
   NEXT_PUBLIC_APP_MODE: "production", DATA_PROVIDER: "prisma", DATABASE_URL: "postgresql://u:p@h:5432/d", AUTH_SECRET: "x".repeat(48), APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "r", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", LEGAL_OPERATOR_NAME: "Example LLC", LEGAL_CONTACT_EMAIL: "privacy@example.com", LEGAL_DATA_LOCATION: "Tashkent, Uzbekistan", SMTP_HOST: "h", SMTP_PORT: "587", SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "a@b.co",
-  PAYMENT_SECRET_KEY: "sk_test_abc", PAYMENT_WEBHOOK_SECRET: "whsec_abc",
+  PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_abc", PAYMENT_WEBHOOK_SECRET: "whsec_abc",
 };
 const names = (env: Record<string, string | undefined>) => validateEnv(env).issues.map((i) => i.name).sort();
 
@@ -41,4 +41,24 @@ for (const n of ["LEGAL_OPERATOR_NAME", "LEGAL_CONTACT_EMAIL", "LEGAL_DATA_LOCAT
 }
 assert.ok(names({ ...full, LEGAL_CONTACT_EMAIL: "not-an-email" }).includes("LEGAL_CONTACT_EMAIL"), "malformed privacy contact");
 assert.ok(names({ ...full, LEGAL_TEXTS_REVIEWED: "yes" }).includes("LEGAL_TEXTS_REVIEWED"), "the review attestation is exactly 1");
+
+// ── PAYMENTS_PROVIDER: an explicit decision, and the Stripe variables belong to `stripe` only
+const { PAYMENT_SECRET_KEY: _k, PAYMENT_WEBHOOK_SECRET: _w, ...noStripe } = full as Record<string, string>; void _k; void _w;
+assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: "none" }), [], "'none' needs no Stripe variable");
+assert.deepEqual(names({ ...full, PAYMENTS_PROVIDER: "none" }), [], "'none' ignores Stripe variables that happen to be present");
+assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: undefined }), ["PAYMENTS_PROVIDER"], "production refuses an unset PAYMENTS_PROVIDER (never silently 'off')");
+assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: "" }), ["PAYMENTS_PROVIDER"]);
+assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: "paypal" }), ["PAYMENTS_PROVIDER"], "unknown provider refused");
+assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: "stripe" }), ["PAYMENT_SECRET_KEY", "PAYMENT_WEBHOOK_SECRET"], "'stripe' still needs both Stripe variables");
+assert.deepEqual(names({ NEXT_PUBLIC_APP_MODE: "demo", PAYMENTS_PROVIDER: "paypal" }), [], "demo ignores PAYMENTS_PROVIDER");
+// ── groups are independent: a payments problem never breaks S3 / SMTP use, and vice versa
+const brokenPayments = { ...noStripe, PAYMENTS_PROVIDER: "stripe" }; // stripe selected but no keys
+assert.doesNotThrow(() => assertEnv(brokenPayments, ["s3"]), "S3 access must not depend on payment variables");
+assert.doesNotThrow(() => assertEnv(brokenPayments, ["smtp"]), "SMTP must not depend on payment variables");
+assert.throws(() => assertEnv(brokenPayments, ["payments"]), /PAYMENT_SECRET_KEY/);
+assert.throws(() => assertEnv(brokenPayments), /PAYMENT_SECRET_KEY/, "startup validation still checks everything");
+const { S3_BUCKET: _b, ...noBucket } = full as Record<string, string>; void _b;
+assert.throws(() => assertEnv(noBucket, ["s3"]), /S3_BUCKET/); assert.doesNotThrow(() => assertEnv(noBucket, ["payments"]));
+const { SMTP_HOST: _h, ...noSmtp } = full as Record<string, string>; void _h;
+assert.deepEqual(validateEnv(noSmtp).issues.map((i) => `${i.group}:${i.name}`), ["smtp:SMTP_HOST"], "SMTP and S3 stay required at startup, each in its own group");
 console.log("env-check: all checks passed");

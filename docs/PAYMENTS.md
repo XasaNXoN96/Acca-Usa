@@ -1,5 +1,18 @@
 # Payments
 
+## Online payments OFF — `PAYMENTS_PROVIDER=none` (first launch)
+
+In production `PAYMENTS_PROVIDER` is **required**: `none` or `stripe` (unset or any other value → the server refuses to start and names it).
+With `none`:
+
+* no Stripe variable is needed (`PAYMENT_*`, `STRIPE_API_BASE` are ignored) and S3 / SMTP are validated independently of payments;
+* a paid platform shows a localized notice with the contact from `LEGAL_CONTACT_EMAIL` (never hard-coded) instead of a buy button; no checkout can be started — the server action and the service both refuse (`PAYMENTS_DISABLED`), and **no payment row is created**;
+* `POST /api/webhooks/payments` answers 404 and the state machine ignores every event (`applyProviderEvent` returns `ignored` before touching the ledger), so **nothing — real, forged or replayed — can grant or withdraw access through a payment**. `?paid=<id>` never grants anything (the banner comes from the stored payment status); the demo checkout page does not exist in production;
+* access is granted and withdrawn by an administrator: Admin → Access (existing server-side authorisation, `source = admin`, optional expiry); each action is written to the audit log (`access.create`, `access.archive`);
+* Admin → Payments shows the badge "Online payments off".
+
+Switching to `stripe` later = set `PAYMENTS_PROVIDER=stripe` plus the Stripe variables below (and register the webhook). Tests: `npm run test:payments-off`, `test:env`, the `payments=none` steps of `test:production`, and the unchanged Stripe-mode steps.
+
 > **Provider status.** The production adapter is **Stripe Checkout** (hosted page + signed webhooks, REST API, no SDK).
 >
 > | Layer | Status |

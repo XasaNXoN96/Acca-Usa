@@ -437,7 +437,9 @@
     "renewCta": "Renew access — {price}",
     "revoked": "Your access to this platform was withdrawn. Contact support if you think this is a mistake.",
     "rateLimited": "Too many attempts. Please wait a few minutes.",
-    "enrollFreeCta": "Enroll (free)"
+    "enrollFreeCta": "Enroll (free)",
+    "paymentsOff": "Online payment is temporarily unavailable. To get access, contact us: <mail>{email}</mail>",
+    "paymentsOffNoContact": "Online payment is temporarily unavailable. To get access, contact the school."
   },
   "subject": {
     "tabs": {
@@ -773,7 +775,8 @@
     "failedBanner": "The payment was not completed. You have not been charged.",
     "cancelledBanner": "The payment was cancelled.",
     "demoNotice": "Demo mode: payments are simulated and no real money moves.",
-    "liveNotice": "Payments are processed by our payment provider. Access starts only after the provider confirms the payment."
+    "liveNotice": "Payments are processed by our payment provider. Access starts only after the provider confirms the payment.",
+    "offNotice": "Online payment is switched off. Access is granted by an administrator after you contact the school."
   },
   "notificationsPage": {
     "title": "Notifications",
@@ -1238,7 +1241,8 @@
           "test": "Stripe TEST mode (no real charges)",
           "live": "Stripe LIVE mode",
           "invalid": "Payment key is not a Stripe key",
-          "missing": "Payments not configured"
+          "missing": "Payments not configured",
+          "none": "Online payments off"
         }
       },
       "certificates": {

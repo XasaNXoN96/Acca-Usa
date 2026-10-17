@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { stripeMode } from "@/lib/stripe-mode";
 import { isDemoMode } from "@/lib/app-mode";
+import { paymentsMode } from "@/lib/payments-mode";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { DemoBadge } from "@/components/ui/demo-badge";
@@ -22,7 +23,7 @@ const numeric = new Set(["amount", "topics", "tests", "questions", "levels", "su
 /** Which payment environment is configured, from the key prefix only (the key itself is never shown or sent anywhere). */
 async function PaymentModeBadge() {
   const t = await getTranslations("admin.resources.payments");
-  const mode = isDemoMode ? "demo" : stripeMode(process.env.PAYMENT_SECRET_KEY);
+  const mode = isDemoMode ? "demo" : paymentsMode() === "none" ? "none" : stripeMode(process.env.PAYMENT_SECRET_KEY);
   const tone = mode === "live" ? "destructive" : mode === "test" ? "warning" : "neutral";
   return <Badge variant={tone} data-payment-mode={mode}>{t(`mode.${mode}`)}</Badge>;
 }

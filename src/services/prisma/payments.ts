@@ -8,6 +8,7 @@ import { getPrisma } from "@/lib/prisma";
 import { absoluteUrl } from "../email";
 import { getPaymentProvider } from "../payments";
 import type { PaymentRec, PaymentStore } from "../payments/contracts";
+import { paymentsMode } from "@/lib/payments-mode";
 import { applyProviderEvent, emailPaymentFailed, emailPaymentReceived } from "../payments/process";
 import { notifyUser } from "./events";
 
@@ -91,6 +92,7 @@ export const paymentService: PaymentService = {
     return p ? toPayment(p) : null;
   },
   async startCheckout({ userId, platform, idempotencyKey, origin }) {
+    if (paymentsMode() === "none") return { ok: false, code: "PAYMENTS_DISABLED" }; // no payment row, no provider call
     const prisma = getPrisma();
     const [user, plat] = await Promise.all([
       prisma.user.findFirst({ where: { id: userId, deletedAt: null, status: "active" } }),

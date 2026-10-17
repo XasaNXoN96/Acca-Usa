@@ -9,6 +9,7 @@ import { services } from "@/services";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireSession } from "@/lib/auth/guards";
 import { isDemoMode } from "@/lib/app-mode";
+import { paymentsMode } from "@/lib/payments-mode";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("payments"))("title") };
@@ -43,7 +44,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Sea
           {returned.status === "paid" ? t("paid") : returned.status === "pending" ? (q.paid ? t("pendingConfirm") : t("cancelledBanner")) : returned.status === "failed" ? t("failedBanner") : t("cancelledBanner")}
         </Alert>
       ) : null}
-      <Alert variant="info">{isDemoMode ? t("demoNotice") : t("liveNotice")}</Alert>
+      <Alert variant="info">{isDemoMode ? t("demoNotice") : paymentsMode() === "none" ? t("offNotice") : t("liveNotice")}</Alert>
       {payments.length === 0 ? (
         <EmptyState title={t("empty")} />
       ) : (

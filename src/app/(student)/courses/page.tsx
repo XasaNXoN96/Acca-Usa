@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { PlatformMark } from "@/components/layout/platform-mark";
 import { PlatformCourses } from "@/features/courses/platform-courses";
-import { EnrollButton, LeaveButton } from "@/features/courses/enroll-buttons";
+import { LeaveButton } from "@/features/courses/enroll-buttons";
+import { EnrollControl } from "@/features/courses/enroll-control";
 import { requireSession } from "@/lib/auth/guards";
 import { services } from "@/services";
 import { routes } from "@/lib/routes";
@@ -65,7 +66,7 @@ export default async function CoursesPage() {
                     <p className="type-caption line-clamp-2 text-muted-foreground">{full(e.platform)}</p>
                   </div>
                 </div>
-                <EnrollButton platform={e.platform} priceCents={e.priceCents} access={e.access} className="mt-auto" />
+                <EnrollControl platform={e.platform} priceCents={e.priceCents} access={e.access} className="mt-auto" />
                 <Button asChild variant="ghost" size="sm"><Link href={routes.coursePlatform(e.platform)}>{t("viewSubjects")}</Link></Button>
               </Card>
             ))}

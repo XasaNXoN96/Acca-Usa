@@ -40,7 +40,7 @@ AUTH_SECRET=<≥ 32 random characters>        # openssl rand -base64 48
 APP_URL=https://your-domain                  # https only
 S3_BUCKET  S3_REGION  S3_ACCESS_KEY_ID  S3_SECRET_ACCESS_KEY   [S3_ENDPOINT]  [S3_FORCE_PATH_STYLE=1]
 SMTP_HOST  SMTP_PORT  SMTP_USER  SMTP_PASSWORD  EMAIL_FROM   [SMTP_SECURE=1]
-PAYMENT_SECRET_KEY  PAYMENT_WEBHOOK_SECRET
+PAYMENTS_PROVIDER=none|stripe   (stripe only: PAYMENT_SECRET_KEY  PAYMENT_WEBHOOK_SECRET)
 ```
 
 `.env.example` lists them. Nothing here may be prefixed `NEXT_PUBLIC_` except the mode.
@@ -72,7 +72,7 @@ environment before the build, not only at runtime. Everything below is validated
 | Mode / data | `NEXT_PUBLIC_APP_MODE=production`, `DATA_PROVIDER=prisma`, `DATABASE_URL` (use the provider's **pooled** connection string for serverless), `APP_URL` (public https URL), `AUTH_SECRET` (≥ 32 random chars; never rotate casually — see docs/AUTH.md) |
 | Files | `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (+ `S3_ENDPOINT` for R2/MinIO) |
 | E-mail | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` |
-| Payments | `PAYMENT_SECRET_KEY` (`sk_test_…` until you decide otherwise), `PAYMENT_WEBHOOK_SECRET` (`whsec_…`); never `STRIPE_API_BASE` |
+| Payments | `PAYMENTS_PROVIDER` (**required**: `none` for the first launch — no Stripe variables — or `stripe`); only with `stripe`: `PAYMENT_SECRET_KEY` (`sk_test_…` until you decide otherwise), `PAYMENT_WEBHOOK_SECRET` (`whsec_…`); never `STRIPE_API_BASE` |
 | Legal | `LEGAL_OPERATOR_NAME`, `LEGAL_CONTACT_EMAIL`, `LEGAL_DATA_LOCATION` (+ optional `LEGAL_*`, `LEGAL_TEXTS_REVIEWED`) |
 | Optional | `AUDIT_CHAIN_SECRET`, `MFA_REQUIRED` (production already forces MFA), media/STT variables |
 

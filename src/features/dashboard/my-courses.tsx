@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { PlatformMark } from "@/components/layout/platform-mark";
-import { EnrollButton } from "@/features/courses/enroll-buttons";
+import { EnrollControl } from "@/features/courses/enroll-control";
 import { platformTheme } from "@/lib/platform-theme";
 import { routes } from "@/lib/routes";
 import type { Enrollment, Platform } from "@/types";
@@ -73,7 +73,7 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
               {active ? (
                 <Button asChild variant={theme.button} size="sm" className="mt-auto w-full"><Link href={routes.coursePlatform(e.platform)}>{t("continue")}</Link></Button>
               ) : (
-                <EnrollButton platform={e.platform} size="sm" label={t("enroll")} priceCents={e.priceCents} className="mt-auto" />
+                <EnrollControl platform={e.platform} size="sm" label={t("enroll")} priceCents={e.priceCents} className="mt-auto" />
               )}
             </Card>
           );

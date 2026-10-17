@@ -409,7 +409,7 @@ export interface PaymentService {
    */
   startCheckout(input: { userId: string; platform: PlatformSlug; idempotencyKey: string; origin: string }): Promise<ServiceResult<{ paymentId: string; checkoutUrl: string }>>;
   /** Applies an AUTHENTICATED provider event (webhook route only). Idempotent per provider event id. */
-  applyProviderEvent(provider: "demo" | "stripe", event: ProviderEvent): Promise<ProcessOutcome>;
+  applyProviderEvent(provider: "demo" | "stripe" | "none", event: ProviderEvent): Promise<ProcessOutcome>;
   /** DEMO ONLY: completes a simulated checkout. Refuses (`DEMO_ONLY`) outside demo mode. */
   completeDemoCheckout(input: { userId: string; paymentId: string; outcome: "paid" | "failed" | "cancelled" }): Promise<ServiceResult>;
 }

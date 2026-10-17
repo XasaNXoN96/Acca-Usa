@@ -6,6 +6,7 @@ import { createHmac, randomBytes } from "node:crypto";
 import http from "node:http";
 import net from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
+import { readFileSync } from "node:fs";
 import { chromium } from "playwright-core";
 
 const ADMIN_URL = process.env.PG_ADMIN_URL ?? "postgresql://postgres@localhost:5433/postgres";
@@ -64,7 +65,7 @@ const baseEnv = {
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
   LEGAL_OPERATOR_NAME: "Acca Test LLC", LEGAL_OPERATOR_ADDRESS: "1 Test Street, Tashkent", LEGAL_OPERATOR_TAX_ID: "123456789", LEGAL_CONTACT_EMAIL: "privacy@acca.example", LEGAL_DATA_LOCATION: "Test datacentre, Tashkent", LEGAL_GOVERNING_LAW: "Test law", LEGAL_REFUND_WINDOW: "14 days", SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
-  PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
+  PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
 };
 const startServer = (env) => {
   const child = spawn("npx", ["next", "start", "-p", PORT], { env: { ...process.env, NEXT_DIST_DIR: ".next-prod", ...env }, stdio: ["ignore", "pipe", "pipe"], detached: true });
@@ -89,7 +90,7 @@ try {
     for (let i = 0; i < 60 && s.child.exitCode === null; i++) await sleep(500);
     const out = s.output(); s.stop(); await waitDown();
     assert(/Invalid environment \(production mode\)/.test(out), `no validation error: ${out.slice(0, 300)}`);
-    for (const name of ["AUTH_SECRET", "DATA_PROVIDER", "DATABASE_URL", "APP_URL", "S3_BUCKET", "SMTP_HOST", "PAYMENT_WEBHOOK_SECRET"]) assert(out.includes(name), `${name} not listed`);
+    for (const name of ["AUTH_SECRET", "DATA_PROVIDER", "DATABASE_URL", "APP_URL", "S3_BUCKET", "SMTP_HOST", "PAYMENTS_PROVIDER"]) assert(out.includes(name), `${name} not listed`);
     assert(!out.includes("tooshort-secret-value"), "the secret value was echoed");
   });
 
@@ -372,6 +373,68 @@ try {
     const { c, p } = await adminLogin(); await p.goto("/admin/audit"); await p.locator("[data-audit-integrity='ok']").waitFor();
     assert((await p.locator("[data-audit-action='payment.refunded']").count()) >= 1 && (await p.locator("[data-audit-action='mfa.reset']").count()) >= 1, "UI does not list the events"); await c.close();
   });
+
+  // ── PAYMENTS_PROVIDER=none: first-launch mode — no Stripe, access is granted by the administrator only
+  server.stop(); await waitDown();
+  const noneEnv = { ...baseEnv, PAYMENTS_PROVIDER: "none", PAYMENT_SECRET_KEY: "", PAYMENT_WEBHOOK_SECRET: "", STRIPE_API_BASE: "" };
+  const refuses = async (env) => { const s2 = startServer(env); for (let i = 0; i < 60 && s2.child.exitCode === null; i++) await sleep(500); const out = s2.output(); s2.stop(); await waitDown(); return out; };
+  await step("payments=none: a missing or unknown PAYMENTS_PROVIDER, or 'stripe' without keys, refuses to start (names the variable); 'none' starts with NO Stripe variable at all", async () => {
+    let out = await refuses({ ...baseEnv, PAYMENTS_PROVIDER: "" }); assert(/Invalid environment/.test(out) && out.includes("PAYMENTS_PROVIDER"), `missing: ${out.slice(0, 300)}`);
+    out = await refuses({ ...baseEnv, PAYMENTS_PROVIDER: "paypal" }); assert(/Invalid environment/.test(out) && out.includes("PAYMENTS_PROVIDER"), `unknown: ${out.slice(0, 300)}`);
+    out = await refuses({ ...baseEnv, PAYMENT_SECRET_KEY: "", PAYMENT_WEBHOOK_SECRET: "" }); assert(/Invalid environment/.test(out) && out.includes("PAYMENT_SECRET_KEY") && out.includes("PAYMENT_WEBHOOK_SECRET"), `stripe without keys: ${out.slice(0, 300)}`);
+    server = startServer(noneEnv); assert(await waitUp(), `server did not start without Stripe variables: ${server.output().slice(0, 400)}`);
+  });
+  await new Promise((r) => sink.listen(SMTP_PORT, "127.0.0.1", r)); // the outage step closed the mail sink
+  await db.platform.update({ where: { slug: "fia" }, data: { priceCents: 2900 } });
+  const offMail = `offline.${Date.now()}@example.com`; const offBefore = await db.payment.count();
+  const offCtx = await ctx(); const offPage = await offCtx.newPage(); let offUser;
+  await step("payments=none: a PAID platform shows the localized contact notice (address from server configuration) instead of a buy button; registration + e-mail still work; no payment row is created", async () => {
+    await offPage.goto("/register"); await offPage.locator("#reg-name").fill("Offline Learner"); await offPage.locator("#reg-email").fill(offMail); await offPage.locator("#reg-password").fill("Learner-pass123"); await offPage.locator("#reg-confirm").fill("Learner-pass123");
+    await offPage.locator("#reg-terms").click(); await offPage.locator("#reg-privacy").click(); await offPage.getByRole("button", { name: "Create account" }).click(); await offPage.waitForURL(/dashboard$/);
+    assert(/Welcome to ACCA USA/.test(await lastMail("Offline Learner")), "welcome e-mail not sent while payments are off");
+    offUser = await db.user.findUnique({ where: { email: offMail } });
+    for (const path of ["/courses", "/platform/fia"]) {
+      await offPage.goto(path); const note = offPage.locator("[data-payments-off]").first(); await note.waitFor(); const txt = await note.innerText();
+      assert(txt.includes("privacy@acca.example") && /temporarily unavailable/.test(txt), `${path}: ${txt}`);
+      assert((await note.locator("a[href='mailto:privacy@acca.example']").count()) === 1, `${path}: no mailto link`);
+      assert((await offPage.getByRole("button", { name: /Buy access|Renew access/ }).count()) === 0, `${path}: a buy button is rendered`);
+    }
+    for (const [loc, re] of [["ru", /Онлайн-оплата временно недоступна. Для получения доступа свяжитесь с нами: privacy@acca.example/], ["uz", /Onlayn to‘lov vaqtincha mavjud emas. Kirish olish uchun biz bilan bog‘laning: privacy@acca.example/]]) {
+      await offCtx.addCookies([{ name: "NEXT_LOCALE", value: loc, url: BASE }]); await offPage.goto("/platform/fia"); const txt = await offPage.locator("[data-payments-off]").first().innerText(); assert(re.test(txt), `${loc}: ${txt}`);
+    }
+    await offCtx.addCookies([{ name: "NEXT_LOCALE", value: "en", url: BASE }]); await offPage.goto("/payments"); await offPage.getByText(/Online payment is switched off/).waitFor();
+    assert((await db.payment.count()) === offBefore, "a payment row was created"); assert(!(await db.enrollment.findFirst({ where: { userId: offUser.id } })), "an enrolment appeared without any decision");
+  });
+  await step("payments=none: no route, callback or webhook can grant access through a payment (forged ?paid=, validly signed webhook, unsigned webhook, demo checkout page)", async () => {
+    await db.payment.create({ data: { id: "pay-off-1", userId: offUser.id, platformSlug: "fia", description: "FIA — full access", amountCents: 2900, currency: "USD", status: "PENDING", provider: "stripe", providerPaymentId: "cs_off_1", checkoutUrl: "https://checkout.stripe.com/x" } });
+    const paidText = JSON.parse(readFileSync("src/i18n/messages/en.json", "utf8")).payments.paid;
+    await offPage.goto("/payments?paid=pay-off-1"); assert(!(await offPage.locator("main").innerText()).includes(paidText), "the success banner came from the URL");
+    const signed = await post(checkoutEvent("evt_off_1", "pay-off-1", 2900)); assert(signed.status === 404, `a validly signed webhook answered ${signed.status}`);
+    const unsigned = await post(checkoutEvent("evt_off_2", "pay-off-1", 2900), { sign: false }); assert(unsigned.status === 404, `an unsigned webhook answered ${unsigned.status}`);
+    const refund = await post({ id: "evt_off_3", type: "charge.refunded", data: { object: { amount: 2900, amount_refunded: 2900, metadata: { paymentId: "pay-off-1" } } } }); assert(refund.status === 404, "refund webhook");
+    await offPage.goto("/payments/demo-checkout/pay-off-1"); await offPage.getByText(/not found/i).first().waitFor(); assert((await offPage.getByRole("button", { name: /Complete payment|Pay now|Simulate/i }).count()) === 0, "demo checkout controls exist in production"); // authenticated page routes render the not-found page (see docs/QA.md)
+    const row = await db.payment.findUnique({ where: { id: "pay-off-1" } }); assert(row.status === "PENDING", `payment changed to ${row.status}`);
+    assert((await db.paymentEvent.count({ where: { eventId: { startsWith: "evt_off_" } } })) === 0, "a webhook delivery was recorded");
+    assert(!(await db.enrollment.findFirst({ where: { userId: offUser.id } })), "access appeared through a payment path");
+    await offPage.goto("/platform/fia"); await offPage.locator("[data-payments-off]").first().waitFor();
+  });
+  await step("payments=none: the administrator can still grant and withdraw access by hand (server-side authorised, audited); a student cannot", async () => {
+    assert((await offCtx.request.get("/admin/access", { maxRedirects: 0 })).status() === 307, "a student reached /admin/access");
+    const { c, p } = await adminLogin();
+    await p.goto("/admin/access"); await p.getByRole("button", { name: "Grant access" }).click();
+    await p.locator("#f-student").selectOption(offUser.id); await p.locator("#f-platform").selectOption({ label: "FIA" }); await p.getByRole("button", { name: "Save", exact: true }).click(); await p.getByText("Saved.").waitFor();
+    const e = await db.enrollment.findUnique({ where: { userId_platformSlug: { userId: offUser.id, platformSlug: "fia" } } }); assert(e?.status === "ACTIVE" && e.source === "admin" && !e.paymentId, `enrolment: ${JSON.stringify(e)}`);
+    await offPage.goto("/platform/fia"); assert((await offPage.locator("[data-payments-off]").count()) === 0, "the student is still gated after the manual grant");
+    await p.goto("/admin/access"); await p.getByRole("button", { name: /^Revoke: Offline Learner · FIA/ }).click(); await p.getByRole("dialog").getByRole("button", { name: "Revoke" }).click(); await p.getByText("Access revoked.").waitFor();
+    assert((await db.enrollment.findUnique({ where: { userId_platformSlug: { userId: offUser.id, platformSlug: "fia" } } })).status === "REVOKED", "revoke did not apply");
+    await offPage.goto("/courses"); await offPage.getByText(/access to this platform was withdrawn/i).waitFor();
+    const actions = (await db.auditEvent.findMany({ where: { targetType: "access" }, orderBy: { seq: "asc" } })); const names = actions.map((a) => a.action);
+    assert(names.includes("access.create") && names.includes("access.archive") && actions.every((a) => a.actorEmail === "owner@acca.example" && a.actorType === "admin"), `audit: ${names.join(",")}`);
+    assert((await db.payment.count({ where: { userId: offUser.id, provider: "none" } })) === 0, "a payment row for provider none exists");
+    await c.close();
+    const v = spawnSync("npx", ["tsx", "scripts/audit-verify.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET }, encoding: "utf8" }); assert(v.status === 0, `audit chain after manual grants: ${v.stdout}${v.stderr}`);
+  });
+  await offCtx.close();
   await db.$disconnect();
 } catch (e) {
   results.push(["setup / fatal", false]); console.log("  FATAL", e.message);

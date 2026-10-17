@@ -42,6 +42,7 @@
     "media:worker": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/media-worker.ts",
     "test:pdf": "node --conditions=react-server --import tsx scripts/integration/certificate-pdf.ts",
     "test:email": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/email.ts",
+    "test:payments-off": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/payments-off.ts",
     "test:payments": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/payments.ts",
     "db:bootstrap": "tsx prisma/bootstrap.ts",
     "build:prod-test": "NEXT_PUBLIC_APP_MODE=production NEXT_DIST_DIR=.next-prod next build",

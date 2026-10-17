@@ -1,4 +1,5 @@
 import { json } from "@/lib/api-guards";
+import { paymentsMode } from "@/lib/payments-mode";
 import { logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rate-limit";
 import { services } from "@/services";
@@ -17,6 +18,7 @@ const MAX_BODY = 256 * 1024;
  *  • demo mode has no webhook: the demo provider cannot verify anything, so this route refuses everything there
  */
 export async function POST(req: Request) {
+  if (paymentsMode() === "none") return json({ ok: false }, 404); // payments off: the endpoint does not exist (demo keeps its refuse-everything answer)
   const provider = getPaymentProvider();
   const ip = (req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown").slice(0, 64);
   const rl = await rateLimit(`webhook:${ip}`, 300, 60_000);

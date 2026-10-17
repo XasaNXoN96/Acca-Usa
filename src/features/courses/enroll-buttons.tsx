@@ -11,12 +11,14 @@ import { isDemoMode } from "@/lib/app-mode";
 import type { PlatformSlug } from "@/types";
 import { enrollAction, leaveAction } from "./actions";
 
-export function EnrollButton({ platform, size = "default", label, className, priceCents = 0, access }: {
+export interface EnrollButtonProps {
   platform: PlatformSlug; size?: ButtonProps["size"]; label?: string; className?: string;
   /** > 0 → the platform is paid: the button starts a checkout instead of enrolling directly */
   priceCents?: number;
   access?: "FREE" | "ACTIVE" | "EXPIRED" | "REVOKED";
-}) {
+}
+
+export function EnrollButton({ platform, size = "default", label, className, priceCents = 0, access }: EnrollButtonProps) {
   const t = useTranslations("courses");
   const f = useFormatter();
   const router = useRouter();
@@ -38,7 +40,7 @@ export function EnrollButton({ platform, size = "default", label, className, pri
             const res = await enrollAction(platform);
             if (res.ok && res.checkoutUrl) window.location.assign(res.checkoutUrl); // provider-hosted (or demo) checkout page
             else if (res.ok) router.refresh();
-            else setError(res.code === "RATE_LIMITED" ? "limited" : "failed");
+            else setError(res.code === "RATE_LIMITED" ? "limited" : "failed"); // PAYMENTS_DISABLED never gets here: the buy button is not rendered
           })
         }
       >

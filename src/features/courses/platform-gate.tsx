@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlatformMark } from "@/components/layout/platform-mark";
-import { EnrollButton } from "./enroll-buttons";
+import { EnrollControl } from "./enroll-control";
 import { services } from "@/services";
 import { platformTheme } from "@/lib/platform-theme";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export async function PlatformGate({ slug }: { slug: PlatformSlug }) {
           </li>
         ))}
       </ul>
-      <EnrollButton platform={slug} size="lg" className="max-w-xs" priceCents={platform.priceCents} />
+      <EnrollControl platform={slug} size="lg" className="max-w-xs" priceCents={platform.priceCents} />
     </Card>
   );
 }

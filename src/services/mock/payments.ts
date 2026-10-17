@@ -6,6 +6,7 @@ import { APP_MODE } from "@/lib/app-mode";
 import { absoluteUrl } from "../email";
 import { getPaymentProvider } from "../payments";
 import type { PaymentRec, PaymentStore } from "../payments/contracts";
+import { paymentsMode } from "@/lib/payments-mode";
 import { applyProviderEvent, emailPaymentFailed, emailPaymentReceived } from "../payments/process";
 import { getDb, nowIso, pushNotification } from "./db";
 
@@ -72,6 +73,7 @@ export const paymentService: PaymentService = {
     return p ? toPayment(p) : null;
   },
   async startCheckout({ userId, platform, idempotencyKey, origin }) {
+    if (paymentsMode() === "none") return { ok: false, code: "PAYMENTS_DISABLED" }; // no payment row, no provider call
     const db = getDb();
     const user = db.users.find((u) => u.id === userId && !u.deletedAt && u.status === "active");
     const plat = db.platforms.find((p) => p.slug === platform && !p.deletedAt);

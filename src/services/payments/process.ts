@@ -2,6 +2,7 @@ import "server-only";
 import { routes } from "@/lib/routes";
 import { audit } from "@/lib/audit";
 import { logEvent } from "@/lib/log";
+import { paymentsMode } from "@/lib/payments-mode";
 import { absoluteUrl, sendEmail } from "../email";
 import type { PaymentProvider, PaymentRec, PaymentStore, ProcessOutcome, ProviderEvent } from "./contracts";
 
@@ -28,6 +29,11 @@ export interface Notifier {
  * simulation, which exists only in demo mode.
  */
 export async function applyProviderEvent(store: PaymentStore, provider: PaymentProvider["name"], event: ProviderEvent, notify: Notifier): Promise<ProcessOutcome> {
+  // Online payments off: NOTHING may reach the ledger or grant / withdraw access through this path, whoever calls it.
+  if (paymentsMode() === "none") {
+    logEvent("warn", "payment.event_ignored_payments_disabled", { provider, type: event.type });
+    return "ignored";
+  }
   const payment =
     (event.paymentId ? await store.findById(event.paymentId) : null) ??
     (event.providerPaymentId ? await store.findByProviderRef(provider, event.providerPaymentId) : null);

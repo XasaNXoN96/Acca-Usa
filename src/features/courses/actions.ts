@@ -8,6 +8,7 @@ import { services } from "@/services";
 import { sessionOrNull } from "@/lib/auth/guards";
 import { rateLimit } from "@/lib/rate-limit";
 import { serverEnv } from "@/lib/env";
+import { paymentsMode } from "@/lib/payments-mode";
 
 const platform = z.enum(["acca", "fia"]);
 
@@ -19,7 +20,7 @@ async function originOf(): Promise<string> {
   return `${proto}://${host}`;
 }
 
-export type EnrollResult = { ok: true; checkoutUrl?: string } | { ok: false; code?: "REVOKED" | "RATE_LIMITED" | "FAILED" };
+export type EnrollResult = { ok: true; checkoutUrl?: string } | { ok: false; code?: "REVOKED" | "RATE_LIMITED" | "FAILED" | "PAYMENTS_DISABLED" };
 
 /**
  * Free platform → enrolled immediately. Paid platform → a pending payment + the provider's checkout URL; access is NOT
@@ -37,6 +38,7 @@ export async function enrollAction(raw: unknown): Promise<EnrollResult> {
   }
   if (res.code === "ACCESS_REVOKED") return { ok: false, code: "REVOKED" };
   if (res.code !== "PAYMENT_REQUIRED") return { ok: false, code: "FAILED" };
+  if (paymentsMode() === "none") return { ok: false, code: "PAYMENTS_DISABLED" }; // never reaches the rate limiter, a payment row or a provider
 
   const rl = await rateLimit(`checkout:${session.user.id}`, 10, 10 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED" };

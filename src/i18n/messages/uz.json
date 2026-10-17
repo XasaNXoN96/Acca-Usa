@@ -437,7 +437,9 @@
     "renewCta": "Kirishni uzaytirish — {price}",
     "revoked": "Bu platformaga kirishingiz bekor qilingan. Xato deb o‘ylasangiz, yordamga murojaat qiling.",
     "rateLimited": "Urinishlar juda ko‘p. Bir necha daqiqa kuting.",
-    "enrollFreeCta": "Yozilish (bepul)"
+    "enrollFreeCta": "Yozilish (bepul)",
+    "paymentsOff": "Onlayn to‘lov vaqtincha mavjud emas. Kirish olish uchun biz bilan bog‘laning: <mail>{email}</mail>",
+    "paymentsOffNoContact": "Onlayn to‘lov vaqtincha mavjud emas. Kirish olish uchun maktab bilan bog‘laning."
   },
   "subject": {
     "tabs": {
@@ -773,7 +775,8 @@
     "failedBanner": "To‘lov yakunlanmadi. Pul yechilmadi.",
     "cancelledBanner": "To‘lov bekor qilindi.",
     "demoNotice": "Demo rejim: to‘lovlar taqlid qilinadi, haqiqiy pul harakatlanmaydi.",
-    "liveNotice": "To‘lovlarni to‘lov provayderi qayta ishlaydi. Kirish faqat provayder to‘lovni tasdiqlagandan keyin boshlanadi."
+    "liveNotice": "To‘lovlarni to‘lov provayderi qayta ishlaydi. Kirish faqat provayder to‘lovni tasdiqlagandan keyin boshlanadi.",
+    "offNotice": "Onlayn to‘lov o‘chirilgan. Kirishni administrator maktabga murojaat qilganingizdan keyin beradi."
   },
   "notificationsPage": {
     "title": "Bildirishnomalar",
@@ -1238,7 +1241,8 @@
           "test": "Stripe TEST rejimi (haqiqiy yechib olish yo‘q)",
           "live": "Stripe LIVE rejimi",
           "invalid": "To‘lov kaliti Stripe kaliti emas",
-          "missing": "To‘lovlar sozlanmagan"
+          "missing": "To‘lovlar sozlanmagan",
+          "none": "Onlayn to‘lov o‘chirilgan"
         }
       },
       "certificates": {

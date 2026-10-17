@@ -9,7 +9,7 @@ import { assertEnv } from "./env-check";
 export const serverEnv = {
   appUrl: () => process.env.APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000",
   s3: () => {
-    assertEnv();
+    assertEnv(process.env, ["s3"]); // only this group: unrelated configuration must not break file access
     return {
       endpoint: process.env.S3_ENDPOINT || undefined,
       region: process.env.S3_REGION ?? "us-east-1",
