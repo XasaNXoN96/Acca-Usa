@@ -1,5 +1,7 @@
 // Smoke test: material analytics — real events only. (fresh server)
 import { chromium } from "playwright-core";
+/** the optional settings (visibility / schedule / position) sit in a collapsed "More settings" block */
+const openMore = (p) => p.locator("details:has(#f-visibility)").evaluate((d) => { d.open = true; });
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -54,7 +56,7 @@ await step("processing errors: a rejected video is listed with its reason and co
   await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-topic").selectOption({ label: "Business organisations and their stakeholders" });
   await a.locator("#f-fileId").setInputFiles({ name: "broken.mp4", mimeType: "video/mp4", buffer: corrupt });
   await a.getByText("File rejected").waitFor({ timeout: 60000 });
-  await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  await openMore(a); await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   await a.goto("/admin/materials/analytics");
   const row = a.locator("[data-material-row]", { hasText: "Broken stats video" });
   const fileCell = (await row.locator('[data-col="file"]').innerText()).trim();

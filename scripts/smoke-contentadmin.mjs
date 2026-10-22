@@ -1,6 +1,8 @@
 // Smoke test: admin content management — draft / scheduled / published, ordering, preview as student, bulk upload.
 // BASE_URL=http://localhost:3100 CHROMIUM=... node scripts/smoke-contentadmin.mjs  (fresh server)
 import { chromium } from "playwright-core";
+/** the optional settings (visibility / schedule / position) sit in a collapsed "More settings" block */
+const openMore = (p) => p.locator("details:has(#f-visibility)").evaluate((d) => { d.open = true; });
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -22,7 +24,7 @@ async function addNote(title, visibility, extra = {}) {
   await a.locator("#f-title").fill(title); await a.locator("#f-kind").selectOption("notes");
   await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-topic").selectOption({ label: TOPIC_LABEL });
   await a.locator("#f-body").fill(`Body of ${title} for the content admin smoke test.`);
-  await a.locator("#f-visibility").selectOption(visibility);
+  await openMore(a); await a.locator("#f-visibility").selectOption(visibility);
   if (extra.publishAt) await a.locator("#f-publishAt").fill(extra.publishAt);
   if (extra.position !== undefined) await a.locator("#f-position").fill(String(extra.position));
   await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
@@ -41,11 +43,11 @@ await step("draft material: admin sees it with a Draft badge; student does not s
 
 await step("publish a draft → student sees it and can open it; unpublish → hidden again", async () => {
   await a.goto("/admin/materials"); await a.getByRole("row", { name: /Draft only note/ }).getByRole("button", { name: /edit/i }).click();
-  await a.locator("#f-visibility").selectOption("published"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  await openMore(a); await a.locator("#f-visibility").selectOption("published"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   assert((await topicText()).includes("Draft only note"), "published material not visible");
   const href = await materialUrl("Draft only note"); await s.goto(href); await s.getByText("Body of Draft only note").waitFor();
   await a.goto("/admin/materials"); await a.getByRole("row", { name: /Draft only note/ }).getByRole("button", { name: /edit/i }).click();
-  await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  await openMore(a); await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   assert(!(await topicText()).includes("Draft only note"), "unpublished material still visible");
 });
 
@@ -55,7 +57,7 @@ await step("scheduled material: hidden until its date (future date), badge shows
   assert(!(await topicText()).includes("Scheduled note"), "future-scheduled material visible");
   // missing date is refused
   await a.getByRole("button", { name: "Add material" }).click(); await a.locator("#f-title").fill("No date note"); await a.locator("#f-kind").selectOption("notes");
-  await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-body").fill("Some body text here."); await a.locator("#f-visibility").selectOption("scheduled");
+  await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-body").fill("Some body text here."); await openMore(a); await a.locator("#f-visibility").selectOption("scheduled");
   await a.getByRole("button", { name: "Save", exact: true }).click(); await a.locator("#f-publishAt-error, [id$='publishAt-error']").first().waitFor(); await a.keyboard.press("Escape");
 });
 

@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+/** the optional settings (visibility / schedule / position) sit in a collapsed "More settings" block */
+const openMore = (p) => p.locator("details:has(#f-visibility)").evaluate((d) => { d.open = true; });
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -82,7 +84,7 @@ await step("My notes page lists the student's own notes, supports search, and ma
   await s.goto("/notes?q=zzzz-nothing"); await s.getByText("No notes match your search.").waitFor();
   // hide the video material → the note stays, without a link
   await a.goto("/admin/materials"); await a.getByRole("row", { name: /Notes video/ }).getByRole("button", { name: /edit/i }).click();
-  await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  await openMore(a); await a.locator("#f-visibility").selectOption("draft"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   await s.goto("/notes?q=two%20seconds"); const row = s.locator("[data-note]", { hasText: "Definition at two seconds" });
   await row.getByText("This material is not available to you right now.").waitFor(); assert((await row.locator("a").count()) === 0, "a hidden material is linked");
 });

@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+/** the optional settings (visibility / schedule / position) sit in a collapsed "More settings" block */
+const openMore = (p) => p.locator("details:has(#f-visibility)").evaluate((d) => { d.open = true; });
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -97,7 +99,7 @@ await step("hidden materials: the file of a draft / scheduled material and of an
     await a.goto("/admin/materials"); await a.getByRole("button", { name: "Add material" }).click(); await a.locator("#f-title").fill(title); await a.locator("#f-kind").selectOption("file");
     await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-topic").selectOption({ label: "Business organisations and their stakeholders" });
     await a.locator("#f-fileId").setInputFiles({ name, mimeType: "text/plain", buffer: Buffer.from(`content of ${title}`) }); await a.getByText("Uploaded").first().waitFor();
-    await a.locator("#f-visibility").selectOption(visibility); if (publishAt) await a.locator("#f-publishAt").fill(publishAt); await save();
+    await openMore(a); await a.locator("#f-visibility").selectOption(visibility); if (publishAt) await a.locator("#f-publishAt").fill(publishAt); await save();
   };
   await addFile("Sec draft file", "d.txt", "draft"); await addFile("Sec scheduled file", "s.txt", "scheduled", "2099-01-01"); await addFile("Sec versioned file", "v1.txt", "published");
   const [draft, scheduled, v1] = ids;
@@ -110,7 +112,7 @@ await step("hidden materials: the file of a draft / scheduled material and of an
   await a.goto("/admin/materials"); await a.getByRole("button", { name: "Add material" }).click(); await a.locator("#f-title").fill("Sec draft audio"); await a.locator("#f-kind").selectOption("audio");
   await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-topic").selectOption({ label: "Business organisations and their stakeholders" });
   await a.locator("#f-fileId").setInputFiles({ name: "a.mp3", mimeType: "audio/mpeg", buffer: readFileSync(join(dir, "a.mp3")) });
-  await a.getByText("Students cannot see this file until processing is finished.").waitFor({ state: "hidden", timeout: 90000 }); await a.locator("#f-visibility").selectOption("draft"); await save();
+  await a.getByText("Students cannot see this file until processing is finished.").waitFor({ state: "hidden", timeout: 90000 }); await openMore(a); await a.locator("#f-visibility").selectOption("draft"); await save();
   await a.goto("/admin/materials"); const href = await a.getByRole("row", { name: /Sec draft audio/ }).getByRole("link", { name: "Versions" }).getAttribute("href"); const mid = href.split("/")[3];
   const up = await ac.request.post(`/api/materials/${mid}/media-text`, { headers: { origin: BASE }, multipart: { language: "en", file: { name: "en.vtt", mimeType: "text/plain", buffer: Buffer.from("WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nHidden subtitle\n") } } }); assert(up.status() === 200, `vtt ${up.status()}`);
   assert((await sc.request.get(`/api/materials/${mid}/subtitles/en`)).status() === 404, "subtitles of a draft material served"); assert((await sc.request.get(`/subject/bt/topic/${T1}/material/${mid}`)).status() !== 500, "server error");

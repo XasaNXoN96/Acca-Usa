@@ -41,9 +41,8 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
       onChange: () => childrenOf(f.name).forEach((c) => form.setValue(c.name, c.kind === "multiselect" || c.kind === "questionPicker" ? [] : "", { shouldDirty: true })),
     });
 
-  return (
-    <>
-      {fields.map((f) => {
+  const tTable = useTranslations("admin.table");
+  const renderField = (f: ResolvedField) => {
         if (f.showIf) {
           const v = String(values[f.showIf.field] ?? "");
           if (f.showIf.in && !f.showIf.in.includes(v)) return null;
@@ -107,7 +106,18 @@ export function RecordFields({ form, fields, errorText, initialFile, placeholder
           default:
             return <TextField key={f.name} {...common} registration={form.register(f.name)} />;
         }
-      })}
+  };
+  const main = fields.filter((f) => !f.advanced);
+  const advanced = fields.filter((f) => f.advanced);
+  return (
+    <>
+      {main.map(renderField)}
+      {advanced.length ? (
+        <details className="group rounded-xl border border-border p-3" open={advanced.some((f) => !!errors[f.name])}>
+          <summary className="cursor-pointer text-sm font-semibold">{tTable("moreSettings")}</summary>
+          <div className="mt-3 space-y-4">{advanced.map(renderField)}</div>
+        </details>
+      ) : null}
     </>
   );
 }

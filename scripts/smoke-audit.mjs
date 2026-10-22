@@ -1,5 +1,7 @@
 // Admin audit log. BASE_URL=... CHROMIUM=... node scripts/smoke-audit.mjs  (fresh server, after `npm run build`; runs on both providers)
 import { chromium } from "playwright-core";
+/** the optional settings (visibility / schedule / position) sit in a collapsed "More settings" block */
+const openMore = (p) => p.locator("details:has(#f-visibility)").evaluate((d) => { d.open = true; });
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
 const results = [];
@@ -23,7 +25,7 @@ await step("2 an admin change creates an event with the actor, the target and fi
   await a.goto("/admin/materials"); await a.getByRole("button", { name: "Add material" }).click();
   await a.locator("#f-title").fill("Audit probe SECRETBODY-91"); await a.locator("#f-kind").selectOption("notes");
   await a.locator("#f-subject").selectOption({ label: "BT — Business and Technology" }); await a.locator("#f-topic").selectOption({ label: "Business organisations and their stakeholders" });
-  await a.locator("#f-body").fill("Body SECRETBODY-91"); await a.locator("#f-visibility").selectOption("draft");
+  await a.locator("#f-body").fill("Body SECRETBODY-91"); await openMore(a); await a.locator("#f-visibility").selectOption("draft");
   await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
   await a.goto("/admin/audit?action=materials"); const row = a.locator("[data-audit-action='materials.create']").first(); await row.waitFor();
   const text = await row.innerText(); assert(text.includes("admin@example.com") && text.includes("materials"), `row: ${text}`);

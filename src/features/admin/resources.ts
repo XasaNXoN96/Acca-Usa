@@ -16,6 +16,8 @@ export interface FieldDef {
   showIf?: { field: string; in?: string[]; notIn?: string[] };
   /** for kind "file": fixed upload kind (otherwise taken from the form's `kind` value) */
   fileKind?: string;
+  /** rarely needed: shown inside a collapsed "More settings" block so the form stays short */
+  advanced?: boolean;
   /** initial value of a NEW record's field */
   default?: string;
 }
@@ -61,9 +63,9 @@ export const resourceConfig: Record<ResourceKey, ResourceConfig> = {
       { name: "subject", kind: "select", required: true }, { name: "topic", kind: "select", dependsOn: "subject" },
       { name: "body", kind: "textarea", showIf: { field: "kind", in: ["notes"] } },
       { name: "fileId", kind: "file", showIf: { field: "kind", notIn: ["notes"] } },
-      { name: "visibility", kind: "select", required: true, default: "published" },
-      { name: "publishAt", kind: "date", showIf: { field: "visibility", in: ["scheduled"] } },
-      { name: "position", kind: "number", default: "0" },
+      { name: "visibility", kind: "select", required: true, default: "published", advanced: true },
+      { name: "publishAt", kind: "date", showIf: { field: "visibility", in: ["scheduled"] }, advanced: true },
+      { name: "position", kind: "number", default: "0", advanced: true },
     ],
   },
   "question-bank": {
