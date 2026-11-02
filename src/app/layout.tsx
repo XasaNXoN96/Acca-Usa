@@ -26,6 +26,12 @@ export const viewport: Viewport = {
   ],
 };
 
+/** Browsers get everything except the (large, admin-only) `admin` texts; the admin layout adds them back. Keeps every public / student page lighter. */
+function clientMessages(all: Record<string, unknown>): Record<string, unknown> {
+  const { admin, ...rest } = all as { admin?: Record<string, unknown> } & Record<string, unknown>;
+  return { ...rest, admin: { roles: admin?.roles, userStatus: admin?.userStatus } };
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [locale, messages, t, jar] = await Promise.all([getLocale(), getMessages(), getTranslations("common"), cookies()]);
   const stored = jar.get(THEME_COOKIE)?.value;
@@ -43,7 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {t("skipToContent")}
         </a>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={clientMessages(messages)}>
           {children}
         </NextIntlClientProvider>
       </body>

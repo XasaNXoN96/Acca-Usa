@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   poweredByHeader: false,
+  // Behind Nginx (deploy/nginx/acca-usa.conf) compression is done there, off the Node event loop. Set NEXT_COMPRESS=1 to run without a proxy.
+  compress: process.env.NEXT_COMPRESS === "1",
   // The certificate PDF reads its fonts from disk at runtime; make sure serverless bundles ship them.
   outputFileTracingIncludes: { "/api/certificates/[id]/pdf": ["./src/assets/fonts/**"] },
   async headers() {

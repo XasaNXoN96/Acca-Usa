@@ -12,12 +12,23 @@ export default getRequestConfig(async () => {
   const fromCookie = store.get(LOCALE_COOKIE)?.value;
   const locale: AppLocale = isLocale(fromCookie) ? fromCookie : negotiateLocale((await headers()).get("accept-language"));
 
-  const messages = (await import(`./messages/${locale}.json`)).default;
-  if (locale === defaultLocale) return { locale, messages };
-
-  const fallback = (await import(`./messages/${defaultLocale}.json`)).default;
-  return { locale, messages: deepMerge(fallback, messages) };
+  return { locale, messages: await messagesFor(locale) };
 });
+
+/** The merged dictionary of a locale never changes while the process runs: build it once, not on every request. */
+const merged = new Map<AppLocale, Dict>();
+async function messagesFor(locale: AppLocale): Promise<Dict> {
+  const hit = merged.get(locale);
+  if (hit) return hit;
+  const own = (await import(`./messages/${locale}.json`)).default as Dict;
+  let result = own;
+  if (locale !== defaultLocale) {
+    const fallback = (await import(`./messages/${defaultLocale}.json`)).default as Dict;
+    result = deepMerge(fallback, own);
+  }
+  merged.set(locale, result);
+  return result;
+}
 
 type Dict = { [key: string]: string | Dict };
 function deepMerge(base: Dict, override: Dict): Dict {

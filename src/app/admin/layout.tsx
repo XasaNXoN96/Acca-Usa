@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/app-shell";
 import { adminNav } from "@/lib/navigation";
 import { can } from "@/lib/permissions";
@@ -13,10 +14,11 @@ import { MfaSetup } from "@/features/admin/mfa-setup";
 export const metadata: Metadata = { title: { default: "Admin", template: "%s | Admin | ACCA USA" } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [r, ts, loaded] = await Promise.all([
+  const [r, ts, loaded, allMessages] = await Promise.all([
     getTranslations("admin.resources"),
     getTranslations("admin"),
     getSessionForMfaSetup(),
+    getMessages(),
   ]);
   if (!loaded) redirect(routes.login);
   const { session, setupRequired, consentRequired } = loaded;
@@ -42,9 +44,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     audit: ts("audit.title"),
   };
   return (
+    // The root layout sends the browser only the small public part of the `admin` texts; the admin area gets the whole dictionary here.
+    <NextIntlClientProvider messages={allMessages}>
     <AppShell variant="admin" items={setupRequired ? [] : adminNav.filter((i) => !i.permission || can(session.user.role, i.permission))} labels={labels} unreadNotifications={unread} user={{ name: session.user.name, email: session.user.email }} demoMessage={ts("demoNotice")}>
       {/* Mandatory second factor not set up yet: NOTHING else under /admin is rendered (pages, data and actions all fail closed). */}
       <RecoveryHost>{setupRequired ? <MfaSetup user={session.user} required /> : children}</RecoveryHost>
     </AppShell>
+    </NextIntlClientProvider>
   );
 }

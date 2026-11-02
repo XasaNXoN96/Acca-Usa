@@ -2,6 +2,7 @@
 
 import { audit, adminActor } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
+import { invalidateCatalog } from "@/services/prisma/catalog-cache";
 import { rateLimit } from "@/lib/rate-limit";
 import { services } from "@/services";
 import { getEmailProvider, sendEmail } from "@/services/email";
@@ -38,6 +39,7 @@ function fail(res: Extract<ServiceResult<unknown>, { ok: false }>): AdminActionR
 }
 
 function refresh(resource: string) {
+  invalidateCatalog(); // the shared catalogue snapshot must not outlive an admin change
   revalidatePath(`/admin/${resource}`);
   revalidatePath("/admin");
   revalidatePath("/", "layout"); // student views read the same data

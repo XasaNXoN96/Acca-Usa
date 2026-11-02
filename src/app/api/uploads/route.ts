@@ -66,7 +66,8 @@ function receive(req: Request, contentType: string, ownerId: string): Promise<Re
       if (name !== "file" || !kind || work) { file.resume(); if (!work) work = Promise.resolve(reply(400, { ok: false, code: "BAD_REQUEST" })); return; }
       work = handleFile(kind, file, info.filename ?? "", ownerId);
     });
-    parser.on("error", () => { if (!work) work = Promise.resolve(reply(400, { ok: false, code: "BAD_REQUEST" })); });
+    // A malformed body (e.g. a NUL byte in the file name) makes busboy emit `error` and NOT `close`: answer at once instead of hanging.
+    parser.on("error", () => { done(reply(400, { ok: false, code: "BAD_REQUEST" })); input.unpipe(parser); input.resume(); });
     // `close` fires once the whole request body has been consumed (also for rejected files, which are drained and discarded).
     parser.on("close", () => { (work ?? Promise.resolve(reply(400, { ok: false, code: "BAD_REQUEST" }))).then(done, () => done(reply(500, { ok: false, code: "FAILED" }))); });
     input.on("error", () => { if (!work) work = Promise.resolve(reply(400, { ok: false, code: "BAD_REQUEST" })); parser.destroy(); resolve(reply(400, { ok: false, code: "BAD_REQUEST" })); });

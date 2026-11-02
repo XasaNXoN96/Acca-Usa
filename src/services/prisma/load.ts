@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import type { Prisma } from "@prisma/client";
 import { getPrisma } from "@/lib/prisma";
+import { cachedCatalog, invalidateCatalog } from "./catalog-cache";
 import type { CalcDb, PlatformRec, LevelRec, ProgressEntry, SubjectRec, TopicRec } from "../domain/records";
 import type { PlatformSlug } from "@/types";
 
@@ -21,10 +22,12 @@ export const toTopicRec = (t: Prisma.TopicGetPayload<object>): TopicRec => ({
  *  • learning state only for `userIds` (or everybody when `"all"` — admin lists, ranking, statistics)
  * The same functions that power the demo provider then compute progress, unlocking and certificates.
  */
-export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
+type Catalog = Pick<CalcDb, "platforms" | "levels" | "subjects" | "topics" | "materials" | "questions" | "tests">;
+
+/** The catalogue half of the snapshot: the same for every user, changes only when an administrator edits content. */
+async function loadCatalog(): Promise<Catalog> {
   const prisma = getPrisma();
-  const byUser = userIds === "all" ? {} : { userId: { in: userIds } };
-  const [platforms, levels, subjects, topics, materials, questions, tests, enrollments, topicProgress, materialProgress, attempts] = await Promise.all([
+  const [platforms, levels, subjects, topics, materials, questions, tests] = await Promise.all([
     prisma.platform.findMany(),
     prisma.level.findMany(),
     prisma.subject.findMany({ orderBy: [{ position: "asc" }, { code: "asc" }] }),
@@ -32,6 +35,23 @@ export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
     prisma.material.findMany({ select: { id: true, topicId: true, deletedAt: true, published: true, publishAt: true } }),
     prisma.question.findMany({ select: { id: true, status: true, deletedAt: true } }),
     prisma.test.findMany({ select: { id: true, topicId: true, published: true, deletedAt: true, questions: { select: { questionId: true }, orderBy: { position: "asc" } } } }),
+  ]);
+  return {
+    platforms: platforms.map(toPlatformRec),
+    levels: levels.map(toLevelRec),
+    subjects: subjects.map(toSubjectRec),
+    topics: topics.map(toTopicRec),
+    materials: materials.map((m) => ({ id: m.id, topicId: m.topicId ?? undefined, deletedAt: iso(m.deletedAt), published: m.published, publishAt: iso(m.publishAt) })),
+    questions: questions.map((q) => ({ id: q.id, status: q.status, deletedAt: iso(q.deletedAt) })),
+    tests: tests.map((t) => ({ id: t.id, topicId: t.topicId ?? undefined, published: t.published, deletedAt: iso(t.deletedAt), questionIds: t.questions.map((x) => x.questionId) })),
+  };
+}
+
+/** The learner half: only the requested users' enrolments, progress and attempts. */
+async function loadLearning(userIds: string[] | "all"): Promise<Pick<CalcDb, "enrollments" | "progress" | "materialProgress" | "attempts">> {
+  const prisma = getPrisma();
+  const byUser = userIds === "all" ? {} : { userId: { in: userIds } };
+  const [enrollments, topicProgress, materialProgress, attempts] = await Promise.all([
     prisma.enrollment.findMany({ where: byUser, select: { userId: true, platformSlug: true, status: true, expiresAt: true } }),
     prisma.topicProgress.findMany({ where: byUser }),
     prisma.materialProgress.findMany({ where: byUser, select: { userId: true, materialId: true } }),
@@ -44,13 +64,6 @@ export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
     m.set(r.topicId, { percent: r.percent, updatedAt: r.updatedAt.toISOString() });
   }
   return {
-    platforms: platforms.map(toPlatformRec),
-    levels: levels.map(toLevelRec),
-    subjects: subjects.map(toSubjectRec),
-    topics: topics.map(toTopicRec),
-    materials: materials.map((m) => ({ id: m.id, topicId: m.topicId ?? undefined, deletedAt: iso(m.deletedAt), published: m.published, publishAt: iso(m.publishAt) })),
-    questions: questions.map((q) => ({ id: q.id, status: q.status, deletedAt: iso(q.deletedAt) })),
-    tests: tests.map((t) => ({ id: t.id, topicId: t.topicId ?? undefined, published: t.published, deletedAt: iso(t.deletedAt), questionIds: t.questions.map((x) => x.questionId) })),
     enrollments: enrollments.map((e) => ({ userId: e.userId, platform: e.platformSlug as PlatformSlug, status: e.status, expiresAt: iso(e.expiresAt) })),
     progress,
     materialProgress,
@@ -58,7 +71,17 @@ export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
   };
 }
 
-const loadMemoized = cache((key: string) => loadCalcDb(key === "*" ? "all" : key.split(",")));
+/** Always fresh (write paths). */
+export async function loadCalcDb(userIds: string[] | "all"): Promise<CalcDb> {
+  invalidateCatalog(); // a writer is about to change content: the next cached read must not serve the old catalogue
+  const [catalog, learning] = await Promise.all([loadCatalog(), loadLearning(userIds)]);
+  return { ...catalog, ...learning };
+}
+
+const loadMemoized = cache(async (key: string): Promise<CalcDb> => {
+  const [catalog, learning] = await Promise.all([cachedCatalog(loadCatalog), loadLearning(key === "*" ? "all" : key.split(","))]);
+  return { ...catalog, ...learning };
+});
 
 /**
  * READ-ONLY variant memoised for the lifetime of one request (React `cache`): a page that asks several services for
