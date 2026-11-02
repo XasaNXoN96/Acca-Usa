@@ -5,7 +5,7 @@
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
-const WIDTHS = process.env.WIDTHS ? process.env.WIDTHS.split(",").map(Number) : [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920, 2560, 3840];
+const WIDTHS = process.env.WIDTHS ? process.env.WIDTHS.split(",").map((x) => (x.includes("x") ? x : Number(x))) : [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920, 2560, 3840];
 const LOCALE = process.env.LOCALE ?? "en";
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search", "/login", "/register", "/terms", "/privacy", "/cookies", "/refunds"];

@@ -15,7 +15,7 @@ export function SendTestEmailButton() {
   const codeLabel = (c: string) => (known.includes(c) ? (t as unknown as (k: string) => string)(`codes.${c}`) : c);
   return (
     <div className="space-y-3">
-      <Button type="button" variant="outline" disabled={pending} onClick={() => start(async () => {
+      <Button type="button" variant="outline" className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-center" disabled={pending} onClick={() => start(async () => {
         setResult(null);
         const r = await sendTestEmailAction();
         if (r.ok) setResult({ kind: r.demo ? "info" : "success", text: r.demo ? t("demoOk") : t("ok") });

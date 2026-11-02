@@ -25,7 +25,7 @@ async function PaymentModeBadge() {
   const t = await getTranslations("admin.resources.payments");
   const mode = isDemoMode ? "demo" : paymentsMode() === "none" ? "none" : stripeMode(process.env.PAYMENT_SECRET_KEY);
   const tone = mode === "live" ? "destructive" : mode === "test" ? "warning" : "neutral";
-  return <Badge variant={tone} data-payment-mode={mode}>{t(`mode.${mode}`)}</Badge>;
+  return <Badge variant={tone} data-payment-mode={mode} className="max-w-full whitespace-normal text-center">{t(`mode.${mode}`)}</Badge>;
 }
 
 /** Server component: authorises, loads rows through the services, hands plain data to the client table. */
