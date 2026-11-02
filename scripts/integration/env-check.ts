@@ -49,6 +49,12 @@ assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: "norton" }), ["ANTIVIRUS_P
 assert.deepEqual(names({ ...full, CLAMAV_PORT: "abc" }), ["CLAMAV_PORT"]);
 assert.deepEqual(names({ NEXT_PUBLIC_APP_MODE: "demo" }), [], "demo needs nothing");
 
+// ── FILE_DELIVERY (optional): node | nginx; nginx needs path-style S3 URLs
+assert.deepEqual(names({ ...full, FILE_DELIVERY: "node" }), [], "node is the default");
+assert.deepEqual(names({ ...full, FILE_DELIVERY: "nginx", S3_FORCE_PATH_STYLE: "1" }), [], "nginx offload with path-style URLs is valid");
+assert.deepEqual(names({ ...full, FILE_DELIVERY: "nginx" }), ["S3_FORCE_PATH_STYLE"], "nginx offload needs path-style S3 URLs");
+assert.deepEqual(names({ ...full, FILE_DELIVERY: "cdn" }), ["FILE_DELIVERY"], "unknown delivery refused");
+
 // ── PAYMENTS_PROVIDER: an explicit decision, and the Stripe variables belong to `stripe` only
 const { PAYMENT_SECRET_KEY: _k, PAYMENT_WEBHOOK_SECRET: _w, ...noStripe } = full as Record<string, string>; void _k; void _w;
 assert.deepEqual(names({ ...noStripe, PAYMENTS_PROVIDER: "none" }), [], "'none' needs no Stripe variable");

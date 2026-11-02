@@ -70,6 +70,17 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const range = parseRange(req.headers.get("range"), served.size);
   if (range === "invalid") return fail(416, "fileRange", { "Content-Range": `bytes */${served.size}` });
 
+  // Optional offload (FILE_DELIVERY=nginx, only behind the shipped Nginx config): this process has just decided that the viewer may read the file;
+  // Nginx then streams it from the private bucket itself (short-lived signed URL that never reaches the browser), so video no longer
+  // flows through Node. Range requests are answered by the bucket. Without Nginx in front never set this: the response would be empty.
+  if (process.env.FILE_DELIVERY === "nginx") {
+    const signed = await storage.signedUrl(served.id, { ttlSeconds: 60, download: !(isStudent || (inlineMimes.has(served.mime) && !download)) });
+    if (signed) {
+      const u = new URL(signed);
+      return new Response(null, { status: 200, headers: { "X-Accel-Redirect": `/_s3${u.pathname}${u.search}`, "X-Content-Type-Options": "nosniff", "Cache-Control": "private, no-store" } });
+    }
+  }
+
   const opened = await storage.open(served.id, range ?? undefined);
   if (!opened) return fail(404, "fileNotFound");
 

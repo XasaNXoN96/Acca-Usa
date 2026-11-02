@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const session = await sessionOrNull(STAFF_ROLES);
   if (!session) return json({ ok: false, code: "FORBIDDEN" }, 403);
 
-  const rl = await rateLimit(`upload:${session.user.id}`, 60, 60 * 60_000);
+  const rl = await rateLimit(`upload:${session.user.id}`, 600, 60 * 60_000);
   if (!rl.ok) return json({ ok: false, code: "RATE_LIMITED" }, 429);
 
   const declared = Number(req.headers.get("content-length") ?? 0);

@@ -73,6 +73,8 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
   const av = env.ANTIVIRUS_PROVIDER;
   if (!has(av)) add("ANTIVIRUS_PROVIDER", "required in production: 'clamav' (recommended) or 'none'");
   else if (av !== "none" && av !== "clamav") add("ANTIVIRUS_PROVIDER", "must be 'clamav' or 'none'");
+  if (has(env.FILE_DELIVERY) && !["node", "nginx"].includes(env.FILE_DELIVERY!)) add("FILE_DELIVERY", "must be 'node' (default) or 'nginx' (X-Accel-Redirect offload, needs S3_FORCE_PATH_STYLE=1 and the shipped Nginx config)");
+  if (env.FILE_DELIVERY === "nginx" && env.S3_FORCE_PATH_STYLE !== "1") add("S3_FORCE_PATH_STYLE", "must be 1 when FILE_DELIVERY=nginx (the signed host must match the one Nginx forwards to)");
   if (has(env.CLAMAV_PORT) && !/^\d{2,5}$/.test(env.CLAMAV_PORT!)) add("CLAMAV_PORT", "must be a port number");
 
   if (env.DEMO_LOGIN === "1") add("DEMO_LOGIN", "demo logins must be disabled in production");
