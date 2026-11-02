@@ -69,6 +69,12 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
     if (has(env.STRIPE_API_BASE) && stripeMode(env.PAYMENT_SECRET_KEY) !== "test") add("STRIPE_API_BASE", "may only be set together with a Stripe TEST key (sk_test_…)");
   }
 
+  // Antivirus is an explicit decision too: `clamav` (every upload is scanned by clamd before it is served) or `none` (no scanning — the operator accepts that risk).
+  const av = env.ANTIVIRUS_PROVIDER;
+  if (!has(av)) add("ANTIVIRUS_PROVIDER", "required in production: 'clamav' (recommended) or 'none'");
+  else if (av !== "none" && av !== "clamav") add("ANTIVIRUS_PROVIDER", "must be 'clamav' or 'none'");
+  if (has(env.CLAMAV_PORT) && !/^\d{2,5}$/.test(env.CLAMAV_PORT!)) add("CLAMAV_PORT", "must be a port number");
+
   if (env.DEMO_LOGIN === "1") add("DEMO_LOGIN", "demo logins must be disabled in production");
   return { mode, issues };
 }

@@ -42,8 +42,9 @@ export function FileField({
   const [mediaState, setMediaState] = useState<{ id: string; s: MediaStatus } | null>(null);
   const media = mediaState && mediaState.id === value ? mediaState.s : null;
   const setMedia = (s: MediaStatus) => setMediaState({ id: value, s });
-  const processable = materialKind === "video" || materialKind === "audio";
   const status = media?.status ?? file?.status ?? "READY";
+  // Video / audio always, and ANY file that is not READY yet (antivirus scan pending / failed / rejected).
+  const processable = materialKind === "video" || materialKind === "audio" || status !== "READY";
 
   // Video / audio are processed by the media pipeline (ffprobe + FFmpeg): poll until READY / FAILED / REJECTED.
   useEffect(() => {

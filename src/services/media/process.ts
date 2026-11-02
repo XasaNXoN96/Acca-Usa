@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { logEvent } from "@/lib/log";
+import { antivirusMode, scanStream } from "@/services/security/antivirus";
 import { getStorage } from "@/services/storage";
 import type { StoredFileMeta } from "@/services/storage/contracts";
 import { planMedia, type Plan, type Probe } from "./plan";
@@ -82,6 +83,23 @@ async function run(id: string): Promise<ProcessResult> {
   // Atomic claim: when the web process and a worker (or two workers) race for the same file, exactly one of them processes it.
   const meta = await storage.claim(id, { maxAttempts: MAX_ATTEMPTS, staleBefore: new Date(Date.now() - STALE_PROCESSING_MS) });
   if (!meta) return { status: "SKIPPED" };
+  // Antivirus first: nothing is served (or even probed by FFmpeg) before the scanner said OK. A scanner outage is not the file's
+  // fault: the attempt is refunded and the file stays queued until the scanner is back.
+  if (antivirusMode() === "clamav") {
+    const opened = await storage.open(id);
+    if (!opened) { await storage.update(id, { status: "FAILED", statusCode: "SOURCE_MISSING" }); return { status: "FAILED", code: "SOURCE_MISSING" }; }
+    const scan = await scanStream(Readable.fromWeb(opened.stream as never));
+    if (scan.status === "infected") {
+      logEvent("warn", "upload.virus_found", { id, signature: scan.signature });
+      await storage.update(id, { status: "REJECTED", statusCode: "VIRUS_FOUND" });
+      return { status: "REJECTED", code: "VIRUS_FOUND" };
+    }
+    if (scan.status === "unavailable") {
+      logEvent("error", "upload.scanner_unavailable", { id, reason: scan.reason });
+      await storage.update(id, { status: "FAILED", statusCode: "SCANNER_UNAVAILABLE", attempts: Math.max(0, (meta.attempts ?? 1) - 1) });
+      return { status: "FAILED", code: "SCANNER_UNAVAILABLE" };
+    }
+  }
   const kind = meta.mime.startsWith("video/") ? "video" : meta.mime.startsWith("audio/") ? "audio" : null;
   if (!kind) {
     await storage.update(id, { status: "READY", processedAt: new Date().toISOString() });

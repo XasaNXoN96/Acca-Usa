@@ -1794,7 +1794,9 @@
       "SOURCE_MISSING": "The uploaded file is missing from storage.",
       "NO_DISK_SPACE": "The server is out of disk space. Free some space and retry.",
       "STORAGE_ERROR": "The file storage did not respond. Retry later.",
-      "SHUTDOWN": "Processing was interrupted by a server restart and will resume automatically."
+      "SHUTDOWN": "Processing was interrupted by a server restart and will resume automatically.",
+      "VIRUS_FOUND": "The file contains a virus or malware and was rejected. It is not stored for students.",
+      "SCANNER_UNAVAILABLE": "The virus scanner is not reachable. The file waits and is checked automatically when it is back."
     }
   },
   "publicSubject": {

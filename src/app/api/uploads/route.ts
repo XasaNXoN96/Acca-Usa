@@ -6,6 +6,7 @@ import { sessionOrNull, STAFF_ROLES } from "@/lib/auth/guards";
 import { logEvent } from "@/lib/log";
 import { rateLimit } from "@/lib/rate-limit";
 import { processFile } from "@/services/media/process";
+import { antivirusMode } from "@/services/security/antivirus";
 import { getStorage } from "@/services/storage";
 import { UploadSizeError, countingStream } from "@/services/storage/stream-util";
 import { checkUploadHead, uploadKinds, uploadRules, type UploadKind } from "@/services/storage/validation";
@@ -101,7 +102,8 @@ async function handleFile(kind: UploadKind, file: NodeJS.ReadableStream & { trun
       body.end();
     } catch (e) { body.destroy(e as Error); }
   })();
-  const needsProcessing = kind === "video" || kind === "audio";
+  // Video / audio always go through the media pipeline; with an antivirus configured EVERY file waits for the scan.
+  const needsProcessing = kind === "video" || kind === "audio" || antivirusMode() === "clamav";
   try {
     // Video / audio are not served until the media pipeline (ffprobe + FFmpeg) has validated them: UPLOADED → … → READY.
     const stored = await getStorage().putStream({ ownerId, name: check.safeName, mime: check.mime, body: counter, status: needsProcessing ? "UPLOADED" : "READY" });

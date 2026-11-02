@@ -5,7 +5,7 @@ import { assertEnv, validateEnv } from "../../src/lib/env-check";
 const full = {
   NEXT_PUBLIC_APP_MODE: "production", DATA_PROVIDER: "prisma", DATABASE_URL: "postgresql://u:p@h:5432/d", AUTH_SECRET: "x".repeat(48), APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "r", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", LEGAL_OPERATOR_NAME: "Example LLC", LEGAL_CONTACT_EMAIL: "privacy@example.com", LEGAL_DATA_LOCATION: "Tashkent, Uzbekistan", SMTP_HOST: "h", SMTP_PORT: "587", SMTP_USER: "u", SMTP_PASSWORD: "p", EMAIL_FROM: "a@b.co",
-  PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_abc", PAYMENT_WEBHOOK_SECRET: "whsec_abc",
+  PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_abc", PAYMENT_WEBHOOK_SECRET: "whsec_abc", ANTIVIRUS_PROVIDER: "clamav",
 };
 const names = (env: Record<string, string | undefined>) => validateEnv(env).issues.map((i) => i.name).sort();
 
@@ -41,6 +41,13 @@ for (const n of ["LEGAL_OPERATOR_NAME", "LEGAL_CONTACT_EMAIL", "LEGAL_DATA_LOCAT
 }
 assert.ok(names({ ...full, LEGAL_CONTACT_EMAIL: "not-an-email" }).includes("LEGAL_CONTACT_EMAIL"), "malformed privacy contact");
 assert.ok(names({ ...full, LEGAL_TEXTS_REVIEWED: "yes" }).includes("LEGAL_TEXTS_REVIEWED"), "the review attestation is exactly 1");
+
+// ── ANTIVIRUS_PROVIDER: an explicit decision (clamav | none)
+assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: undefined }), ["ANTIVIRUS_PROVIDER"], "production must choose");
+assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: "none" }), [], "'none' is a valid explicit choice");
+assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: "norton" }), ["ANTIVIRUS_PROVIDER"], "unknown provider refused");
+assert.deepEqual(names({ ...full, CLAMAV_PORT: "abc" }), ["CLAMAV_PORT"]);
+assert.deepEqual(names({ NEXT_PUBLIC_APP_MODE: "demo" }), [], "demo needs nothing");
 
 // ── PAYMENTS_PROVIDER: an explicit decision, and the Stripe variables belong to `stripe` only
 const { PAYMENT_SECRET_KEY: _k, PAYMENT_WEBHOOK_SECRET: _w, ...noStripe } = full as Record<string, string>; void _k; void _w;

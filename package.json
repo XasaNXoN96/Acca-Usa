@@ -31,6 +31,7 @@
     "test:media": "tsx scripts/integration/media-info.ts",
     "test:media-pipeline": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/media-pipeline.ts",
     "test:upload-stream": "NEXT_PUBLIC_APP_MODE=demo DATA_PROVIDER=memory node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/upload-stream.ts",
+    "test:antivirus": "NEXT_PUBLIC_APP_MODE=demo DATA_PROVIDER=memory node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/antivirus.ts",
     "test:mistakes": "tsx scripts/integration/mistakes.ts",
     "test:exams": "NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/exams.ts",
     "test:mfa": "node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/mfa.ts && NEXT_PUBLIC_APP_MODE=demo node -r ./scripts/integration/stub-server-only.cjs --import tsx scripts/integration/mfa-service.ts",

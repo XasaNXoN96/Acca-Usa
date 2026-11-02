@@ -65,7 +65,7 @@ const baseEnv = {
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
   LEGAL_OPERATOR_NAME: "Acca Test LLC", LEGAL_OPERATOR_ADDRESS: "1 Test Street, Tashkent", LEGAL_OPERATOR_TAX_ID: "123456789", LEGAL_CONTACT_EMAIL: "privacy@acca.example", LEGAL_DATA_LOCATION: "Test datacentre, Tashkent", LEGAL_GOVERNING_LAW: "Test law", LEGAL_REFUND_WINDOW: "14 days", SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
-  PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
+  ANTIVIRUS_PROVIDER: "none", PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
 };
 const startServer = (env) => {
   const child = spawn("npx", ["next", "start", "-p", PORT], { env: { ...process.env, NEXT_DIST_DIR: ".next-prod", ...env }, stdio: ["ignore", "pipe", "pipe"], detached: true });

@@ -1794,7 +1794,9 @@
       "SOURCE_MISSING": "Yuklangan fayl omborda topilmadi.",
       "NO_DISK_SPACE": "Serverda disk joyi tugadi. Joy bo‘shatib, qayta urinib ko‘ring.",
       "STORAGE_ERROR": "Fayl ombori javob bermadi. Keyinroq qayta urinib ko‘ring.",
-      "SHUTDOWN": "Qayta ishlash server qayta ishga tushgani sababli to‘xtadi va avtomatik davom etadi."
+      "SHUTDOWN": "Qayta ishlash server qayta ishga tushgani sababli to‘xtadi va avtomatik davom etadi.",
+      "VIRUS_FOUND": "Faylda virus yoki zararli kod topildi — fayl rad etildi va talabalarga ko‘rsatilmaydi.",
+      "SCANNER_UNAVAILABLE": "Antivirus tekshiruvi hozir mavjud emas. Fayl kutadi va u qaytgach avtomatik tekshiriladi."
     }
   },
   "publicSubject": {
