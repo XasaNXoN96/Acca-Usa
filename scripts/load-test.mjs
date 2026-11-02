@@ -4,7 +4,7 @@
  *   BASE=https://staging.example.com STUDENT_COOKIE=<session cookie value of a test student> \
  *   VIDEO_FILE_ID=<id of a READY video the student may open> VIEWERS=50 SECONDS=60 BITRATE_MBPS=2.5 \
  *   node scripts/load-test.mjs
- * Simulates VIEWERS people watching video at BITRATE_MBPS (1 MB range requests, paced like a player buffering ahead) and reports,
+ * Simulates VIEWERS people watching video at BITRATE_MBPS (range requests of CHUNK_MB, default 1, paced like a player buffering ahead) and reports,
  * per range request, latency percentiles and "stalls" (a chunk that took longer than the time it covers, i.e. the player would
  * run dry). Run it FROM ANOTHER MACHINE or its own CPU cores: the load generator must not compete with the server.
  * Optional: PAGES="/dashboard,/courses" PAGE_USERS=30 adds students loading pages while the videos play.
@@ -19,7 +19,7 @@ const PAGES = (process.env.PAGES ?? "").split(",").filter(Boolean);
 const PAGE_USERS = Number(process.env.PAGE_USERS ?? 0);
 if (!COOKIE) { console.error("STUDENT_COOKIE is required (the value of the acca_session cookie of a TEST student)."); process.exit(2); }
 const headers = { cookie: `acca_session=${COOKIE}` };
-const CHUNK = 1024 * 1024;
+const CHUNK = Math.round(Number(process.env.CHUNK_MB ?? 1) * 1024 * 1024); // browsers ask for much larger ranges than 1 MB; CHUNK_MB=1 is the harsh case
 const chunkSeconds = (CHUNK * 8) / (MBPS * 1_000_000); // playback time covered by one 1 MB chunk
 const end = Date.now() + SECONDS * 1000;
 const lat = [], pageLat = [];

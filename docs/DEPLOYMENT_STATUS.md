@@ -34,6 +34,21 @@ Local lab: production build (`NEXT_PUBLIC_APP_MODE=production`), PostgreSQL 16, 
 | Two workers racing; stale `PROCESSING` recovery; low disk → `NO_DISK_SPACE`; shutdown skips new files | automated: `npm run test:upload-stream` (9 checks) |
 | Uploads in the end-to-end production suite | `npm run test:production` (28 steps, includes the new upload step) |
 
+## Pre-launch hardening round (what was done and verified)
+
+| Area | Result |
+|---|---|
+| Dependencies | Next.js 16.4.0 → 16.4.4 (critical RCE / DoS advisories), nodemailer → 10.3. `npm audit` still lists `zod` 3.x (DoS on huge collections; needs a breaking 4.x migration, inputs are size-limited), the Prisma CLI's `deepmerge-ts` (migration tooling only) and lint-time packages. |
+| Antivirus | ClamAV integration (`test:antivirus`, real clamd with a test signature checked once). Explicit `ANTIVIRUS_PROVIDER`. **Real signature database: NOT TESTED** (no internet in the sandbox). |
+| Attack probes | `scripts/security-probe.mjs`: 48 probes (headers, anonymous access, traversal, open redirect, forged cookies, CSRF on upload, spoofed / script / SVG uploads, NUL-byte file name, multi-range, unsatisfiable range) — all pass. **Found and fixed:** a malformed upload (NUL byte in the file name) made the request hang forever (DoS path). |
+| Passwords | the most guessed passwords are refused (registration, reset, admin form, `admin:create`). Gap kept on purpose: no e-mail verification at sign-up (anyone can register with someone else's address; the owner can still reset the password). |
+| Registration | `scripts/registration-probe.mjs`: 21 checks (valid sign-up, cookie flags, HTML / SQL-looking names, duplicate e-mail in another case, plus-addresses, weak / common / mismatched passwords, name / e-mail limits, missing consents, unicode e-mail, RU / UZ messages, no enumeration on password reset, rate limit) — all pass. Sign-up still reveals "an account with this e-mail already exists" (usual trade-off). |
+| Materials of every type | all 24 allowed formats (6 video, 6 audio, 4 image, pdf, slides pdf/pptx, docx, xlsx, zip, txt, csv) uploaded through the production build with antivirus on, processed by real FFmpeg and read back with Range: all `READY` and served. Admin guide: `docs/ADMIN_GUIDE_RU.md`. Staff upload limit raised to 600/h (an administrator loading a course hit 60/h). |
+| Devices | `audit-responsive` (overflow, clipped content, tiny touch targets, public + student + admin pages): 315–3840 px, landscape phones, tablets, RU / UZ / EN — **0 problems** after fixing two Russian-text overflows in the admin. |
+| Performance | catalogue snapshot shared between requests (+40 % page throughput), smaller HTML (admin-only texts not sent to everyone), compression moved to Nginx, optional Nginx video offload. Details and limits: `docs/LOAD_AND_CAPACITY.md`. A tried access-decision cache for files was **reverted** because it let a student read an old file version for a few seconds (caught by `smoke-examsecurity`). |
+| Nginx config | validated with a real Nginx 1.24 (`nginx -t`, run, HTTP/2, gzip, HSTS, large uploads, internal offload location). **Found and fixed:** `http2 on;` does not exist in Ubuntu 24.04's nginx 1.24. |
+| Regression | `smoke:all` 33/33, `test:production` 28/28, integration, migration, backup and restart suites — see the final report for the last run. |
+
 ## Not verifiable before a VPS exists
 
 * Real Nginx behaviour (body limits, timeouts, `proxy_request_buffering off`), `nginx -t` on the shipped file, certbot/Let's Encrypt, DNS.
@@ -49,7 +64,7 @@ Local lab: production build (`NEXT_PUBLIC_APP_MODE=production`), PostgreSQL 16, 
 * Queue is the `StoredFile` status table polled by the worker (no Redis/BullMQ): fine for one server, not horizontally scalable beyond a few workers.
 * Dev tools (`tsx`, `prisma`) are devDependencies, so the server installs all dependencies (`npm ci`); larger `node_modules`, accepted.
 * No HLS/adaptive streaming; progressive MP4 with Range requests only (`docs/MEDIA.md`).
-* No malware scanning of uploads (type/signature checks only).
+* Antivirus works (ClamAV, `docs/ANTIVIRUS.md`) but was verified only with a test signature, not the real database.
 * Files have no automatic backup unless the operator configures the second bucket / versioning.
 * Not "production ready": that claim requires the VPS drills above.
 

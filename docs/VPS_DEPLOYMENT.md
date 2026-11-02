@@ -266,6 +266,14 @@ written to Nginx's temp directory first), long body/read timeouts for slow conne
 Test from outside: `curl -I https://YOUR.DOMAIN/api/health`, sign in as the administrator, upload a small PDF, then a short video; the video becomes visible to students only after
 its status turns READY (Admin → Materials).
 
+### Optional: let Nginx serve the video (recommended once students are many)
+
+By default video bytes pass through the Node app. With `FILE_DELIVERY=nginx` (and `S3_FORCE_PATH_STYLE=1`, MinIO on `127.0.0.1:9000`) the app only checks access and
+answers `X-Accel-Redirect`; Nginx then streams from the private bucket using a 60-second signed URL that never reaches the browser (`location /_s3/` in `deploy/nginx/acca-usa.conf`,
+`internal` = not reachable directly). Change `127.0.0.1:9000` in that block if your `S3_ENDPOINT` differs. **Never set it without that Nginx block** (the response would be empty).
+Tested here with a real Nginx 1.24 and an S3 stand-in: Range requests, headers, view-only rules (students still get 403 for `?download`), anonymous 401 and the 404 of the internal path;
+**not** tested with MinIO. Also raise `worker_connections 4096;` and `worker_rlimit_nofile 8192;` in `/etc/nginx/nginx.conf`. Measurements: `docs/LOAD_AND_CAPACITY.md`.
+
 ## 10. Test the upload path on the real server (do not skip)
 
 On **staging** first, with your real Nginx and storage:
@@ -277,6 +285,9 @@ On **staging** first, with your real Nginx and storage:
 5. While a conversion runs, `sudo systemctl restart acca-usa-media-worker`: the file returns to the queue and finishes after the restart.
 6. `df -h` before and after: no space is left behind in `/var/lib/acca-media` or Nginx's `/var/lib/nginx`.
 7. Disconnect your network in the middle of a big upload: no partial file appears in the library.
+
+Then run, from your own computer against the **staging** URL: `BASE=https://staging.example.com node scripts/security-probe.mjs` (48 black-box security probes; with test-account cookies it also runs the
+authenticated checks) and `scripts/registration-probe.mjs` (sign-up edge cases; needs Chromium: `BASE=… CHROMIUM=/path/to/chromium node …`). Both must end with "passed". Never run them against the production site.
 
 ## 11. Updating to a new version
 

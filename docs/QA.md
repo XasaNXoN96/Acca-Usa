@@ -50,3 +50,14 @@ question has one**. A question is *resolved* when its latest outcome — a later
 `/mistakes/practice` quizzes up to 10 unresolved mistakes; every answer is graded on the server (`PracticeAnswer`, ungraded,
 never changes a test result). The page never contains the answer key, and only questions the learner got wrong earlier can be
 checked. The logic is one pure module (`services/domain/mistakes.ts`) shared by both providers.
+
+## Added for the pre-launch round
+
+| Command | What it proves |
+|---|---|
+| `npm run test:antivirus` | ClamAV INSTREAM framing against a clamd test double: clean / infected, 70 MB stream, outage and recovery, timeout |
+| `npm run test:upload-stream` | streaming size cap, claim race, stale recovery, shutdown, disk space |
+| `node scripts/security-probe.mjs` | 48 black-box security probes (local / staging) |
+| `node scripts/registration-probe.mjs` | 21 sign-up edge cases in a real browser (local / staging) |
+| `node scripts/load-test.mjs` | video viewers + browsing students; capacity of **your** server (staging) |
+| `LOCALE=ru WIDTHS=667x375,… node scripts/run-smokes.mjs audit-responsive.mjs` | responsive audit in another language / sizes (up to 3840 px, landscape) |

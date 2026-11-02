@@ -21,6 +21,12 @@ everything else needs a human against the real service.
 - [ ] **upload drill on the real server** (VPS_DEPLOYMENT.md §10): big video, oversize file, spoofed file, seek, worker restart mid-conversion, dropped connection — **not verified here (no VPS)**
 - [ ] off-server copies of DB dumps **and** files exist; a DB restore drill and a file restore drill were done — **not verified here**
 
+## Security checks on the real server
+- [ ] `ANTIVIRUS_PROVIDER=clamav`; `freshclam` has downloaded signatures; `echo PING | nc 127.0.0.1 3310` → PONG; upload the EICAR test string in a `.txt` as admin → the file is **rejected** (`docs/ANTIVIRUS.md`) — **not verified here (no real signature database)**
+- [ ] `node scripts/security-probe.mjs` and `scripts/registration-probe.mjs` against **staging** end with "passed"
+- [ ] `nginx -t` OK, HTTPS grade checked (e.g. SSL Labs), `curl -I` shows HSTS / nosniff / no `X-Powered-By`, port 3000 / 5432 / 9000 / 3310 are **not** reachable from outside (`nmap` from another machine)
+- [ ] `docs/LOAD_AND_CAPACITY.md`: load test run on staging from another machine; ceiling written down
+
 ## Database (`docs/MIGRATIONS.md`)
 - [ ] automated backups (`npm run db:backup`, encrypted, copied to write-once storage) + point-in-time recovery enabled; **restore drill done** with `npm run db:restore` on YOUR infrastructure (`docs/BACKUP_AND_RESTORE.md`) — tools proven only on local PostgreSQL 16
 - [ ] object-storage versioning / replication for uploaded files (not covered by the database backup); `AUTH_SECRET` / `AUDIT_CHAIN_SECRET` stored in a secret manager
