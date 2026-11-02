@@ -3,7 +3,7 @@
 # Set MEDIA_INLINE_PROCESSING=0 in /etc/acca-usa/acca-usa.env if this worker is the only processor (otherwise the web process also tries once per upload — harmless).
 [Unit]
 Description=ACCA USA media worker
-After=network-online.target postgresql.service
+After=network-online.target postgresql.service clamav-daemon.service
 Wants=network-online.target
 
 [Service]

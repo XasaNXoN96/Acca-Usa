@@ -3,7 +3,7 @@
 # (root:acca, mode 0640 — NOT in the repository, NOT in this file). See docs/VPS_DEPLOYMENT.md. Not run on a real systemd from the repository.
 [Unit]
 Description=ACCA USA web application
-After=network-online.target postgresql.service
+After=network-online.target postgresql.service clamav-daemon.service
 Wants=network-online.target
 
 [Service]

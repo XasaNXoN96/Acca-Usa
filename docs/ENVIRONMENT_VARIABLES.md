@@ -69,6 +69,22 @@ Access is granted only by a verified webhook or by an administrator's decision �
 
 `LEGAL_OPERATOR_NAME` R · `LEGAL_CONTACT_EMAIL` R (also shown in the "online payment unavailable" notice) · `LEGAL_DATA_LOCATION` R (where the database, files and backups physically are — state the truth) · `LEGAL_OPERATOR_ADDRESS`, `LEGAL_OPERATOR_TAX_ID`, `LEGAL_GOVERNING_LAW`, `LEGAL_REFUND_WINDOW` O · `LEGAL_TEXTS_REVIEWED=1` O (only after a lawyer has reviewed the texts).
 
+## Antivirus — see `docs/ANTIVIRUS.md`
+
+| Name | | Meaning |
+|---|---|---|
+| `ANTIVIRUS_PROVIDER` | R | `clamav` (every upload scanned by clamd before it is served; recommended) or `none` (explicitly no scanning). Missing/other value = the server refuses to start. |
+| `CLAMAV_HOST`, `CLAMAV_PORT` | O | clamd TCP address (defaults `127.0.0.1`, `3310`). |
+| `CLAMAV_SOCKET` | O | clamd Unix socket path instead of host/port. |
+| `CLAMAV_TIMEOUT_MS` | O | idle timeout of one scan (default `120000`). |
+
+## Performance
+
+| Name | Default | Meaning |
+|---|---|---|
+| `CATALOG_CACHE_SECONDS` | `5` | The catalogue (topics, materials, tests) is shared by all requests for this long; admin saves refresh it at once. `0` = no cache. |
+| `NEXT_COMPRESS` | off | `1` turns on Node's own gzip (only when running **without** Nginx; Nginx compresses otherwise). |
+
 ## Media processing (web app and `media:worker`) — see `docs/MEDIA.md`
 
 | Name | Default | Meaning |

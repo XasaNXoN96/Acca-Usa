@@ -1,3 +1,4 @@
+import { isCommonPassword } from "./auth";
 import { z } from "zod";
 import { difficulties, materialKinds } from "@/types";
 
@@ -136,6 +137,7 @@ export const studentSchemaFor = (isNew: boolean) =>
       }
       if (p.length < 8) ctx.addIssue({ code: "custom", path: ["password"], message: "passwordMin" });
       else if (!/[A-Za-z]/.test(p) || !/\d/.test(p)) ctx.addIssue({ code: "custom", path: ["password"], message: "passwordStrength" });
+      else if (isCommonPassword(p)) ctx.addIssue({ code: "custom", path: ["password"], message: "passwordCommon" });
     });
 
 export const certificateSchema = z.object({ student: id, subject: id });

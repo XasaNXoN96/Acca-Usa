@@ -1,9 +1,12 @@
 // Responsive audit: horizontal overflow, clipped elements and small touch targets on key pages at 12 widths (315 … 1920).
 //   BASE_URL=http://localhost:3100 CHROMIUM=... node scripts/audit-responsive.mjs [extra paths…]   (fresh server)
+//   LOCALE=ru|uz|en  runs the whole scan in that language (Russian / Uzbek texts are longer than English)
+//   WIDTHS=320,390,667x375,…  overrides the sizes (WxH for a fixed height, e.g. landscape phones). Default also covers 2560 and 3840 (large monitors / 4K).
 import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
-const WIDTHS = [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920];
+const WIDTHS = process.env.WIDTHS ? process.env.WIDTHS.split(",").map(Number) : [315, 320, 360, 390, 412, 480, 768, 820, 1024, 1280, 1440, 1920, 2560, 3840];
+const LOCALE = process.env.LOCALE ?? "en";
 const T1 = "bt-business-organisations-and-their-stakeholders";
 const PUBLIC = ["/", "/all-courses", "/acca", "/fia", "/subject/bt", "/books", "/forums", "/search", "/login", "/register", "/terms", "/privacy", "/cookies", "/refunds"];
 const STUDENT = ["/dashboard", "/notes", "/mistakes", "/courses", "/platform/acca", "/subject/bt", `/subject/bt/topic/${T1}`, `/subject/bt/topic/${T1}/material/${T1}-notes`, `/subject/bt/topic/${T1}/material/${T1}-video`, `/subject/bt/topic/${T1}/material/${T1}-pdf`, `/subject/bt/topic/${T1}/material/${T1}-audio`, `/subject/bt/topic/${T1}/material/${T1}-diagram`, `/subject/bt/topic/${T1}/material/${T1}-glossary`, "/exams", "/progress", "/ranking", "/ranking?platform=acca&subject=bt", "/certificates", "/certificates/cert-demo-bt", "/notifications", "/payments", "/profile"];
@@ -22,15 +25,16 @@ async function login(who) {
 const states = { public: undefined, student: await login("Student"), admin: await login("Admin") };
 
 async function scan(role, paths) {
-  for (const w of WIDTHS) {
-    const c = await browser.newContext({ baseURL: BASE, viewport: { width: w, height: w < 600 ? 800 : 900 }, hasTouch: w < 1024, storageState: states[role] });
-    await c.addCookies([{ name: "NEXT_LOCALE", value: "en", url: BASE }]);
+  for (const spec of WIDTHS) {
+    const [w, given] = String(spec).split("x").map(Number); // "667x375" = a landscape phone, a plain number uses a default height
+    const c = await browser.newContext({ baseURL: BASE, viewport: { width: w, height: given || (w < 600 ? 800 : 900) }, hasTouch: w < 1024, storageState: states[role] });
+    await c.addCookies([{ name: "NEXT_LOCALE", value: LOCALE, url: BASE }]);
     const p = await c.newPage();
     for (const path of paths) {
       checks++;
       const res = await p.goto(path, { waitUntil: "load" }).catch(() => null);
       await p.waitForTimeout(150);
-      if (!res || res.status() >= 400) { problems++; console.log(`✗ ${role} ${w} ${path}: HTTP ${res?.status()}`); continue; }
+      if (!res || res.status() >= 400) { problems++; console.log(`✗ ${role} ${spec} ${path}: HTTP ${res?.status()}`); continue; }
       const r = await p.evaluate((touch) => {
         const out = [];
         const over = document.documentElement.scrollWidth - document.documentElement.clientWidth;
@@ -50,7 +54,7 @@ async function scan(role, paths) {
         }
         return out;
       }, w < 1024);
-      if (r.length) { problems++; console.log(`✗ ${role} ${w} ${path}: ${r.join("; ")}`); }
+      if (r.length) { problems++; console.log(`✗ ${role} ${spec} ${path}: ${r.join("; ")}`); }
     }
     await c.close();
   }

@@ -24,9 +24,27 @@ Internet ──443──► Nginx (TLS, upload limits, trusted client IP)
 
 Only ports 22 (SSH), 80 and 443 are open to the internet. PostgreSQL, MinIO and the Node app listen on `127.0.0.1` only.
 
-Sizing: 2 vCPU / 4 GB RAM / 40 GB+ disk is a sensible minimum if the files live on the same machine (video needs disk: originals +
-converted copies; budget 2–3× the raw video size plus working space for FFmpeg ≈ 3× the largest file). Put the file store on a separate
-volume or a provider's object storage when the library grows. Provider, region, IP and domain are your choice; nothing here depends on one.
+Sizing (the plan: **2 vCPU / 8 GB RAM / 80 GB NVMe**):
+
+| Part | RAM | Disk |
+|---|---|---|
+| Ubuntu + Nginx + Node app (`next start`) | ≈ 0.6–1 GB | ≈ 6 GB (system) + 2 GB (code, `node_modules`, `.next`) |
+| PostgreSQL | ≈ 0.5–1 GB (set `shared_buffers` ≈ 1 GB) | ≈ 1–3 GB at first, grows with students and progress |
+| ClamAV daemon (`clamd`) | ≈ 1.5–2 GB (signatures live in RAM) | ≈ 0.4 GB |
+| FFmpeg while converting a video | 0.3–1 GB per job (the worker runs **one** job at a time) | working copy ≈ 3× the video |
+| MinIO (if on the same server) | ≈ 0.3–0.5 GB | **the rest** |
+| Backups of the database (encrypted dumps, 7–14 kept) | – | ≈ 1–5 GB |
+
+Disk budget on 80 GB: ≈ 12 GB for system, code, PostgreSQL, ClamAV signatures, logs and database backups; ≈ 8 GB must stay **free** (conversion scratch space
+and headroom); that leaves **≈ 60 GB for video and documents**. Every uploaded video is stored twice when FFmpeg has to convert it (original + MP4 copy), and a
+video that is already browser-ready is stored once. Plan therefore for **≈ 30–40 GB of original lecture video** — roughly 40–50 hours at 720p (≈ 0.7–1 GB per hour) —
+before you must add disk (a block-storage volume mounted for MinIO, or provider object storage; MinIO's `S3_ENDPOINT` just moves). Compress lecture video before upload
+(720p, H.264, ≈ 2 Mbit/s is plenty for lessons) and delete test uploads. **CPU:** two cores are enough for the site and for a conversion at a time, but a conversion
+makes pages slower while it runs — keep `MEDIA_CONCURRENCY=1` and let the worker run at night when you upload large batches.
+
+**Network is the limit for video, not CPU.** One student watching 720p uses ≈ 2–2.5 Mbit/s. A 100 Mbit/s uplink serves ≈ 40 viewers, 1 Gbit/s ≈ 400. Ask the provider
+for the **guaranteed** uplink and the monthly traffic allowance *before* buying (a plan with 10 Mbit/s cannot serve video at all), and see `docs/DEPLOYMENT_STATUS.md` for the
+measured capacity of the application itself. Provider, region, IP and domain are your choice; nothing here depends on one.
 
 ## 1. Before you start (decisions and accounts)
 
@@ -85,12 +103,14 @@ Optional: change the SSH port (then allow it in `ufw` first). Keep the provider'
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt -y install nodejs build-essential
 
-sudo apt -y install postgresql postgresql-contrib nginx ffmpeg git certbot python3-certbot-nginx
+sudo apt -y install postgresql postgresql-contrib nginx ffmpeg git certbot python3-certbot-nginx clamav clamav-daemon netcat-openbsd
 
 node -v && psql --version && ffmpeg -version | head -1 && ffprobe -version | head -1 && nginx -v
 ```
 
 Ubuntu's `ffmpeg` package includes `libx264` and the AAC encoder the pipeline uses. Check: `ffmpeg -hide_banner -encoders | grep -E "libx264|aac"`.
+
+Antivirus: finish the ClamAV setup from `docs/ANTIVIRUS.md` (first signature download, `StreamMaxLength 200M`, loopback-only) **before** step 8, and set `ANTIVIRUS_PROVIDER=clamav` in the env file.
 
 ## 4. System user and directories
 
@@ -176,6 +196,8 @@ SMTP_HOST=…  SMTP_PORT=587  SMTP_USER=…  SMTP_PASSWORD=…  EMAIL_FROM="ACCA
 PAYMENTS_PROVIDER=none
 LEGAL_OPERATOR_NAME=…  LEGAL_CONTACT_EMAIL=…  LEGAL_DATA_LOCATION=…
 MEDIA_INLINE_PROCESSING=0
+ANTIVIRUS_PROVIDER=clamav
+CLAMAV_HOST=127.0.0.1  CLAMAV_PORT=3310
 ```
 
 Build with the same environment (the mode is compiled in) and prepare the database. Variables are loaded only inside the `acca` user's

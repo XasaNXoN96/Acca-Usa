@@ -7,6 +7,7 @@
  *  • another administrator already exists   → refused unless ADMIN_ALLOW_ADDITIONAL=1 (further admins are created inside the
  *                                             admin area by an existing, MFA-protected administrator)
  */
+import { isCommonPassword } from "@/lib/validators/auth";
 export type BootstrapDecision =
   | { action: "create" | "reset" | "promote" }
   | { action: "refuse"; reason: "STUDENT_ACCOUNT" | "ADMIN_EXISTS" };
@@ -24,4 +25,4 @@ export function decideAdminBootstrap(input: {
 }
 
 export const passwordProblem = (password: string): string | null =>
-  password.length < 12 ? "at least 12 characters" : !/[A-Za-z]/.test(password) || !/\d/.test(password) ? "letters and digits" : null;
+  password.length < 12 ? "at least 12 characters" : !/[A-Za-z]/.test(password) || !/\d/.test(password) ? "letters and digits" : isCommonPassword(password) ? "too common" : null;
