@@ -1584,6 +1584,50 @@
         "FAILED": "Xatolik yuz berdi. Qayta urinib ko‘ring."
       }
     },
+    "questionImport": {
+      "title": "Savollarni import qilish",
+      "description": "CSV fayldan birdaniga ko‘p savol qo‘shing. Ular qoralama sifatida yaratiladi, e’lon qilishdan oldin tekshirib chiqishingiz mumkin.",
+      "back": "Savollar bankiga",
+      "link": "Fayldan import",
+      "stepsTitle": "Qanday ishlaydi",
+      "step1": "Shablonni yuklab oling va Excel yoki Google Sheets’da to‘ldiring (bir qator — bitta savol).",
+      "step2": "CSV (UTF-8) sifatida saqlang: Fayl → Saqlash / Yuklab olish → CSV.",
+      "step3": "Faylni shu yerda tanlang. Avval u tekshiriladi; «Import» tugmasini bosmaguningizcha hech narsa qo‘shilmaydi.",
+      "columns": "Ustunlar: subject (fan kodi, masalan BT), topic (ixtiyoriy, mavzuning aniq nomi), text, a, b, c, d, correct (A–D), explanation, points (standart 1), difficulty (easy / medium / hard), tags (ixtiyoriy). status ustuni e’tiborga olinmaydi: savollar doim qoralama sifatida import qilinadi.",
+      "template": "Shablonni yuklab olish",
+      "choose": "CSV fayl tanlang",
+      "line": "Qator",
+      "column": "Ustun",
+      "problem": "Muammo",
+      "checked": "Tekshirilgan qatorlar: {rows}. Import uchun tayyor: {valid}, xatolari bor: {errors}, allaqachon mavjud va o‘tkazib yuboriladi: {duplicates}.",
+      "done": "Import qilingan savollar (qoralama): {imported}. Import qilinmagan qatorlar: {errors}.",
+      "duplicates": "Takror sifatida o‘tkazib yuborilgan (qatorlar): {lines}",
+      "importCta": "{valid} ta savolni import qilish",
+      "errors": {
+        "TOO_BIG": "Fayl juda katta (ko‘pi bilan 2 MB).",
+        "NOT_CSV": ".csv fayl tanlang.",
+        "FORBIDDEN": "Savollarni import qilishga ruxsatingiz yo‘q.",
+        "RATE_LIMITED": "Urinishlar juda ko‘p. Keyinroq qayta urinib ko‘ring.",
+        "EMPTY": "Faylda savollar yo‘q.",
+        "NO_HEADER": "Birinchi qatorda ustun nomlari bo‘lishi kerak.",
+        "MISSING_COLUMNS": "Quyidagi ustunlar yetishmayapti:",
+        "TOO_MANY_ROWS": "Qatorlar juda ko‘p (faylda ko‘pi bilan 2000). Faylni bo‘ling."
+      },
+      "rowErrors": {
+        "required": "Majburiy qiymat bo‘sh.",
+        "min": "Juda qisqa.",
+        "max": "Juda uzun.",
+        "range": "Son ruxsat etilgan oraliqdan tashqarida.",
+        "invalidChoice": "Noto‘g‘ri qiymat.",
+        "SUBJECT_NOT_FOUND": "Fan topilmadi. Fan kodini kiriting (masalan, BT).",
+        "TOPIC_NOT_FOUND": "Bu fanda mavzu topilmadi (nomi aynan mos bo‘lishi kerak).",
+        "CORRECT_INVALID": "To‘g‘ri javob A, B, C yoki D bo‘lishi kerak.",
+        "DIFFICULTY_INVALID": "Qiyinlik: easy, medium yoki hard.",
+        "STATUS_INVALID": "Noma’lum holat.",
+        "OPTIONS_NOT_UNIQUE": "To‘rtta javob variantlari har xil bo‘lishi kerak.",
+        "SAVE_FAILED": "Saqlab bo‘lmadi."
+      }
+    },
     "bulk": {
       "title": "Ommaviy yuklash",
       "description": "Bir vaqtda ko‘p fayl qo‘shing. Har bir fayl tanlangan fan va mavzuda material bo‘ladi; video va audio keyin qayta ishlanadi.",

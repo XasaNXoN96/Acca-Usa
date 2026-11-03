@@ -1584,6 +1584,50 @@
         "FAILED": "Something went wrong. Please try again."
       }
     },
+    "questionImport": {
+      "title": "Import questions",
+      "description": "Add many questions at once from a CSV file. They are created as drafts so you can review them before publishing.",
+      "back": "Back to question bank",
+      "link": "Import from file",
+      "stepsTitle": "How it works",
+      "step1": "Download the template and fill it in Excel or Google Sheets (one question per row).",
+      "step2": "Save it as CSV (UTF-8): File → Save as / Download → CSV.",
+      "step3": "Choose the file here. It is checked first; nothing is added until you press Import.",
+      "columns": "Columns: subject (code, e.g. BT), topic (optional, exact title), text, a, b, c, d, correct (A–D), explanation, points (default 1), difficulty (easy / medium / hard), tags (optional). The status column is ignored: questions are always imported as drafts.",
+      "template": "Download template",
+      "choose": "Choose a CSV file",
+      "line": "Row",
+      "column": "Column",
+      "problem": "Problem",
+      "checked": "Checked {rows} rows: {valid} are ready to import, {errors} have problems, {duplicates} already exist and will be skipped.",
+      "done": "Imported {imported} questions as drafts. {errors} rows were not imported.",
+      "duplicates": "Skipped as duplicates (rows): {lines}",
+      "importCta": "Import {valid} questions",
+      "errors": {
+        "TOO_BIG": "The file is too large (2 MB at most).",
+        "NOT_CSV": "Choose a .csv file.",
+        "FORBIDDEN": "You do not have permission to import questions.",
+        "RATE_LIMITED": "Too many attempts. Try again later.",
+        "EMPTY": "The file has no questions.",
+        "NO_HEADER": "The first row must contain the column names.",
+        "MISSING_COLUMNS": "These columns are missing:",
+        "TOO_MANY_ROWS": "Too many rows (2000 at most per file). Split the file."
+      },
+      "rowErrors": {
+        "required": "Required value is empty.",
+        "min": "Too short.",
+        "max": "Too long.",
+        "range": "Number out of range.",
+        "invalidChoice": "Not a valid choice.",
+        "SUBJECT_NOT_FOUND": "Subject not found. Use the subject code (e.g. BT).",
+        "TOPIC_NOT_FOUND": "Topic not found in this subject (the title must match exactly).",
+        "CORRECT_INVALID": "The correct answer must be A, B, C or D.",
+        "DIFFICULTY_INVALID": "Difficulty must be easy, medium or hard.",
+        "STATUS_INVALID": "Unknown status.",
+        "OPTIONS_NOT_UNIQUE": "The four answers must be different.",
+        "SAVE_FAILED": "Could not be saved."
+      }
+    },
     "bulk": {
       "title": "Bulk upload",
       "description": "Add many files at once. Each file becomes a material in the chosen subject and topic; videos and audio are processed afterwards.",
