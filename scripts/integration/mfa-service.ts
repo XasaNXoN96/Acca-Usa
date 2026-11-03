@@ -10,7 +10,7 @@ async function main() {
   const made = await services.users.create({ name: "Mfa Admin", email, role: "ADMIN", status: "active", password: "Mfa-admin-pass12" });
   assert.ok(made.ok); const id = made.data.id;
 
-  assert.deepEqual(await services.mfa.status(id), { enabled: false, recoveryCodesLeft: 0 });
+  assert.deepEqual(await services.mfa.status(id), { enabled: false, recoveryCodesLeft: 0, telegramLinked: false });
   assert.deepEqual(await services.mfa.verifyLogin(id, "123456"), { ok: false }, "no MFA enrolled → nothing verifies");
 
   const b1 = await services.mfa.beginEnrollment(id); assert.ok(b1.ok);
@@ -24,7 +24,7 @@ async function main() {
   assert.equal(ok.data.recoveryCodes.length, 10);
   assert.equal(ok.data.tokenVersion, before.tokenVersion + 1, "enrolment revokes older sessions");
   assert.equal(await services.auth.getSessionUser(id, before.tokenVersion), null, "pre-enrolment session is dead");
-  assert.deepEqual(await services.mfa.status(id), { enabled: true, recoveryCodesLeft: 10 });
+  assert.deepEqual(await services.mfa.status(id), { enabled: true, recoveryCodesLeft: 10, telegramLinked: false });
   const again = await services.mfa.beginEnrollment(id); assert.ok(!again.ok && again.code === "ALREADY_ENABLED", "cannot re-enrol over an active factor");
 
   // the enrolment consumed the current step → same code is a replay, the next step is fine, older steps are not
@@ -53,7 +53,7 @@ async function main() {
   // reset: factor removed, sessions revoked, old codes useless
   const tv = (await services.auth.verifyCredentials(email, "Mfa-admin-pass12")) as { tokenVersion: number };
   assert.ok((await services.mfa.reset(id)).ok);
-  assert.deepEqual(await services.mfa.status(id), { enabled: false, recoveryCodesLeft: 0 });
+  assert.deepEqual(await services.mfa.status(id), { enabled: false, recoveryCodesLeft: 0, telegramLinked: false });
   assert.equal(await services.auth.getSessionUser(id, tv.tokenVersion), null, "reset revokes sessions");
   assert.deepEqual(await services.mfa.verifyLogin(id, codeAt(b1.data.secret, 1)), { ok: false });
   assert.ok(!(await services.mfa.reset("does-not-exist")).ok);
