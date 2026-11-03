@@ -45,7 +45,8 @@ const sink = net.createServer((sock) => {
   sock.on("error", () => {});
 });
 const decodeQp = (s) => s.replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-const lastMail = async (containing) => { for (let i = 0; i < 40; i++) { const m = [...mails].reverse().find((x) => decodeQp(x).includes(containing)); if (m) return decodeQp(m); await sleep(250); } throw new Error(`no mail containing "${containing}"`); };
+/** Latest mail containing ALL the given texts (a string or a list): two mails to one person (welcome + e-mail confirmation) both carry the name. */
+const lastMail = async (containing) => { const parts = [].concat(containing); for (let i = 0; i < 40; i++) { const m = [...mails].reverse().find((x) => { const t = decodeQp(x); return parts.every((q) => t.includes(q)); }); if (m) return decodeQp(m); await sleep(250); } throw new Error(`no mail containing ${JSON.stringify(parts)}`); };
 
 // ── a local TEST DOUBLE of the Stripe REST API (NOT Stripe): records what the server sends, returns a checkout session
 const stripeCalls = [];
@@ -113,7 +114,7 @@ try {
     await studentPage.locator("#reg-password").fill("Learner-pass123"); await studentPage.locator("#reg-confirm").fill("Learner-pass123"); await studentPage.locator("#reg-terms").click(); await studentPage.locator("#reg-privacy").click();
     await studentPage.getByRole("button", { name: "Create account" }).click(); await studentPage.waitForURL(/dashboard$/);
     const cookie = (await studentCtx.cookies()).find((x) => x.name === "acca_session"); assert(cookie?.httpOnly && cookie.secure && cookie.sameSite === "Lax", `cookie flags ${JSON.stringify(cookie)}`);
-    const welcome = await lastMail("Prod Learner"); assert(/Welcome to ACCA USA/.test(welcome) && welcome.includes(studentEmail), "welcome mail");
+    const welcome = await lastMail(["Welcome to ACCA USA", "Prod Learner"]); assert(/Welcome to ACCA USA/.test(welcome) && welcome.includes(studentEmail), "welcome mail");
     assert(!welcome.includes("Learner-pass123"), "password in e-mail");
   });
   // `db` (Prisma) is created further down for the admin steps: this step opens its own short-lived client.
@@ -125,7 +126,7 @@ try {
       await vdb.platform.update({ where: { slug: "fia" }, data: { priceCents: 2900 } }); const before = await vdb.payment.count();
       await studentPage.goto("/platform/fia"); await studentPage.getByRole("button", { name: /Buy access/ }).click();
       await studentPage.getByText(/Confirm your e-mail address first/).waitFor(); assert((await vdb.payment.count()) === before, "a payment row was created for an unconfirmed account");
-      const mail = await lastMail("verify-email?token="); assert(!mail.includes("Learner-pass123"), "password in the confirmation mail");
+      const mail = await lastMail(["verify-email?token=", "Prod Learner"]); assert(!mail.includes("Learner-pass123"), "password in the confirmation mail");
       const link = /https:\/\/acca\.example(\/verify-email\?token=[A-Za-z0-9_-]+)/.exec(mail)?.[1]; assert(link, "confirmation link in the mail");
       const anon = await ctx(); const ap = await anon.newPage();
       await ap.goto("/verify-email?token=" + "x".repeat(43)); assert((await ap.locator('[data-verify-email-result="invalid"]').count()) === 1, "a made-up token was accepted");
@@ -421,7 +422,7 @@ try {
   await step("payments=none: a PAID platform shows the localized contact notice (address from server configuration) instead of a buy button; registration + e-mail still work; no payment row is created", async () => {
     await offPage.goto("/register"); await offPage.locator("#reg-name").fill("Offline Learner"); await offPage.locator("#reg-email").fill(offMail); await offPage.locator("#reg-password").fill("Learner-pass123"); await offPage.locator("#reg-confirm").fill("Learner-pass123");
     await offPage.locator("#reg-terms").click(); await offPage.locator("#reg-privacy").click(); await offPage.getByRole("button", { name: "Create account" }).click(); await offPage.waitForURL(/dashboard$/);
-    assert(/Welcome to ACCA USA/.test(await lastMail("Offline Learner")), "welcome e-mail not sent while payments are off");
+    assert(/Welcome to ACCA USA/.test(await lastMail(["Welcome to ACCA USA", "Offline Learner"])), "welcome e-mail not sent while payments are off");
     offUser = await db.user.findUnique({ where: { email: offMail } });
     for (const path of ["/courses", "/platform/fia"]) {
       await offPage.goto(path); const note = offPage.locator("[data-payments-off]").first(); await note.waitFor(); const txt = await note.innerText();
@@ -483,6 +484,7 @@ try {
   // ── Payme (Uzbekistan): the Merchant API endpoint against the real server, the real route and PostgreSQL (the caller is a test double of Payme)
   await step("payme: the endpoint does not exist unless PAYMENTS_PROVIDER=payme; payme needs its variables and UZS (names only in the message)", async () => {
     assert((await fetch(`${BASE}/api/payments/payme`, { method: "POST", body: "{}" })).status === 404, "the Payme endpoint answers while payments are off");
+    server.stop(); await waitDown(); // the probe servers below use the same port
     const paymeBase = { ...baseEnv, PAYMENTS_PROVIDER: "payme", PRICE_CURRENCY: "UZS", PAYME_MERCHANT_ID: "5e730e8e0b852a417aa49ceb", PAYME_KEY: "payme-test-key-0123456789", PAYMENT_SECRET_KEY: "", PAYMENT_WEBHOOK_SECRET: "" };
     let out = await refuses({ ...paymeBase, PAYME_KEY: "" }); assert(/Invalid environment/.test(out) && out.includes("PAYME_KEY") && !out.includes("payme-test-key"), `no key: ${out.slice(0, 300)}`);
     out = await refuses({ ...paymeBase, PAYME_MERCHANT_ID: "" }); assert(out.includes("PAYME_MERCHANT_ID"), `no merchant: ${out.slice(0, 300)}`);
@@ -502,7 +504,7 @@ try {
     assert((await rpc("CheckPerformTransaction", { amount: 100, account: acc })).error?.code === -31001, "wrong amount accepted");
     const created = await rpc("CreateTransaction", { id: "pm-tx-1", time: Date.now(), amount: 2_900_000, account: acc });
     assert(created.result?.state === 1 && created.result?.transaction === "pay-pm-1", JSON.stringify(created));
-    assert(!(await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } })), "Create granted access");
+    { const e0 = await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } }); assert(!e0 || e0.status !== "ACTIVE", "Create granted access"); } // an earlier step left this learner a REVOKED enrolment
     const performs = await Promise.all([1, 2, 3, 4].map(() => rpc("PerformTransaction", { id: "pm-tx-1" })));
     assert(performs.every((x) => x.result?.state === 2 && x.result.perform_time === performs[0].result.perform_time), JSON.stringify(performs));
     const enrol = await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } }); assert(enrol?.status === "ACTIVE", "Perform did not grant access");
