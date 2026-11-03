@@ -132,10 +132,14 @@ model User {
   mfaEnabledAt DateTime?
   /// last accepted 30-second TOTP step — a code from this step or earlier can never be replayed
   mfaLastStep  Int?
+  /// null = the owner of the address has not confirmed it yet (production sign-ups). Accounts that existed before this column, accounts created by an
+  /// administrator and the first administrator are confirmed at creation.
+  emailVerifiedAt DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?
 
+  emailVerificationTokens EmailVerificationToken[]
   enrollments      Enrollment[]
   topicProgress    TopicProgress[]
   materialProgress MaterialProgress[]
@@ -170,6 +174,20 @@ model MfaRecoveryCode {
 
 model ResetToken {
   /// SHA-256 of the random token — the raw token is only ever in the e-mail / reset link.
+  tokenHash String    @id
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// E-mail confirmation links of new accounts (production). Same rules as ResetToken: only the hash is stored, single use, short life.
+model EmailVerificationToken {
   tokenHash String    @id
   userId    String
   expiresAt DateTime
@@ -648,11 +666,32 @@ model Payment {
   platform    Platform       @relation(fields: [platformSlug], references: [slug], onDelete: Restrict)
   enrollments Enrollment[]
   events      PaymentEvent[]
+  paymeTransactions PaymeTransaction[]
 
   @@unique([provider, providerPaymentId])
   @@unique([userId, idempotencyKey])
   @@index([userId, status])
   @@index([status, createdAt])
+}
+
+/// Payme (Uzbekistan) Merchant API transactions. `id` is Payme's own transaction id; times are milliseconds since the epoch.
+/// state: 1 created, 2 performed (paid), -1 cancelled before perform, -2 cancelled after perform (refund).
+model PaymeTransaction {
+  id          String   @id
+  paymentId   String
+  paymeTime   BigInt
+  amountCents Int
+  state       Int
+  reason      Int?
+  createTime  BigInt
+  performTime BigInt   @default(0)
+  cancelTime  BigInt   @default(0)
+  updatedAt   DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId, state])
+  @@index([paymeTime])
 }
 
 /// Every webhook delivery, keyed by the provider's event id → replays are detected and ignored (idempotency).

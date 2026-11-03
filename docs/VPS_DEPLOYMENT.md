@@ -210,6 +210,15 @@ run_acca npx prisma migrate deploy      # applies the committed migrations (docs
 run_acca npm run db:bootstrap           # ACCA + FIA platforms and levels only; NO demo data; idempotent
 ```
 
+**Preflight — run it now and after every change.** One command checks the configuration (names only), PostgreSQL and migrations, the bucket (writes and deletes one tiny object),
+the SMTP login (sends nothing), FFmpeg with libx264/AAC, ClamAV, free disk, and — with `--url https://your-domain` — the public site's HTTPS/headers and that ports 3000, 5432, 9000 and 3310 are **closed** to the internet:
+
+```bash
+sudo -u acca bash -c 'set -a; . /etc/acca-usa/acca-usa.env; set +a; cd /srv/acca-usa && npm run preflight -- --url https://YOUR.DOMAIN'
+```
+
+Every line is `ok`, `WARN` or `FAIL` and it exits 1 on any FAIL; fix FAILs before starting students on the site. (Checked here against a local PostgreSQL, an S3 stand-in, an SMTP sink, FFmpeg and a clamd — and shown to fail correctly when each one is broken; not run on a real server.)
+
 **There is no automatic seeding in production**: `npm run db:seed` is demo data and must never be run on production (the app also refuses the demo provider there).
 
 Starting the service in step 8 validates the configuration; if anything is missing or unsafe the process exits and the journal names the variables (never their values).
@@ -307,6 +316,22 @@ to roll back the code, check out the previous tag — a database rollback means 
 See `docs/BACKUP_AND_RESTORE.md`. In short: `/etc/acca-usa/backup.env` (mode 0640 root:acca) with `BACKUP_DIR=/var/backups/acca-usa` and `BACKUP_PASSPHRASE=…`
 (kept **also** in your password manager), optional `BACKUP_REMOTE` / `FILES_*` rclone targets, then
 `sudo cp deploy/systemd/acca-usa-backup.* /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now acca-usa-backup.timer`.
+
+## 12b. Monitoring and alerts
+
+```bash
+sudo cp /srv/acca-usa/deploy/systemd/acca-usa-monitor.* /etc/systemd/system/
+sudo cp /srv/acca-usa/deploy/monitoring/monitor.env.example /etc/acca-usa/monitor.env     # edit: your domain, backup dir, Telegram bot (optional)
+sudo chown root:acca /etc/acca-usa/monitor.env && sudo chmod 640 /etc/acca-usa/monitor.env
+sudo chmod +x /srv/acca-usa/deploy/monitoring/monitor.sh
+sudo mkdir -p /etc/systemd/journald.conf.d && sudo cp /srv/acca-usa/deploy/journald/acca-usa.conf /etc/systemd/journald.conf.d/ && sudo systemctl restart systemd-journald
+sudo systemctl daemon-reload && sudo systemctl enable --now acca-usa-monitor.timer
+sudo systemctl start acca-usa-monitor && journalctl -t acca-monitor -n 5 --no-pager      # nothing is printed while everything is fine
+```
+
+Every 5 minutes it checks: site + database (`/api/health?ready=1`), disk usage (alerts at 85 %), TLS certificate (alerts 14 days before expiry), age of the newest database backup (alerts after 30 h), ClamAV, and the web / worker services.
+You get **one message when something breaks, a reminder every 6 hours while it lasts, and one when it recovers** (journal + Telegram / webhook if configured). The logic was tested here with a stand-in site and webhook (alert, no repeat, recovery); Telegram delivery and `systemctl` checks were **not** (no systemd in the sandbox). Journald is capped at 1 GB / 30 days by the drop-in.
+Also add an **external** uptime check (a free monitoring service pinging `https://YOUR.DOMAIN/api/health`): the monitor cannot tell you that the whole server is down.
 
 ## 13. Routine operations
 

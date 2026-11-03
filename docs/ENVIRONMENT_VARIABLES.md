@@ -34,6 +34,7 @@ The public Vercel demo uses `demo` mode and no variables at all; it must never r
 | `AUTH_SECRET` | R | ≥32 random characters (`openssl rand -base64 48`). Signs session cookies and derives the key that encrypts administrators' MFA secrets. **Losing it = every session invalid and every MFA secret unreadable.** Back it up in a password manager, not in Git. |
 | `AUDIT_CHAIN_SECRET` | O | Separate key for the audit hash chain (≥32 chars). Set it to the current `AUTH_SECRET` **before** rotating `AUTH_SECRET` (`docs/AUDIT.md`). |
 | `APP_URL` | R | Public `https://` URL (links in e-mails, certificate QR codes, page metadata). Plain `http://` is refused in production. |
+| `SEO_INDEX` | O | `1` lets search engines index the public pages (adds `robots.txt` rules + `sitemap.xml`, `meta robots`). Unset = nothing is indexed (staging, demo). Set it on production at launch. |
 | `AUTH_URL` | O | Overrides the metadata base URL; defaults to `APP_URL`. |
 | `MFA_REQUIRED` | O | `1` forces administrator two-step verification outside production too (always on in production). |
 | `DEMO_LOGIN` | – | Must **not** be `1` in production (the server refuses to start). |
@@ -59,7 +60,9 @@ The public Vercel demo uses `demo` mode and no variables at all; it must never r
 | Name | | Meaning |
 |---|---|---|
 | `PRICE_CURRENCY` | O | `USD` (default) or `UZS`. All prices, payments, statistics and e-mails use it. Prices are typed in whole units in Admin → Platforms (`150000` = 150 000 sum; stored as tiyin, 1/100). Stripe + UZS is refused at startup. |
-| `PAYMENTS_PROVIDER` | R | `none` (online payments off: no Stripe variable is needed, paid platforms show the contact notice, an administrator grants access in Admin → Access) or `stripe`. Missing or any other value = the server refuses to start. |
+| `PAYMENTS_PROVIDER` | R | `none` (online payments off: no payment variable is needed, paid platforms show the contact notice, an administrator grants access in Admin → Access), `payme` (Uzbekistan, UZS) or `stripe`. Missing or any other value = the server refuses to start. |
+| `PAYME_MERCHANT_ID`, `PAYME_KEY` | R if `payme` | Merchant id and cashbox key from the Payme business cabinet (`docs/PAYMENTS.md`). Requires `PRICE_CURRENCY=UZS`. The key is a secret. |
+| `PAYME_CHECKOUT_URL` | O | `https://checkout.paycom.uz` (default) or `https://test.paycom.uz` for Payme's test environment. |
 | `PAYMENT_SECRET_KEY` | R if `stripe` | `sk_test_…` or `sk_live_…`. Must be absent/unused with `none`. |
 | `PAYMENT_WEBHOOK_SECRET` | R if `stripe` | `whsec_…` signing secret of `/api/webhooks/payments`. |
 | `STRIPE_API_BASE` | T | Redirects Stripe calls to a local test double; refused with a live key. |

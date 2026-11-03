@@ -10,7 +10,7 @@ import { notifyAdmins, notifyUser } from "./events";
 import { loadCalcDbForRead } from "./load";
 
 export const toUser = (r: DbUser): User => ({
-  id: r.id, name: r.name, email: r.email, role: r.role, status: r.status, locale: r.locale, createdAt: r.createdAt.toISOString(),
+  id: r.id, name: r.name, email: r.email, role: r.role, status: r.status, locale: r.locale, createdAt: r.createdAt.toISOString(), emailVerified: !!r.emailVerifiedAt,
 });
 
 const normEmail = (e: string) => e.trim().toLowerCase();
@@ -18,6 +18,8 @@ const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 export { RESET_TTL_MINUTES } from "../auth-constants";
 import { RESET_TTL_MINUTES } from "../auth-constants";
 const RESET_TTL_MS = RESET_TTL_MINUTES * 60 * 1000;
+const VERIFY_TTL_MS = 48 * 60 * 60 * 1000;
+const verifyHash = (token: string) => sha256(`email-verify:${token}`);
 const isUniqueViolation = (e: unknown) => typeof e === "object" && e !== null && (e as { code?: string }).code === "P2002";
 
 export const authService: AuthService = {
@@ -53,6 +55,31 @@ export const authService: AuthService = {
       prisma.resetToken.create({ data: { tokenHash: sha256(token), userId: rec.id, expiresAt: new Date(Date.now() + RESET_TTL_MS) } }),
     ]);
     return { token, user: { name: rec.name, email: rec.email, locale: rec.locale } };
+  },
+
+  async issueEmailVerification(userId) {
+    const prisma = getPrisma();
+    const rec = await prisma.user.findFirst({ where: { id: userId, deletedAt: null, status: "active", emailVerifiedAt: null } });
+    if (!rec) return null;
+    const token = randomBytes(32).toString("base64url");
+    await prisma.$transaction([
+      prisma.emailVerificationToken.deleteMany({ where: { userId: rec.id } }), // only the newest link works
+      prisma.emailVerificationToken.create({ data: { tokenHash: verifyHash(token), userId: rec.id, expiresAt: new Date(Date.now() + VERIFY_TTL_MS) } }),
+    ]);
+    return { token, user: { name: rec.name, email: rec.email, locale: rec.locale } };
+  },
+
+  async confirmEmail(token) {
+    const prisma = getPrisma();
+    const hash = verifyHash(token);
+    return prisma.$transaction(async (tx) => {
+      const claimed = await tx.emailVerificationToken.updateMany({ where: { tokenHash: hash, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } });
+      if (claimed.count !== 1) return { ok: false as const };
+      const entry = await tx.emailVerificationToken.findUnique({ where: { tokenHash: hash } });
+      if (!entry) return { ok: false as const };
+      await tx.user.updateMany({ where: { id: entry.userId, deletedAt: null, emailVerifiedAt: null }, data: { emailVerifiedAt: new Date() } });
+      return { ok: true as const };
+    });
   },
 
   async resetPassword(token, newPassword) {
@@ -104,7 +131,7 @@ export const userService: UserService = {
   async create(input) {
     try {
       const rec = await getPrisma().user.create({
-        data: { name: input.name.trim(), email: normEmail(input.email), role: input.role, status: input.status, passwordHash: await hashPassword(input.password) },
+        data: { name: input.name.trim(), email: normEmail(input.email), role: input.role, status: input.status, passwordHash: await hashPassword(input.password), emailVerifiedAt: new Date() }, // an administrator vouches for the address
       });
       return { ok: true, data: toUser(rec) };
     } catch (e) {

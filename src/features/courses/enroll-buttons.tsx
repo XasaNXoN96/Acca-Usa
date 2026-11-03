@@ -25,7 +25,7 @@ export function EnrollButton({ platform, size = "default", label, className, pri
   const f = useFormatter();
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [error, setError] = useState<"failed" | "limited" | false>(false);
+  const [error, setError] = useState<"failed" | "limited" | "unverified" | false>(false);
   if (access === "REVOKED") return <p role="status" className={`type-small font-medium text-destructive ${className ?? ""}`}>{t("revoked")}</p>;
   const paid = priceCents > 0;
   const wholeSum = currency === "UZS" && priceCents % 100 === 0;
@@ -43,13 +43,13 @@ export function EnrollButton({ platform, size = "default", label, className, pri
             const res = await enrollAction(platform);
             if (res.ok && res.checkoutUrl) window.location.assign(res.checkoutUrl); // provider-hosted (or demo) checkout page
             else if (res.ok) router.refresh();
-            else setError(res.code === "RATE_LIMITED" ? "limited" : "failed"); // PAYMENTS_DISABLED never gets here: the buy button is not rendered
+            else setError(res.code === "RATE_LIMITED" ? "limited" : res.code === "EMAIL_NOT_VERIFIED" ? "unverified" : "failed"); // PAYMENTS_DISABLED never gets here: the buy button is not rendered
           })
         }
       >
         {pending ? t("enrolling") : (<><Plus aria-hidden />{paid ? (access === "EXPIRED" ? t("renewCta", { price }) : t("buyCta", { price })) : (label ?? (isDemoMode ? t("enrollCta") : t("enrollFreeCta")))}</>)}
       </Button>
-      {error ? <p role="alert" className="type-caption mt-1.5 font-medium text-destructive">{error === "limited" ? t("rateLimited") : t("actionError")}</p> : null}
+      {error ? <p role="alert" className="type-caption mt-1.5 font-medium text-destructive">{error === "limited" ? t("rateLimited") : error === "unverified" ? t("emailNotVerified") : t("actionError")}</p> : null}
     </div>
   );
 }

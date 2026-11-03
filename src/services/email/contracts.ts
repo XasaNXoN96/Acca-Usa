@@ -24,6 +24,7 @@ export interface EmailProvider {
 export type EmailKind =
   | { kind: "welcome"; name: string }
   | { kind: "passwordReset"; name: string; resetUrl: string; expiresMinutes: number }
+  | { kind: "verifyEmail"; name: string; verifyUrl: string; expiresHours: number }
   | { kind: "certificateIssued"; name: string; certificateTitle: string; number: string; certificateUrl: string; verifyUrl: string }
   | { kind: "notification"; name: string; title: string; body: string; url?: string }
   | { kind: "paymentConfirmation"; name: string; description: string; amount: string; paymentId: string }

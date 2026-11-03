@@ -53,8 +53,8 @@ async function main() {
   const passwordHash = await hashPassword(adminPassword);
   const user = await prisma.user.upsert({
     where: { email: adminEmail },
-    create: { email: adminEmail, name, passwordHash, role: "ADMIN", status: "active" },
-    update: { name, passwordHash, role: "ADMIN", status: "active", deletedAt: null, tokenVersion: { increment: 1 } },
+    create: { email: adminEmail, name, passwordHash, role: "ADMIN", status: "active", emailVerifiedAt: new Date() },
+    update: { name, passwordHash, role: "ADMIN", status: "active", deletedAt: null, tokenVersion: { increment: 1 }, emailVerifiedAt: new Date() },
   });
   await cliAudit(prisma, { action: `admin.${decision.action === "create" ? "created" : decision.action === "reset" ? "password_reset" : "promoted"}`, target: { type: "user", id: user.id }, meta: { adminEmail: user.email } });
   console.log(`Administrator ${decision.action === "create" ? "created" : decision.action === "reset" ? "password reset" : "promoted"}: ${user.email}`);

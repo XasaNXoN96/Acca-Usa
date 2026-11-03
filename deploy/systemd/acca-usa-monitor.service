@@ -1,0 +1,16 @@
+# Health monitor, started by acca-usa-monitor.timer. Settings in /etc/acca-usa/monitor.env (see deploy/monitoring/monitor.sh).
+[Unit]
+Description=ACCA USA health monitor
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=acca
+Group=acca
+EnvironmentFile=-/etc/acca-usa/monitor.env
+StateDirectory=acca-monitor
+Environment=STATE_DIR=/var/lib/acca-monitor
+ExecStart=/srv/acca-usa/deploy/monitoring/monitor.sh
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true

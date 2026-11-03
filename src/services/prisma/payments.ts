@@ -100,6 +100,7 @@ export const paymentService: PaymentService = {
       prisma.platform.findFirst({ where: { slug: platform, deletedAt: null } }),
     ]);
     if (!user || !plat) return { ok: false, code: "NOT_FOUND" };
+    if (APP_MODE === "production" && !user.emailVerifiedAt) return { ok: false, code: "EMAIL_NOT_VERIFIED" }; // receipts and notices must reach the real owner of the address
     if (plat.priceCents <= 0) return { ok: false, code: "NOT_PAID" };
     const provider = getPaymentProvider();
     const resolveUrl = (path: string) => (path.startsWith("/") ? `${origin}${path}` : path);

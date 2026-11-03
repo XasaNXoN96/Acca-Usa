@@ -3,6 +3,8 @@ import { AppShell } from "@/components/layout/app-shell";
 import { services } from "@/services";
 import { studentBottomNav, studentNav } from "@/lib/navigation";
 import { requireSession } from "@/lib/auth/guards";
+import { isDemoMode } from "@/lib/app-mode";
+import { VerifyEmailBanner } from "@/features/auth/verify-email-banner";
 
 /** Student app frame (sidebar, top bar, bottom tabs). Requires a session. Used by the (student) layout and by mixed public/private routes. */
 export async function StudentShell({ children }: { children: React.ReactNode }) {
@@ -22,6 +24,7 @@ export async function StudentShell({ children }: { children: React.ReactNode }) 
       user={{ name: session.user.name, email: session.user.email }}
       unreadNotifications={unread}
     >
+      {!isDemoMode && session.user.emailVerified === false ? <VerifyEmailBanner email={session.user.email} /> : null}
       {children}
     </AppShell>
   );

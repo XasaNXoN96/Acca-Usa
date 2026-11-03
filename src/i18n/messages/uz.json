@@ -347,6 +347,24 @@
       "requestNew": "Yangi havola so‘rash",
       "success": "Parol yangilandi. Yangi parol bilan kiring."
     },
+    "verifyEmail": {
+    "page": {
+      "title": "E-pochtani tasdiqlash",
+      "okTitle": "E-pochtangiz tasdiqlandi",
+      "okText": "Rahmat. Endi platformaga kirishni sotib olishingiz mumkin.",
+      "badTitle": "Havola yaroqsiz yoki muddati tugagan",
+      "badText": "Hisobingizga kiring va yangi havola olish uchun «Xatni qayta yuborish» tugmasini bosing.",
+      "signIn": "Shaxsiy kabinetga o‘tish",
+      "toLogin": "Kirish"
+    },
+    "banner": {
+      "text": "Iltimos, elektron pochta manzilingizni tasdiqlang. Havola {email} manziliga yuborildi.",
+      "resend": "Xatni qayta yuborish",
+      "sent": "Tayyor. Kiruvchi xatlarni (va spam papkasini) tekshiring.",
+      "limited": "So‘rovlar juda ko‘p. Keyinroq urinib ko‘ring.",
+      "failed": "Xatni yuborib bo‘lmadi. Keyinroq urinib ko‘ring."
+    }
+    },
     "mfa": {
       "title": "Ikki bosqichli tekshiruv",
       "subtitle": "Autentifikator ilovasidagi 6 xonali kodni yoki tiklash kodlaridan birini kiriting.",
@@ -420,6 +438,7 @@
     "revoked": "Bekor qilingan"
   },
   "courses": {
+    "emailNotVerified": "Avval elektron pochta manzilingizni tasdiqlang (sahifaning yuqoridagi xabariga qarang), shundan so‘ng kirishni sotib olishingiz mumkin.",
     "title": "Mening platformalarim",
     "description": "Malakalaringiz. Har bir platformaning o‘z fanlari va progressi bor.",
     "subjects": "Fanlar",
@@ -1239,6 +1258,8 @@
           "platform": "Platforma"
         },
         "mode": {
+          "paymeTest": "Payme: test muhiti (haqiqiy yechib olish yo‘q)",
+          "paymeLive": "Payme: jangovar rejim (haqiqiy to‘lovlar)",
           "demo": "Demo-simulyatsiya (haqiqiy to‘lovlar yo‘q)",
           "test": "Stripe TEST rejimi (haqiqiy yechib olish yo‘q)",
           "live": "Stripe LIVE rejimi",
@@ -1948,6 +1969,13 @@
       "body": "Parolni tiklash so‘rovi olindi. Quyidagi havola {minutes} daqiqa amal qiladi va bir marta ishlaydi.",
       "ignore": "Agar siz so‘ramagan bo‘lsangiz, bu xatni e‘tiborsiz qoldiring — parolingiz o‘zgarmaydi.",
       "cta": "Yangi parol tanlash"
+    },
+    "verify": {
+      "subject": "Elektron pochta manzilingizni tasdiqlang — ACCA USA",
+      "hello": "Assalomu alaykum, {name}!",
+      "body": "Iltimos, bu elektron pochta manzili sizniki ekanini tasdiqlang. Quyidagi havola {hours} soat amal qiladi va bir marta ishlatiladi. Onlayn xarid qilish uchun tasdiqlangan manzil kerak.",
+      "ignore": "Agar ACCA USA hisobini siz yaratmagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.",
+      "cta": "E-pochtani tasdiqlash"
     },
     "certificate": {
       "subject": "ACCA USA sertifikatingiz tayyor",

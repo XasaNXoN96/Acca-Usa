@@ -60,6 +60,18 @@ assert.deepEqual(names({ ...full, PAYMENTS_PROVIDER: "none", PRICE_CURRENCY: "UZ
   assert.ok(/149[.,]00/.test(formatMoney(14_900, "USD", "en")), "USD keeps cents");
 }
 
+// ── PAYMENTS_PROVIDER=payme: merchant id + key + UZS
+const payme = { ...full, PAYMENTS_PROVIDER: "payme", PRICE_CURRENCY: "UZS", PAYME_MERCHANT_ID: "5e730e8e0b852a417aa49ceb", PAYME_KEY: "k".repeat(24), PAYMENT_SECRET_KEY: undefined, PAYMENT_WEBHOOK_SECRET: undefined };
+assert.deepEqual(names(payme), [], "payme with its variables and UZS is valid (no Stripe variables needed)");
+assert.deepEqual(names({ ...payme, PAYME_KEY: undefined }), ["PAYME_KEY"]);
+assert.deepEqual(names({ ...payme, PAYME_MERCHANT_ID: undefined }), ["PAYME_MERCHANT_ID"]);
+assert.deepEqual(names({ ...payme, PAYME_KEY: "short" }), ["PAYME_KEY"], "an obviously too short key");
+assert.deepEqual(names({ ...payme, PRICE_CURRENCY: "USD" }), ["PRICE_CURRENCY"], "payme charges sum only");
+assert.deepEqual(names({ ...payme, PRICE_CURRENCY: undefined }), ["PRICE_CURRENCY"]);
+assert.deepEqual(names({ ...payme, PAYME_CHECKOUT_URL: "http://x.example" }), ["PAYME_CHECKOUT_URL"], "https only");
+assert.deepEqual(names({ ...payme, PAYME_CHECKOUT_URL: "https://test.paycom.uz" }), [], "the test environment is allowed");
+assert.equal(JSON.stringify(validateEnv({ ...payme, PAYME_KEY: undefined }).issues).includes("kkkk"), false, "no value is ever echoed");
+
 // ── FILE_DELIVERY (optional): node | nginx; nginx needs path-style S3 URLs
 assert.deepEqual(names({ ...full, FILE_DELIVERY: "node" }), [], "node is the default");
 assert.deepEqual(names({ ...full, FILE_DELIVERY: "nginx", S3_FORCE_PATH_STYLE: "1" }), [], "nginx offload with path-style URLs is valid");

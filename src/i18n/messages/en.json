@@ -347,6 +347,24 @@
       "requestNew": "Request a new link",
       "success": "Password updated. Sign in with your new password."
     },
+    "verifyEmail": {
+    "page": {
+      "title": "E-mail confirmation",
+      "okTitle": "Your e-mail is confirmed",
+      "okText": "Thank you. You can now buy access to a platform.",
+      "badTitle": "This link is invalid or expired",
+      "badText": "Sign in and press “Send the e-mail again” to get a new link.",
+      "signIn": "Go to my account",
+      "toLogin": "Sign in"
+    },
+    "banner": {
+      "text": "Please confirm your e-mail address. We sent a link to {email}.",
+      "resend": "Send the e-mail again",
+      "sent": "Done. Check your inbox (and the spam folder).",
+      "limited": "Too many requests. Try again later.",
+      "failed": "Could not send the e-mail. Try again later."
+    }
+    },
     "mfa": {
       "title": "Two-step verification",
       "subtitle": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
@@ -420,6 +438,7 @@
     "revoked": "Revoked"
   },
   "courses": {
+    "emailNotVerified": "Confirm your e-mail address first (see the notice at the top of the page), then you can buy access.",
     "title": "My Platforms",
     "description": "Your qualifications. Each platform keeps its own subjects and progress.",
     "subjects": "Subjects",
@@ -1239,6 +1258,8 @@
           "platform": "Platform"
         },
         "mode": {
+          "paymeTest": "Payme TEST environment (no real charges)",
+          "paymeLive": "Payme LIVE (real payments)",
           "demo": "Demo simulation (no real payments)",
           "test": "Stripe TEST mode (no real charges)",
           "live": "Stripe LIVE mode",
@@ -1948,6 +1969,13 @@
       "body": "We received a request to reset your password. The link below is valid for {minutes} minutes and can be used once.",
       "ignore": "If you did not ask for this, you can ignore this e-mail — your password stays the same.",
       "cta": "Choose a new password"
+    },
+    "verify": {
+      "subject": "Confirm your e-mail address — ACCA USA",
+      "hello": "Hello {name},",
+      "body": "Please confirm that this e-mail address is yours. The link below is valid for {hours} hours and can be used once. You need a confirmed address to buy access online.",
+      "ignore": "If you did not create an ACCA USA account, you can ignore this e-mail.",
+      "cta": "Confirm e-mail"
     },
     "certificate": {
       "subject": "Your ACCA USA certificate is ready",

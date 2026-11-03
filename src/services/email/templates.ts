@@ -41,6 +41,10 @@ export async function renderEmail(to: Recipient, mail: EmailKind): Promise<Email
       const paragraphs = [t("reset.hello", { name: mail.name }), t("reset.body", { minutes: mail.expiresMinutes }), t("reset.ignore")];
       return { to: to.email, subject: t("reset.subject"), text: text([...paragraphs, mail.resetUrl, t("footer")]), html: layout({ preheader: t("reset.subject"), heading: t("reset.subject"), paragraphs, cta: { label: t("reset.cta"), url: mail.resetUrl }, ...common }) };
     }
+    case "verifyEmail": {
+      const paragraphs = [t("verify.hello", { name: mail.name }), t("verify.body", { hours: mail.expiresHours }), t("verify.ignore")];
+      return { to: to.email, subject: t("verify.subject"), text: text([...paragraphs, mail.verifyUrl, t("footer")]), html: layout({ preheader: t("verify.subject"), heading: t("verify.subject"), paragraphs, cta: { label: t("verify.cta"), url: mail.verifyUrl }, ...common }) };
+    }
     case "certificateIssued": {
       const paragraphs = [t("certificate.hello", { name: mail.name }), t("certificate.body", { title: mail.certificateTitle }), t("certificate.number", { number: mail.number }), t("certificate.verify", { url: mail.verifyUrl })];
       return { to: to.email, subject: t("certificate.subject"), text: text([...paragraphs, mail.certificateUrl, t("footer")]), html: layout({ preheader: t("certificate.subject"), heading: t("certificate.subject"), paragraphs, cta: { label: t("certificate.cta"), url: mail.certificateUrl }, ...common }) };

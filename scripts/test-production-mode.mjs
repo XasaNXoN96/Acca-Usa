@@ -116,6 +116,35 @@ try {
     const welcome = await lastMail("Prod Learner"); assert(/Welcome to ACCA USA/.test(welcome) && welcome.includes(studentEmail), "welcome mail");
     assert(!welcome.includes("Learner-pass123"), "password in e-mail");
   });
+  // `db` (Prisma) is created further down for the admin steps: this step opens its own short-lived client.
+  await step("e-mail confirmation: a new account is unconfirmed (banner, checkout refused, no payment row); the link in the e-mail confirms it once; resend is rate limited; administrators' accounts are confirmed", async () => {
+    const { PrismaClient: PC } = await import("@prisma/client"); const vdb = new PC({ datasources: { db: { url: DB_URL } } });
+    try {
+      assert((await vdb.user.findUnique({ where: { email: studentEmail } })).emailVerifiedAt === null, "a new account is already confirmed");
+      await studentPage.goto("/dashboard"); await studentPage.locator("[data-verify-email-banner]").waitFor();
+      await vdb.platform.update({ where: { slug: "fia" }, data: { priceCents: 2900 } }); const before = await vdb.payment.count();
+      await studentPage.goto("/platform/fia"); await studentPage.getByRole("button", { name: /Buy access/ }).click();
+      await studentPage.getByText(/Confirm your e-mail address first/).waitFor(); assert((await vdb.payment.count()) === before, "a payment row was created for an unconfirmed account");
+      const mail = await lastMail("verify-email?token="); assert(!mail.includes("Learner-pass123"), "password in the confirmation mail");
+      const link = /https:\/\/acca\.example(\/verify-email\?token=[A-Za-z0-9_-]+)/.exec(mail)?.[1]; assert(link, "confirmation link in the mail");
+      const anon = await ctx(); const ap = await anon.newPage();
+      await ap.goto("/verify-email?token=" + "x".repeat(43)); assert((await ap.locator('[data-verify-email-result="invalid"]').count()) === 1, "a made-up token was accepted");
+      await ap.goto(link); await ap.locator('[data-verify-email-result="ok"]').waitFor();
+      assert((await vdb.user.findUnique({ where: { email: studentEmail } })).emailVerifiedAt !== null, "the link did not confirm the account");
+      await ap.goto(link); assert((await ap.locator('[data-verify-email-result="invalid"]').count()) === 1, "the link worked twice");
+      await anon.close();
+      await studentPage.goto("/dashboard"); assert((await studentPage.locator("[data-verify-email-banner]").count()) === 0, "the banner stays after confirming");
+      await vdb.platform.update({ where: { slug: "fia" }, data: { priceCents: 0 } });
+      // resend: a second unconfirmed account may ask 3 times an hour, the 4th is refused
+      const c2 = await ctx(); const p2 = await c2.newPage(); const e2 = `resend.${Date.now()}@example.com`;
+      await p2.goto("/register"); await p2.locator("#reg-name").fill("Resend Learner"); await p2.locator("#reg-email").fill(e2); await p2.locator("#reg-password").fill("Learner-pass123"); await p2.locator("#reg-confirm").fill("Learner-pass123");
+      await p2.locator("#reg-terms").click(); await p2.locator("#reg-privacy").click(); await p2.getByRole("button", { name: "Create account" }).click(); await p2.waitForURL(/dashboard$/);
+      for (let i = 0; i < 3; i++) { await p2.getByRole("button", { name: "Send the e-mail again" }).click(); await p2.getByText(/Done\. Check your inbox/).waitFor(); await p2.reload(); }
+      await p2.getByRole("button", { name: "Send the e-mail again" }).click(); await p2.getByText(/Too many requests/).waitFor();
+      const tokens = await vdb.emailVerificationToken.count({ where: { user: { email: e2 } } }); assert(tokens === 1, `only the newest link may exist, found ${tokens}`);
+      await c2.close();
+    } finally { await vdb.$disconnect(); }
+  });
   await step("forgot password: identical answer, no on-screen link; the link arrives by e-mail, works once, old password stops working", async () => {
     const c = await ctx(); const p = await c.newPage(); await p.goto("/forgot-password"); await p.locator("#forgot-email").fill(studentEmail); await p.locator("button[type=submit]").click();
     await p.waitForLoadState("networkidle"); const body = await p.locator("body").innerText(); assert(!/token=/.test(body) && !/demo/i.test(body), `on-screen reset link: ${body.slice(0, 200)}`);
@@ -172,6 +201,7 @@ try {
     mfaSecret = (await p.getByTestId("mfa-secret").innerText()).trim(); await p.locator("#mfa-confirm").fill(await freshCode()); await p.getByRole("button", { name: "Confirm and enable" }).click(); await p.getByTestId("recovery-codes").waitFor(); await c.close();
   });
   await step("admin created with admin:create can sign in with password + code; settings / statistics show no demo wording", async () => {
+    assert((await db.user.findUnique({ where: { email: "owner@acca.example" } })).emailVerifiedAt !== null, "the administrator created with admin:create is not confirmed");
     const { c, p } = await adminLogin();
     assert(!/demo/i.test(await p.locator("main").innerText()), "demo wording on the admin dashboard");
     await p.goto("/admin/settings"); await p.getByText("Settings are configured by the deployment").waitFor(); await p.goto("/admin/statistics"); await p.locator("[data-stats-cards]").waitFor();
@@ -449,6 +479,47 @@ try {
     assert(dead.status() === 500 && deadText === '{"ok":false,"code":"FAILED"}', `dead storage: ${dead.status()} ${deadText}`);
     assert((await db.storedFile.count()) === before, "a failed upload left a database row behind");
     await c.close();
+  });
+  // ── Payme (Uzbekistan): the Merchant API endpoint against the real server, the real route and PostgreSQL (the caller is a test double of Payme)
+  await step("payme: the endpoint does not exist unless PAYMENTS_PROVIDER=payme; payme needs its variables and UZS (names only in the message)", async () => {
+    assert((await fetch(`${BASE}/api/payments/payme`, { method: "POST", body: "{}" })).status === 404, "the Payme endpoint answers while payments are off");
+    const paymeBase = { ...baseEnv, PAYMENTS_PROVIDER: "payme", PRICE_CURRENCY: "UZS", PAYME_MERCHANT_ID: "5e730e8e0b852a417aa49ceb", PAYME_KEY: "payme-test-key-0123456789", PAYMENT_SECRET_KEY: "", PAYMENT_WEBHOOK_SECRET: "" };
+    let out = await refuses({ ...paymeBase, PAYME_KEY: "" }); assert(/Invalid environment/.test(out) && out.includes("PAYME_KEY") && !out.includes("payme-test-key"), `no key: ${out.slice(0, 300)}`);
+    out = await refuses({ ...paymeBase, PAYME_MERCHANT_ID: "" }); assert(out.includes("PAYME_MERCHANT_ID"), `no merchant: ${out.slice(0, 300)}`);
+    out = await refuses({ ...paymeBase, PRICE_CURRENCY: "USD" }); assert(out.includes("PRICE_CURRENCY"), `usd: ${out.slice(0, 300)}`);
+    out = await refuses({ ...paymeBase, PAYME_CHECKOUT_URL: "http://insecure.example" }); assert(out.includes("PAYME_CHECKOUT_URL"), `http checkout: ${out.slice(0, 300)}`);
+  });
+  const paymeEnv = { ...baseEnv, PAYMENTS_PROVIDER: "payme", PRICE_CURRENCY: "UZS", PAYME_MERCHANT_ID: "5e730e8e0b852a417aa49ceb", PAYME_KEY: "payme-test-key-0123456789", PAYMENT_SECRET_KEY: "", PAYMENT_WEBHOOK_SECRET: "" };
+  server.stop(); await waitDown(); server = startServer(paymeEnv); assert(await waitUp(), `server did not start in payme mode: ${server.output().slice(0, 400)}`);
+  await step("payme: Merchant API — auth, amounts, Create / Perform / Cancel against PostgreSQL; access is granted by Perform only and withdrawn by a refund", async () => {
+    const basic = `Basic ${Buffer.from("Paycom:payme-test-key-0123456789").toString("base64")}`;
+    const rpc = async (method, params, auth = basic) => { const r = await fetch(`${BASE}/api/payments/payme`, { method: "POST", headers: { "content-type": "application/json", ...(auth ? { authorization: auth } : {}) }, body: JSON.stringify({ jsonrpc: "2.0", id: 7, method, params }) }); assert(r.status === 200, `HTTP ${r.status}`); return r.json(); };
+    await db.payment.create({ data: { id: "pay-pm-1", userId: offUser.id, platformSlug: "fia", description: "FIA — full access", amountCents: 2_900_000, currency: "UZS", status: "PENDING", provider: "payme", providerPaymentId: "payme:pay-pm-1" } });
+    const acc = { order_id: "pay-pm-1" };
+    assert((await rpc("CheckPerformTransaction", { amount: 2_900_000, account: acc }, null)).error?.code === -32504, "no credentials accepted");
+    assert((await rpc("CheckPerformTransaction", { amount: 2_900_000, account: acc }, `Basic ${Buffer.from("Paycom:wrong-key").toString("base64")}`)).error?.code === -32504, "a wrong key was accepted");
+    assert((await rpc("CheckPerformTransaction", { amount: 2_900_000, account: acc })).result?.allow === true, "check failed");
+    assert((await rpc("CheckPerformTransaction", { amount: 100, account: acc })).error?.code === -31001, "wrong amount accepted");
+    const created = await rpc("CreateTransaction", { id: "pm-tx-1", time: Date.now(), amount: 2_900_000, account: acc });
+    assert(created.result?.state === 1 && created.result?.transaction === "pay-pm-1", JSON.stringify(created));
+    assert(!(await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } })), "Create granted access");
+    const performs = await Promise.all([1, 2, 3, 4].map(() => rpc("PerformTransaction", { id: "pm-tx-1" })));
+    assert(performs.every((x) => x.result?.state === 2 && x.result.perform_time === performs[0].result.perform_time), JSON.stringify(performs));
+    const enrol = await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } }); assert(enrol?.status === "ACTIVE", "Perform did not grant access");
+    assert((await db.payment.findUnique({ where: { id: "pay-pm-1" } })).status === "PAID", "payment not PAID");
+    assert((await db.paymeTransaction.findUnique({ where: { id: "pm-tx-1" } })).state === 2, "transaction not stored as performed");
+    assert((await db.paymentEvent.count({ where: { provider: "payme", eventId: "perform:pm-tx-1" } })) === 1, "the paid event was applied more than once");
+    assert((await rpc("CheckTransaction", { id: "pm-tx-1" })).result?.state === 2, "check transaction");
+    const refund = await rpc("CancelTransaction", { id: "pm-tx-1", reason: 5 }); assert(refund.result?.state === -2, JSON.stringify(refund));
+    assert((await db.enrollment.findFirst({ where: { userId: offUser.id, platformSlug: "fia" } })).status === "REVOKED", "refund did not withdraw access");
+    assert((await db.payment.findUnique({ where: { id: "pay-pm-1" } })).status === "REFUNDED", "payment not REFUNDED");
+    const stmt = await rpc("GetStatement", { from: 0, to: Date.now() + 1000 }); assert(stmt.result?.transactions?.some((t) => t.id === "pm-tx-1"), "statement misses the transaction");
+  });
+  await step("payme: the generic webhook route trusts nothing in payme mode; a forged Stripe-style event cannot pay a Payme order", async () => {
+    await db.payment.create({ data: { id: "pay-pm-2", userId: offUser.id, platformSlug: "fia", description: "FIA — full access", amountCents: 2_900_000, currency: "UZS", status: "PENDING", provider: "payme", providerPaymentId: "payme:pay-pm-2" } });
+    const r = await fetch(`${BASE}/api/webhooks/payments`, { method: "POST", headers: { "content-type": "application/json", "stripe-signature": "t=1,v1=00" }, body: JSON.stringify({ id: "evt_pm", type: "checkout.session.completed", data: { object: { id: "cs_x", payment_status: "paid", amount_total: 2_900_000, currency: "uzs", metadata: { paymentId: "pay-pm-2" } } } }) });
+    assert(r.status === 400, `the generic webhook answered ${r.status}`);
+    assert((await db.payment.findUnique({ where: { id: "pay-pm-2" } })).status === "PENDING", "an order was paid through the generic route");
   });
   await offCtx.close();
   await db.$disconnect();

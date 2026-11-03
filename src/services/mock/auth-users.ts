@@ -49,6 +49,10 @@ export const authService: AuthService = {
     return { token, user: { name: rec.name, email: rec.email, locale: rec.locale } };
   },
 
+  /** Demo mode has no e-mail: every account counts as confirmed. */
+  async issueEmailVerification() { return null; },
+  async confirmEmail() { return { ok: false }; },
+
   async resetPassword(token, newPassword) {
     const db = getDb();
     const hash = sha256(token);

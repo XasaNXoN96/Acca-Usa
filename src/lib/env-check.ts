@@ -14,7 +14,7 @@ export interface EnvIssue { name: string; reason: string; group: EnvGroup }
 export function groupOf(name: string): EnvGroup {
   if (name.startsWith("S3_")) return "s3";
   if (name.startsWith("SMTP_") || name === "EMAIL_FROM") return "smtp";
-  if (name.startsWith("PAYMENT") || name.startsWith("STRIPE_")) return "payments";
+  if (name.startsWith("PAYMENT") || name.startsWith("PAYME_") || name.startsWith("STRIPE_")) return "payments";
   if (name.startsWith("LEGAL_")) return "legal";
   return "core";
 }
@@ -60,9 +60,17 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
   // Online payments are an explicit decision: `none` (access is granted by an administrator, no Stripe variables needed) or `stripe`.
   if (has(env.PRICE_CURRENCY) && !["USD", "UZS"].includes(env.PRICE_CURRENCY!)) add("PRICE_CURRENCY", "must be 'USD' or 'UZS'");
   const payments = env.PAYMENTS_PROVIDER;
-  if (!has(payments)) add("PAYMENTS_PROVIDER", "required in production: 'none' (online payments off) or 'stripe'");
-  else if (payments !== "none" && payments !== "stripe") add("PAYMENTS_PROVIDER", "must be 'none' or 'stripe'");
+  if (!has(payments)) add("PAYMENTS_PROVIDER", "required in production: 'none' (online payments off), 'stripe' or 'payme'");
+  else if (payments !== "none" && payments !== "stripe" && payments !== "payme") add("PAYMENTS_PROVIDER", "must be 'none', 'stripe' or 'payme'");
   if (payments === "stripe" && env.PRICE_CURRENCY === "UZS") add("PRICE_CURRENCY", "Stripe cannot charge Uzbek sum: use PRICE_CURRENCY=USD with Stripe (or another payment provider for UZS)");
+  if (payments === "payme") {
+    need("PAYME_MERCHANT_ID", "required when PAYMENTS_PROVIDER=payme");
+    need("PAYME_KEY", "required when PAYMENTS_PROVIDER=payme (the key of the Payme cashbox; Basic-auth secret of /api/payments/payme)");
+    if (has(env.PAYME_KEY) && env.PAYME_KEY!.length < 16) add("PAYME_KEY", "looks too short to be a Payme cashbox key");
+    if (has(env.PAYME_MERCHANT_ID) && !/^[A-Za-z0-9]{8,64}$/.test(env.PAYME_MERCHANT_ID!)) add("PAYME_MERCHANT_ID", "must be the merchant id from the Payme cabinet (letters and digits)");
+    if (has(env.PAYME_CHECKOUT_URL) && !isUrl(env.PAYME_CHECKOUT_URL, ["https:"])) add("PAYME_CHECKOUT_URL", "must be an https:// URL (https://checkout.paycom.uz, or https://test.paycom.uz for the Payme test environment)");
+    if (env.PRICE_CURRENCY !== "UZS") add("PRICE_CURRENCY", "must be UZS with PAYMENTS_PROVIDER=payme (Payme charges Uzbek sum only)");
+  }
   if (payments === "stripe") {
     need("PAYMENT_SECRET_KEY", "required when PAYMENTS_PROVIDER=stripe");
     need("PAYMENT_WEBHOOK_SECRET", "required when PAYMENTS_PROVIDER=stripe (payment webhooks)");

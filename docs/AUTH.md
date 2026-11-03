@@ -45,6 +45,20 @@ absolute URLs and the auth pages themselves, so `?next=` cannot be used as an op
 `RateLimit` table, so limits hold across instances; in demo mode it is a per-process map. If the database is unavailable
 the limiter falls back to the local counter rather than failing open.
 
+## E-mail confirmation (production sign-ups)
+
+A student who registers must prove that the address is theirs. Registration still signs the student in at once (nothing is blocked for learning), but:
+
+* a notice at the top of every student page says the address is unconfirmed and offers **"Send the e-mail again"** (3 per hour per account);
+* **buying access online is refused** (`EMAIL_NOT_VERIFIED`, no payment row is created) until the link in the e-mail has been opened;
+* the link (`/verify-email?token=…`) is single-use and valid 48 hours; only its SHA-256 hash is stored (table `EmailVerificationToken`, same rules as password-reset tokens, but a different hash domain so a reset token can never confirm an address); the newest link replaces older ones;
+* accounts that existed before this feature, accounts created by an administrator in the admin area and the first administrator (`admin:create`) count as **confirmed**;
+* demo mode has no e-mail: everyone counts as confirmed and no notice is shown;
+* administrators can still grant access by hand to an unconfirmed student (*Admin → Access*).
+
+Tested: `npm run test:production` ("e-mail confirmation" step: banner, refused checkout with no payment row, made-up token, single use, banner gone after confirming, resend limit, only the newest link exists, `admin:create` accounts confirmed).
+Not tested: delivery to real mailboxes (spam filtering) — check SPF / DKIM / DMARC for the sender domain (`docs/EMAIL.md`).
+
 ## Demo vs production
 
 Demo credentials are shown on the login page and exist only in the demo dataset (`NEXT_PUBLIC_APP_MODE=demo`). In

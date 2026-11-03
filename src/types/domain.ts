@@ -17,6 +17,8 @@ export interface User {
   status: UserStatus;
   locale: Locale;
   createdAt: string;
+  /** false = the owner of the address has not confirmed it (production sign-ups only). Absent = confirmed / not applicable (demo). */
+  emailVerified?: boolean;
 }
 
 export interface Level {

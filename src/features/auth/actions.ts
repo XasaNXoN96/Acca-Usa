@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { services } from "@/services";
 import { clearMfaChallenge, endSession, pendingMfa, startMfaChallenge, startSession } from "@/lib/auth/session";
-import { homeFor } from "@/lib/auth/guards";
+import { homeFor, sessionOrNull } from "@/lib/auth/guards";
 import { safeNext } from "@/lib/auth/redirect";
 import { audit } from "@/lib/audit";
 import { rateLimit, rateLimitClear } from "@/lib/rate-limit";
@@ -25,6 +25,25 @@ import { RESET_TTL_MINUTES } from "@/services/auth-constants";
 export type AuthResult =
   | { ok: true; redirectTo: string }
   | { ok: false; code: "INVALID_INPUT" | "INVALID_CREDENTIALS" | "SUSPENDED" | "EMAIL_TAKEN" | "RATE_LIMITED" | "INVALID_TOKEN" | "INVALID_CODE" | "NO_CHALLENGE"; retryMinutes?: number };
+
+/** Creates a fresh confirmation link for an unconfirmed account and e-mails it (silently does nothing when there is nothing to confirm). */
+async function sendVerificationEmail(userId: string): Promise<boolean> {
+  const issued = await services.auth.issueEmailVerification(userId);
+  if (!issued) return false;
+  const res = await sendEmail({ email: issued.user.email, locale: issued.user.locale }, {
+    kind: "verifyEmail", name: issued.user.name, verifyUrl: absoluteUrl(`${routes.verifyEmail}?token=${encodeURIComponent(issued.token)}`), expiresHours: 48,
+  });
+  return res.ok;
+}
+
+/** The "Send the e-mail again" button of the confirmation banner. */
+export async function resendVerificationAction(): Promise<{ ok: true } | { ok: false; code: "RATE_LIMITED" | "FAILED" }> {
+  const session = await sessionOrNull();
+  if (!session || isDemoMode) return { ok: false, code: "FAILED" };
+  const rl = await rateLimit(`verify-resend:${session.user.id}`, 3, 60 * 60_000);
+  if (!rl.ok) return { ok: false, code: "RATE_LIMITED" };
+  return (await sendVerificationEmail(session.user.id)) ? { ok: true } : { ok: false, code: "FAILED" };
+}
 
 async function clientKey() {
   const h = await headers();
@@ -108,6 +127,8 @@ export async function registerAction(input: unknown, next?: string | null): Prom
   ], { locale: isLocale(locale) ? locale : "en", source: "register" });
   // After the response: a slow or failing mail server must not delay (or break) registration.
   after(() => sendEmail({ email: created.data.email, locale: created.data.locale }, { kind: "welcome", name: created.data.name }));
+  // Production: the owner of the address must confirm it (needed to buy access online). Demo mode has no e-mail at all.
+  if (!isDemoMode) after(() => sendVerificationEmail(created.data.id));
 
   // Self-registration only ever creates a STUDENT; staff roles are granted by an administrator.
   const login = await services.auth.verifyCredentials(parsed.data.email, parsed.data.password);

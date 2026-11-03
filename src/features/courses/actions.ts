@@ -20,7 +20,7 @@ async function originOf(): Promise<string> {
   return `${proto}://${host}`;
 }
 
-export type EnrollResult = { ok: true; checkoutUrl?: string } | { ok: false; code?: "REVOKED" | "RATE_LIMITED" | "FAILED" | "PAYMENTS_DISABLED" };
+export type EnrollResult = { ok: true; checkoutUrl?: string } | { ok: false; code?: "REVOKED" | "RATE_LIMITED" | "FAILED" | "PAYMENTS_DISABLED" | "EMAIL_NOT_VERIFIED" };
 
 /**
  * Free platform → enrolled immediately. Paid platform → a pending payment + the provider's checkout URL; access is NOT
@@ -43,7 +43,7 @@ export async function enrollAction(raw: unknown): Promise<EnrollResult> {
   const rl = await rateLimit(`checkout:${session.user.id}`, 10, 10 * 60_000);
   if (!rl.ok) return { ok: false, code: "RATE_LIMITED" };
   const checkout = await services.payments.startCheckout({ userId: session.user.id, platform: parsed.data, idempotencyKey: randomUUID(), origin: await originOf() });
-  return checkout.ok ? { ok: true, checkoutUrl: checkout.data.checkoutUrl } : { ok: false, code: "FAILED" };
+  return checkout.ok ? { ok: true, checkoutUrl: checkout.data.checkoutUrl } : { ok: false, code: checkout.code === "EMAIL_NOT_VERIFIED" ? "EMAIL_NOT_VERIFIED" : "FAILED" };
 }
 
 export async function leaveAction(raw: unknown): Promise<{ ok: boolean }> {

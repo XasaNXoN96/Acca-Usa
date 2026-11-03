@@ -64,6 +64,10 @@ export interface AuthService {
   /** Creates a single-use reset token. The raw token is returned ONLY to the caller (demo mode shows it; production emails it). */
   requestPasswordReset(email: string): Promise<{ token: string; user: { name: string; email: string; locale: Locale } } | null>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
+  /** Creates a confirmation link token for an account whose e-mail is not confirmed yet; null when there is nothing to confirm (already confirmed / unknown / demo). */
+  issueEmailVerification(userId: string): Promise<{ token: string; user: { name: string; email: string; locale: Locale } } | null>;
+  /** Single-use: marks the account's e-mail as confirmed. */
+  confirmEmail(token: string): Promise<{ ok: true } | { ok: false }>;
   /** Used by the session layer: re-reads the user on every request (role/status changes apply immediately). */
   getSessionUser(userId: string, tokenVersion: number): Promise<User | null>;
 }
@@ -409,7 +413,7 @@ export interface PaymentService {
    */
   startCheckout(input: { userId: string; platform: PlatformSlug; idempotencyKey: string; origin: string }): Promise<ServiceResult<{ paymentId: string; checkoutUrl: string }>>;
   /** Applies an AUTHENTICATED provider event (webhook route only). Idempotent per provider event id. */
-  applyProviderEvent(provider: "demo" | "stripe" | "none", event: ProviderEvent): Promise<ProcessOutcome>;
+  applyProviderEvent(provider: "demo" | "stripe" | "payme" | "none", event: ProviderEvent): Promise<ProcessOutcome>;
   /** DEMO ONLY: completes a simulated checkout. Refuses (`DEMO_ONLY`) outside demo mode. */
   completeDemoCheckout(input: { userId: string; paymentId: string; outcome: "paid" | "failed" | "cancelled" }): Promise<ServiceResult>;
 }

@@ -3,6 +3,7 @@ import { paymentsMode } from "@/lib/payments-mode";
 import type { PaymentProvider } from "./contracts";
 import { DemoPaymentProvider } from "./demo-provider";
 import { DisabledPaymentProvider } from "./disabled-provider";
+import { PaymePaymentProvider } from "./payme-provider";
 import { StripePaymentProvider } from "./stripe-provider";
 
 const g = globalThis as unknown as { __accaPayments?: PaymentProvider };
@@ -11,7 +12,7 @@ const g = globalThis as unknown as { __accaPayments?: PaymentProvider };
 export function getPaymentProvider(): PaymentProvider {
   if (!g.__accaPayments) {
     const mode = paymentsMode();
-    g.__accaPayments = mode === "demo" ? new DemoPaymentProvider() : mode === "stripe" ? new StripePaymentProvider() : new DisabledPaymentProvider();
+    g.__accaPayments = mode === "demo" ? new DemoPaymentProvider() : mode === "stripe" ? new StripePaymentProvider() : mode === "payme" ? new PaymePaymentProvider() : new DisabledPaymentProvider();
   }
   return g.__accaPayments;
 }

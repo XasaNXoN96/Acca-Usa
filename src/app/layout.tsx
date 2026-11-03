@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
+import { seoIndexing } from "@/lib/seo";
 import { isTheme, themeInitScript, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("description"),
     applicationName: "ACCA USA",
     openGraph: { title: t("title"), description: t("description"), siteName: "ACCA USA", type: "website" },
-    robots: { index: false, follow: false }, // flip when the product goes live
+    robots: seoIndexing() ? { index: true, follow: true } : { index: false, follow: false }, // SEO_INDEX=1 on the production server (docs/VPS_DEPLOYMENT.md)
   };
 }
 

@@ -24,6 +24,26 @@ Switching to `stripe` later = set `PAYMENTS_PROVIDER=stripe` plus the Stripe var
 >
 > Do not call payments "production ready" until the TEST-mode checklist below has been run with a real Stripe test account.
 
+## Payme (Uzbekistan) — `PAYMENTS_PROVIDER=payme`
+
+For the Uzbek market the shop takes payment through **Payme** (UZS only). Stripe cannot charge sum, so with Payme set `PRICE_CURRENCY=UZS` (the server refuses any other combination).
+
+**How it works.** The student presses *Buy access* → the app creates a pending payment and sends the student to Payme's hosted checkout page (a link that carries the merchant id, OUR payment id as the *account*, and the amount in tiyin). Payme then **calls our endpoint** `POST /api/payments/payme` (JSON-RPC, HTTP Basic `Paycom:<PAYME_KEY>`) with `CheckPerformTransaction → CreateTransaction → PerformTransaction` (and `CancelTransaction`, `CheckTransaction`, `GetStatement`). The app answers from its own records.
+
+**Safety rules (all tested):** every request needs the cashbox key (constant-time comparison, otherwise `-32504`); the order must exist, belong to Payme, still be pending and the amount must equal the stored amount exactly (`-31001`); Create / Perform / Cancel are idempotent (Payme retries); **access is granted by `PerformTransaction` only** — never by Create, Check, a browser redirect or the generic webhook route (which refuses everything in Payme mode); a transaction not performed within 12 hours is cancelled; cancelling a performed transaction is a refund and withdraws the access it granted; parallel duplicate calls are applied once. Transactions are stored in the `PaymeTransaction` table (additive migration `20261105100000_payme_transactions`).
+
+**Variables** (names only here; values come from the Payme business cabinet and are typed on the server): `PAYME_MERCHANT_ID`, `PAYME_KEY` (the cashbox key — keep it like a password), optional `PAYME_CHECKOUT_URL` (`https://checkout.paycom.uz` by default, `https://test.paycom.uz` for Payme's test environment). Admin → Payments shows a **TEST / LIVE** badge from that URL.
+
+**What the operator must do (nothing of this could be done here — no Payme account existed):**
+1. Register the business with Payme, get a **merchant id** and a **cashbox** with a *test key* and a *production key*.
+2. In the cabinet set the endpoint URL to `https://<your-domain>/api/payments/payme` and the account field name to `order_id`.
+3. On **staging** set `PAYME_CHECKOUT_URL=https://test.paycom.uz` and the test key; make a test purchase end to end (pending → Payme test page → paid → access) and a cancellation.
+4. Run **Payme's own sandbox / certification checks** of the Merchant API against the staging endpoint. The protocol was written from Payme's public documentation and verified against a local test double (`npm run test:payme`, plus `test:production` against PostgreSQL), **not** against Payme: error codes or fiscal-receipt (`detail`) requirements that Payme's checks demand are a likely, small adjustment in `src/services/payments/payme-rpc.ts`.
+5. Switch to the production key and `https://checkout.paycom.uz`; keep `/api/payments/payme` reachable from the internet (Payme's servers call it); do not rate-limit it at Nginx.
+6. Ask your accountant whether fiscal receipts (online cash register data) must accompany each payment — not implemented.
+
+**Fallback that always works:** with `PAYMENTS_PROVIDER=none` students pay by bank transfer and an administrator grants access in *Admin → Access*.
+
 ## Stripe TEST-mode verification (to run with your own test account)
 
 1. `PAYMENT_SECRET_KEY=sk_test_…` (the app reports the mode from the key prefix: Admin → Payments shows a **Stripe TEST mode** badge; a `sk_live_` key shows **LIVE**).

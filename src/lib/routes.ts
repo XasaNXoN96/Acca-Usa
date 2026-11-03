@@ -19,6 +19,7 @@ export const routes = {
   refunds: "/refunds",
   register: "/register",
   forgotPassword: "/forgot-password",
+  verifyEmail: "/verify-email",
   resetPassword: "/reset-password",
 
   dashboard: "/dashboard",

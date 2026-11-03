@@ -48,10 +48,11 @@ export type WebhookVerification = { ok: true; event: ProviderEvent | null } | { 
  * Payment provider. Business code depends on this interface only.
  *  - DemoPaymentProvider: a clearly-labelled simulation (demo mode only; unreachable in production)
  *  - StripePaymentProvider: Stripe Checkout + signed webhooks (production, PAYMENTS_PROVIDER=stripe)
+ *  - PaymePaymentProvider: Payme hosted checkout + the Payme Merchant API endpoint (production, PAYMENTS_PROVIDER=payme, UZS only)
  *  - DisabledPaymentProvider: online payments off (production, PAYMENTS_PROVIDER=none)
  */
 export interface PaymentProvider {
-  readonly name: "demo" | "stripe" | "none";
+  readonly name: "demo" | "stripe" | "payme" | "none";
   createCheckout(request: CheckoutRequest): Promise<CheckoutSession>;
   /** Authenticates a webhook delivery from its RAW body + headers. `event: null` = authentic but irrelevant. */
   verifyWebhook(rawBody: string, headers: Headers): WebhookVerification;
