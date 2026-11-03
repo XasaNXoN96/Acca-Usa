@@ -16,6 +16,9 @@ const PORT = "3102";
 const BASE = `http://localhost:${PORT}`;
 const SMTP_PORT = 2525;
 const STRIPE_PORT = 12111;
+const TG_PORT = 12346;
+const TG_TOKEN = "123456789:AAH_prodtest_0123456789abcdefghijk";
+const TG_SECRET = "prod-test-hook-secret-0123456789";
 const CHROMIUM = process.env.CHROMIUM ?? "/opt/pw-browsers/chromium";
 const results = [];
 const step = async (n, f) => { try { await f(); results.push([n, true]); console.log("  ok  ", n); } catch (e) { results.push([n, false]); console.log("  FAIL", n, "\n      ", String(e.message).split("\n").slice(0, 3).join("\n      ")); } };
@@ -61,12 +64,29 @@ const fakeStripe = http.createServer((req, res) => {
   });
 });
 
+// ── a local TEST DOUBLE of the Telegram Bot API (NOT Telegram): records what the server sends
+const tgCalls = [];
+const fakeTelegram = http.createServer((req, res) => {
+  let raw = ""; req.on("data", (c) => (raw += c));
+  req.on("end", () => {
+    const m = /^\/bot([^/]+)\/(\w+)$/.exec(req.url ?? "");
+    res.setHeader("content-type", "application/json");
+    if (!m || m[1] !== TG_TOKEN) { res.statusCode = 404; res.end("{}"); return; }
+    let body = {}; try { body = JSON.parse(raw || "{}"); } catch { /* ignore */ }
+    tgCalls.push({ method: m[2], body });
+    res.end(JSON.stringify({ ok: true, result: { message_id: tgCalls.length } }));
+  });
+});
+const tgTexts = (chat) => tgCalls.filter((c) => c.method === "sendMessage" && (!chat || String(c.body.chat_id) === String(chat))).map((c) => String(c.body.text));
+const tgWait = async (pred, chat, ms = 8000) => { for (let t = 0; t < ms; t += 200) { const hit = tgTexts(chat).find(pred); if (hit) return hit; await sleep(200); } throw new Error(`no Telegram message matched (${tgTexts(chat).length} seen)`); };
+
 const baseEnv = {
   NEXT_PUBLIC_APP_MODE: "production", NODE_ENV: "production", PORT,
   AUTH_SECRET: randomBytes(48).toString("base64"), DATA_PROVIDER: "prisma", DATABASE_URL: DB_URL, APP_URL: "https://acca.example",
   S3_BUCKET: "b", S3_REGION: "us-east-1", S3_ACCESS_KEY_ID: "k", S3_SECRET_ACCESS_KEY: "s", S3_ENDPOINT: "http://127.0.0.1:9",
   LEGAL_OPERATOR_NAME: "Acca Test LLC", LEGAL_OPERATOR_ADDRESS: "1 Test Street, Tashkent", LEGAL_OPERATOR_TAX_ID: "123456789", LEGAL_CONTACT_EMAIL: "privacy@acca.example", LEGAL_DATA_LOCATION: "Test datacentre, Tashkent", LEGAL_GOVERNING_LAW: "Test law", LEGAL_REFUND_WINDOW: "14 days", SMTP_HOST: "127.0.0.1", SMTP_PORT: String(SMTP_PORT), SMTP_USER: "smtp-user-77", SMTP_PASSWORD: "smtp-secret-pw-8231", EMAIL_FROM: "ACCA USA <no-reply@acca.example>",
   ANTIVIRUS_PROVIDER: "none", PAYMENTS_PROVIDER: "stripe", PAYMENT_SECRET_KEY: "sk_test_x", PAYMENT_WEBHOOK_SECRET: "whsec_prod_test", STRIPE_API_BASE: `http://127.0.0.1:${STRIPE_PORT}/v1`,
+  TELEGRAM_BOT_TOKEN: TG_TOKEN, TELEGRAM_CHAT_ID: "777000", TELEGRAM_WEBHOOK_SECRET: TG_SECRET, TELEGRAM_BOT_USERNAME: "acca_prod_test_bot", TELEGRAM_API_BASE: `http://127.0.0.1:${TG_PORT}`, SUPPORT_TELEGRAM: "mirzaxojayevas",
 };
 const startServer = (env) => {
   const child = spawn("npx", ["next", "start", "-p", PORT], { env: { ...process.env, NEXT_DIST_DIR: ".next-prod", ...env }, stdio: ["ignore", "pipe", "pipe"], detached: true });
@@ -84,6 +104,7 @@ try {
   sh("npx", ["tsx", "scripts/create-admin.ts"], { DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET, ADMIN_EMAIL: "owner@acca.example", ADMIN_NAME: "Site Owner", ADMIN_PASSWORD: "Owner-pass-12345" });
   await new Promise((r) => sink.listen(SMTP_PORT, "127.0.0.1", r));
   await new Promise((r) => fakeStripe.listen(STRIPE_PORT, "127.0.0.1", r));
+  await new Promise((r) => fakeTelegram.listen(TG_PORT, "127.0.0.1", r));
 
   await step("startup validation: a production server with missing configuration refuses to start and names the variables (never values)", async () => {
     const blank = Object.fromEntries(Object.keys(baseEnv).map((k) => [k, ""]));
@@ -218,6 +239,82 @@ try {
   const user = await db.user.findUnique({ where: { email: studentEmail } });
 
   const adminCli = (env) => { const r = spawnSync("npx", ["tsx", "scripts/create-admin.ts"], { env: { ...process.env, DATABASE_URL: DB_URL, AUTH_SECRET: baseEnv.AUTH_SECRET, ...env }, encoding: "utf8" }); return { code: r.status, out: `${r.stdout}${r.stderr}` }; };
+  // ── Telegram: second factor next to the authenticator app, notifications, support (the caller is a test double of the Bot API)
+  const hook = (body, secret = TG_SECRET) => fetch(`${BASE}/api/telegram/webhook`, { method: "POST", headers: { "content-type": "application/json", ...(secret ? { "x-telegram-bot-api-secret-token": secret } : {}) }, body: JSON.stringify(body) });
+  const CHAT = 555000111;
+  await step("telegram: Admin → Security → Connect Telegram gives a one-time bot link; the bot's /start (with the secret) links the chat; a request without the secret is refused", async () => {
+    const { c, p } = await adminLogin(); await c.route("https://t.me/**", (r) => r.abort());
+    await p.goto("/admin/security"); await p.locator("[data-telegram-card]").waitFor();
+    await p.getByRole("button", { name: "Connect Telegram" }).click();
+    const href = await p.locator('[data-telegram-card] a[href^="https://t.me/acca_prod_test_bot?start="]').getAttribute("href"); const token = href.split("start=")[1]; assert(/^[A-Za-z0-9_-]{32}$/.test(token), `token ${token}`);
+    assert((await hook({ message: { text: `/start ${token}`, chat: { id: CHAT, type: "private" }, from: { first_name: "Owner", username: "owner_tg" } } }, "")).status === 401, "no secret accepted");
+    assert((await hook({ message: { text: `/start ${token}`, chat: { id: CHAT, type: "private" }, from: { first_name: "Owner" } } }, "wrong-secret-0123456789")).status === 401, "wrong secret accepted");
+    assert(!(await db.telegramLink.count()), "linked without a valid secret");
+    assert((await hook({ message: { text: `/start ${token}`, chat: { id: CHAT, type: "private" }, from: { first_name: "Owner", username: "owner_tg" } } })).status === 200);
+    await p.getByText(/Telegram is connected \(@owner_tg\)/).waitFor();
+    assert((await db.telegramLink.findFirst()).chatId === String(CHAT), "chat not stored");
+    await tgWait((t) => /Connected to the administrator account/.test(t), CHAT);
+    assert((await hook({ message: { text: `/start ${token}`, chat: { id: 999, type: "private" }, from: { first_name: "Thief" } } })).status === 200); assert((await db.telegramLink.count()) === 1 && (await db.telegramLink.findFirst()).chatId === String(CHAT), "the token worked twice");
+    assert((await db.telegramToken.count({ where: { purpose: "link", usedAt: { not: null } } })) === 1);
+    await c.close();
+  });
+  await step("telegram: sign-in with a code sent to Telegram — wrong code refused, code works once, a new code replaces the old one; the authenticator code still works", async () => {
+    const login = async () => {
+      const c = await browser.newContext({ baseURL: BASE, viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { "x-forwarded-for": `10.9.0.${++adminIp}` } }); const p = await c.newPage();
+      await p.goto("/login"); await p.locator("#login-email").fill("owner@acca.example"); await p.locator("#login-password").fill("Owner-pass-12345"); await p.getByRole("button", { name: "Sign in", exact: true }).click(); await p.waitForURL(/login\/mfa/);
+      return { c, p };
+    };
+    const lastCode = async (after) => { await tgWait((x) => /sign-in code/.test(x) && (x.match(/<code>(\d{6})<\/code>/)?.[1] ?? "") !== after, CHAT); const all = tgTexts(CHAT).filter((x) => /sign-in code/.test(x)); return /<code>(\d{6})<\/code>/.exec(all[all.length - 1])[1]; };
+    const sendCode = async (p) => { await p.getByRole("button", { name: "Send the code to my Telegram" }).click(); await p.getByText(/The code was sent to your Telegram/).waitFor(); };
+    const verify = async (p, code) => {
+      await p.locator("#mfa-code").fill(code);
+      await p.getByRole("button", { name: "Verify" }).click({ timeout: 8000 }).catch(async (e) => { throw new Error(`Verify button unavailable (${String(e.message).split("\n")[0]}); page "${(await p.locator("main").innerText().catch(() => "?")).replace(/\s+/g, " ").slice(0, 260)}" at ${p.url()}`); });
+    };
+    // a refused code empties the field once the server answered; the previous alert may still be on screen, so wait for the field, not the alert
+    const refuse = async (p, code) => { await verify(p, code); await p.waitForFunction(() => document.querySelector("#mfa-code")?.value === "", null, { timeout: 15000 }); await p.getByText(/That code is not valid/i).waitFor(); };
+    // sign-in 1: a wrong code is refused; a second request REPLACES the first code (the older one stops working); the newer one signs in
+    let { c, p } = await login();
+    await sendCode(p); const code1 = await lastCode("");
+    await refuse(p, code1 === "000000" ? "000001" : "000000");
+    await p.getByRole("button", { name: "Send the code to my Telegram" }).click(); await p.getByText(/The code was sent to your Telegram/).waitFor(); await sleep(300);
+    const code2 = await lastCode(code1); assert(code2 !== code1, "the second code equals the first");
+    await refuse(p, code1); // replaced by code2
+    await verify(p, code2); await p.waitForURL(/admin|consent/); assert(!p.url().includes("/login"), `still on ${p.url()}`); await c.close();
+    // sign-in 2: the used code is dead; a new code works (3rd and last code this user may request in 10 minutes)
+    ({ c, p } = await login()); await refuse(p, code2);
+    await sendCode(p); const code3 = await lastCode(code2); await verify(p, code3); await p.waitForURL(/admin|consent/); await c.close();
+    // sign-in 3: a 4th code inside 10 minutes is refused (rate limit) — the authenticator app is the way in
+    ({ c, p } = await login()); await p.getByRole("button", { name: "Send the code to my Telegram" }).click(); await p.getByText(/Too many requests/).waitFor(); await c.close();
+    // the authenticator app keeps working (adminLogin uses a TOTP code)
+    const tp = await adminLogin(); assert(tp.p.url().includes("/admin"), "authenticator sign-in broke"); await tp.c.close();
+    // a code is never stored in clear and the attempts are counted
+    const rows = await db.telegramToken.findMany({ where: { purpose: "login" } }); assert(rows.length >= 1 && rows.every((r) => r.secretHash.length === 64), "login token rows");
+    assert(!rows.some((r) => [code1, code2, code3].includes(r.secretHash)), "a code is stored in clear");
+  });
+  await step("telegram: the Telegram code is useless without the password step (no challenge → refused), and only a linked administrator can request one", async () => {
+    const c = await ctx(); const p = await c.newPage(); await p.goto("/login/mfa"); await p.waitForURL(/\/login$/); // no pending challenge: back to the password step
+    const before = tgTexts(CHAT).length; await p.goto("/login"); await c.close();
+    assert(tgTexts(CHAT).length === before, "a code was sent without a sign-in");
+  });
+  await step("support: the page shows the @mirzaxojayevas contact; the form delivers an escaped message to Telegram; a filled honeypot sends nothing; the 6th message from one address is refused", async () => {
+    const c = await browser.newContext({ baseURL: BASE, viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { "x-forwarded-for": "10.7.0.1" } }); const p = await c.newPage();
+    await p.goto("/support"); const href = await p.locator("[data-support-telegram]").getAttribute("href"); assert(href === "https://t.me/mirzaxojayevas", `contact link ${href}`);
+    const send = async (msg, honey) => { await p.goto("/support"); await p.locator("#sp-name").fill("Visitor <b>One</b>"); await p.locator("#sp-email").fill("visitor@example.com"); await p.locator("#sp-message").fill(msg); if (honey) await p.locator('input[tabindex="-1"]').fill("http://spam.example", { force: true }); await p.getByRole("button", { name: "Send message" }).click(); };
+    await send("I cannot open the <script>alert(1)</script> lesson, please help"); await p.getByText(/Your message was sent to the team/).waitFor();
+    const m = await tgWait((t) => /Support message/.test(t)); assert(m.includes("&lt;script&gt;alert(1)&lt;/script&gt;") && m.includes("Visitor &lt;b&gt;One&lt;/b&gt;") && !m.includes("<script>"), m);
+    const before = tgTexts().length; await send("This one is from a robot, ignore it please", true); await p.getByText(/Your message was sent to the team/).waitFor(); await sleep(600); assert(tgTexts().length === before, "the honeypot message was delivered");
+    for (let i = 0; i < 4; i++) { await send(`Message number ${i + 2} from the same address, long enough`); await p.getByText(/Your message was sent to the team/).waitFor(); }
+    await send("The sixth message in the hour must be refused"); await p.getByText(/Too many messages from this address/).waitFor();
+    await c.close();
+  });
+  await step("telegram notifications: server start, sign-ups (e-mail masked), administrator sign-ins and actions arrive; nothing secret is in any message; direct messages to the bot reach the team", async () => {
+    await tgWait((t) => /Server started/.test(t));
+    const reg = await tgWait((t) => /New student registered/.test(t)); assert(/\w\*\*\*@example\.com/.test(reg) && !reg.includes(studentEmail), `sign-up message: ${reg}`);
+    await tgWait((t) => /auth\.login/.test(t)); await tgWait((t) => /mfa\.telegram|auth\.mfa_telegram_sent/.test(t));
+    assert((await hook({ message: { text: "Hello, I paid but see no access", chat: { id: 4242, type: "private" }, from: { first_name: "Student", username: "stud" } } })).status === 200);
+    await tgWait((t) => /Message to the bot/.test(t) && /Hello, I paid but see no access/.test(t), 777000);
+    const all = tgTexts().join("\n"); for (const secret of ["Owner-pass-12345", "Learner-pass123", "sk_test_x", "whsec_prod_test", TG_TOKEN, TG_SECRET, "smtp-secret-pw-8231"]) assert(!all.includes(secret), `a secret reached Telegram: ${secret.slice(0, 6)}…`);
+  });
   await step("admin:create is safe: a second administrator / a student's e-mail are refused without an explicit flag; reset works and revokes sessions; the password is never printed", async () => {
     const other = adminCli({ ADMIN_EMAIL: "second@acca.example", ADMIN_PASSWORD: "Second-pass-12345" });
     assert(other.code === 3 && /administrator already exists/.test(other.out), `second admin: ${other.code} ${other.out}`); assert(!other.out.includes("Second-pass-12345"), "password printed");
@@ -529,7 +626,7 @@ try {
   results.push(["setup / fatal", false]); console.log("  FATAL", e.message);
 } finally {
   if (browser) await browser.close();
-  server?.stop(); sink.close(); fakeStripe.close(); await waitDown();
+  server?.stop(); sink.close(); fakeStripe.close(); fakeTelegram.close(); await waitDown();
   try { sh("psql", [ADMIN_URL, "-c", `DROP DATABASE IF EXISTS ${DB}`]); } catch { /* best effort */ }
 }
 const failed = results.filter((r) => !r[1]).length;

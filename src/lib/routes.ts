@@ -13,6 +13,7 @@ export const routes = {
   login: "/login",
   loginMfa: "/login/mfa",
   consent: "/consent",
+  support: "/support",
   terms: "/terms",
   privacy: "/privacy",
   cookies: "/cookies",

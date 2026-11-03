@@ -67,6 +67,11 @@ export async function applyProviderEvent(store: PaymentStore, provider: PaymentP
       ...(event.type === "paid" ? { paidAt: new Date().toISOString() } : {}),
     });
     await audit({ actor: { type: "system", id: provider }, action: `payment.${next[event.type].toLowerCase()}`, target: { type: "payment", id: payment.id }, meta: { provider, amountCents: payment.amountCents, currency: payment.currency, platform: payment.platform } });
+    if (process.env.TELEGRAM_BOT_TOKEN) {
+      const status = next[event.type].toLowerCase();
+      void store.userContact(payment.userId).then((u) => import("../telegram/notify").then((m) =>
+        m.notifyOps("payments", `Payment ${status}`, [payment.description, `${formatAmount(payment.amountCents, payment.currency)} · ${provider}`, ...(u ? [`student: ${u.name}`] : []), `payment: ${payment.id}`], `payment|${payment.id}|${event.type}`))).catch(() => undefined);
+    }
     if (event.type === "paid") await notify.paymentReceived(payment.userId, payment);
     else if (event.type === "failed") await notify.paymentFailed(payment.userId, payment);
     return "applied";

@@ -7,15 +7,17 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cancelMfaAction, verifyMfaAction } from "./actions";
+import { cancelMfaAction, sendTelegramLoginCodeAction, verifyMfaAction } from "./actions";
 
-export function MfaChallengeForm() {
+export function MfaChallengeForm({ telegram = false }: { telegram?: boolean }) {
   const t = useTranslations("auth.mfa");
   const s = useTranslations("auth.serverErrors");
   const router = useRouter();
   const [pending, start] = useTransition();
   const [failure, setFailure] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [tg, setTg] = useState<"idle" | "sent" | "limited" | "failed">("idle");
+  const [tgPending, startTg] = useTransition();
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,15 @@ export function MfaChallengeForm() {
       </div>
       <Button type="submit" size="lg" className="w-full" loading={pending} disabled={code.trim().length < 6}>{t("submit")}</Button>
     </form>
+    {telegram ? (
+      <div className="space-y-2 rounded-xl border border-border p-3">
+        <Button type="button" variant="outline" size="sm" className="h-auto min-h-9 w-full whitespace-normal py-1.5 text-center" loading={tgPending}
+          onClick={() => startTg(async () => { const r = await sendTelegramLoginCodeAction(); setTg(r.ok ? "sent" : r.code === "RATE_LIMITED" ? "limited" : "failed"); })}>
+          {t("telegram.send")}
+        </Button>
+        {tg !== "idle" ? <p role="status" className="type-caption text-muted-foreground">{tg === "sent" ? t("telegram.sent") : tg === "limited" ? t("telegram.limited") : t("telegram.failed")}</p> : null}
+      </div>
+    ) : null}
     <form action={cancelMfaAction}>
       <Button type="submit" variant="ghost" size="sm" className="w-full">{t("cancel")}</Button>
     </form>

@@ -4,7 +4,7 @@ import type { Permission } from "./permissions";
 export type NavIconName =
   | "dashboard" | "courses" | "acca" | "fia" | "exams" | "progress" | "ranking"
   | "certificates" | "payments" | "notifications" | "profile" | "platforms" | "subjects"
-  | "topics" | "materials" | "questions" | "tests" | "students" | "statistics" | "settings" | "overview";
+  | "topics" | "materials" | "questions" | "tests" | "students" | "statistics" | "settings" | "overview" | "support";
 
 export interface NavItem {
   /** key inside the `nav` (or admin) message namespace */
@@ -30,6 +30,7 @@ export const studentNav: NavItem[] = [
   { labelKey: "payments", href: routes.payments, icon: "payments" },
   { labelKey: "notifications", href: routes.notifications, icon: "notifications" },
   { labelKey: "profile", href: routes.profile, icon: "profile" },
+  { labelKey: "support", href: routes.support, icon: "support" },
 ];
 
 /** The 5 most used destinations, shown in the mobile bottom bar. */

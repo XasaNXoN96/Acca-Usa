@@ -7,7 +7,7 @@
  */
 import { stripeMode } from "./stripe-mode";
 
-export type EnvGroup = "core" | "s3" | "smtp" | "payments" | "legal";
+export type EnvGroup = "core" | "s3" | "smtp" | "payments" | "legal" | "telegram";
 export interface EnvIssue { name: string; reason: string; group: EnvGroup }
 
 /** Each variable belongs to one feature group, so a problem in one group never blocks the use of another (see `assertEnv`). */
@@ -16,6 +16,7 @@ export function groupOf(name: string): EnvGroup {
   if (name.startsWith("SMTP_") || name === "EMAIL_FROM") return "smtp";
   if (name.startsWith("PAYMENT") || name.startsWith("PAYME_") || name.startsWith("STRIPE_")) return "payments";
   if (name.startsWith("LEGAL_")) return "legal";
+  if (name.startsWith("TELEGRAM_") || name === "SUPPORT_TELEGRAM") return "telegram";
   return "core";
 }
 
@@ -34,6 +35,23 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
   if (env.AUTH_SECRET && env.AUTH_SECRET.length < 32) add("AUTH_SECRET", "must be at least 32 characters");
   if (env.NEXT_PUBLIC_APP_MODE && !["demo", "production"].includes(env.NEXT_PUBLIC_APP_MODE)) add("NEXT_PUBLIC_APP_MODE", "must be 'demo' or 'production'");
   if (env.DATA_PROVIDER && !["memory", "prisma"].includes(env.DATA_PROVIDER)) add("DATA_PROVIDER", "must be 'memory' or 'prisma'");
+  // Telegram bot (optional feature): when any part is configured, the whole set must be valid. Names only, never values.
+  const tgSet = ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "TELEGRAM_WEBHOOK_SECRET", "TELEGRAM_BOT_USERNAME"].some((n) => has(env[n]));
+  if (tgSet) {
+    if (!has(env.TELEGRAM_BOT_TOKEN)) add("TELEGRAM_BOT_TOKEN", "required when the Telegram bot is configured (from @BotFather)");
+    else if (!/^\d{5,15}:[A-Za-z0-9_-]{30,60}$/.test(env.TELEGRAM_BOT_TOKEN!)) add("TELEGRAM_BOT_TOKEN", "does not look like a bot token (123456789:AA…)");
+    if (!has(env.TELEGRAM_CHAT_ID)) add("TELEGRAM_CHAT_ID", "required when the Telegram bot is configured (the chat that receives the notifications)");
+    else if (!/^-?\d{5,20}$/.test(env.TELEGRAM_CHAT_ID!)) add("TELEGRAM_CHAT_ID", "must be a numeric chat id (a group id starts with -)");
+    if (!has(env.TELEGRAM_WEBHOOK_SECRET)) add("TELEGRAM_WEBHOOK_SECRET", "required when the Telegram bot is configured (random, 16-256 characters: letters, digits, _ and -)");
+    else if (!/^[A-Za-z0-9_-]{16,256}$/.test(env.TELEGRAM_WEBHOOK_SECRET!)) add("TELEGRAM_WEBHOOK_SECRET", "must be 16-256 characters: letters, digits, _ and -");
+    if (!has(env.TELEGRAM_BOT_USERNAME)) add("TELEGRAM_BOT_USERNAME", "required when the Telegram bot is configured (without @)");
+    else if (!/^[A-Za-z0-9_]{5,32}$/.test(env.TELEGRAM_BOT_USERNAME!)) add("TELEGRAM_BOT_USERNAME", "must be the bot username without @ (5-32 letters, digits, _)");
+  }
+  if (has(env.TELEGRAM_EVENTS) && !env.TELEGRAM_EVENTS!.split(",").every((x) => ["system", "security", "users", "payments", "content", "support"].includes(x.trim()))) add("TELEGRAM_EVENTS", "must list categories: system, security, users, payments, content, support");
+  if (has(env.TELEGRAM_PII) && !["masked", "full"].includes(env.TELEGRAM_PII!)) add("TELEGRAM_PII", "must be 'masked' (default) or 'full'");
+  if (has(env.SUPPORT_TELEGRAM) && !/^[A-Za-z0-9_]{5,32}$/.test(env.SUPPORT_TELEGRAM!)) add("SUPPORT_TELEGRAM", "must be a Telegram username without @ (5-32 letters, digits, _)");
+  if (has(env.TELEGRAM_API_BASE) && !isUrl(env.TELEGRAM_API_BASE, ["https:", "http:"])) add("TELEGRAM_API_BASE", "must be an http(s) URL (tests only)");
+
   if (mode === "demo") return { mode, issues };
 
   // ── production ──

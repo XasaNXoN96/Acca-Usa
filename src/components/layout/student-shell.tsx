@@ -13,7 +13,7 @@ export async function StudentShell({ children }: { children: React.ReactNode }) 
   const labels: Record<string, string> = {
     dashboard: t("dashboard"), courses: t("courses"), acca: t("acca"), fia: t("fia"), exams: t("exams"),
     progress: t("progress"), ranking: t("ranking"), certificates: t("certificates"), payments: t("payments"),
-    notifications: t("notifications"), profile: t("profile"),
+    notifications: t("notifications"), profile: t("profile"), support: t("support"),
   };
   return (
     <AppShell

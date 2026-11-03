@@ -56,7 +56,7 @@ export default async function CoursesPage() {
       {available.length ? (
         <section aria-labelledby="enroll-more" className="space-y-3">
           <h2 id="enroll-more" className="type-h3">{d("enrollTitle")}</h2>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {available.map((e) => (
               <Card key={e.platform} className="flex flex-col gap-3 p-4">
                 <div className="flex items-center gap-3">

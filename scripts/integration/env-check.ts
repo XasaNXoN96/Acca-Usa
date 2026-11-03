@@ -72,6 +72,21 @@ assert.deepEqual(names({ ...payme, PAYME_CHECKOUT_URL: "http://x.example" }), ["
 assert.deepEqual(names({ ...payme, PAYME_CHECKOUT_URL: "https://test.paycom.uz" }), [], "the test environment is allowed");
 assert.equal(JSON.stringify(validateEnv({ ...payme, PAYME_KEY: undefined }).issues).includes("kkkk"), false, "no value is ever echoed");
 
+// ── Telegram bot: optional, but all-or-nothing and well-formed
+const tg = { TELEGRAM_BOT_TOKEN: "123456789:AAH_abcdefghijklmnopqrstuvwxyz012345", TELEGRAM_CHAT_ID: "123456789", TELEGRAM_WEBHOOK_SECRET: "s".repeat(24), TELEGRAM_BOT_USERNAME: "acca_usa_bot" };
+assert.deepEqual(names({ ...full, ...tg }), [], "a complete Telegram configuration is valid");
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_CHAT_ID: "-1001234567890" }), [], "a group chat id is valid");
+assert.deepEqual(names({ ...full, TELEGRAM_BOT_TOKEN: tg.TELEGRAM_BOT_TOKEN }), ["TELEGRAM_BOT_USERNAME", "TELEGRAM_CHAT_ID", "TELEGRAM_WEBHOOK_SECRET"], "a half configuration is refused");
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_BOT_TOKEN: "nonsense" }), ["TELEGRAM_BOT_TOKEN"]);
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_WEBHOOK_SECRET: "short" }), ["TELEGRAM_WEBHOOK_SECRET"]);
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_EVENTS: "system,gossip" }), ["TELEGRAM_EVENTS"]);
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_EVENTS: "system, security" }), [], "categories may be spaced");
+assert.deepEqual(names({ ...full, ...tg, TELEGRAM_PII: "everything" }), ["TELEGRAM_PII"]);
+assert.deepEqual(names({ ...full, SUPPORT_TELEGRAM: "mirzaxojayevas" }), [], "the support handle alone needs no bot");
+assert.deepEqual(names({ ...full, SUPPORT_TELEGRAM: "@bad handle" }), ["SUPPORT_TELEGRAM"]);
+assert.equal(JSON.stringify(validateEnv({ ...full, ...tg, TELEGRAM_BOT_TOKEN: "nonsense" }).issues).includes("nonsense"), false, "no value is echoed");
+assert.deepEqual(names({ NEXT_PUBLIC_APP_MODE: "demo", TELEGRAM_BOT_TOKEN: "x" }).includes("TELEGRAM_BOT_TOKEN"), true, "a malformed Telegram setting is reported even in demo mode");
+
 // ── FILE_DELIVERY (optional): node | nginx; nginx needs path-style S3 URLs
 assert.deepEqual(names({ ...full, FILE_DELIVERY: "node" }), [], "node is the default");
 assert.deepEqual(names({ ...full, FILE_DELIVERY: "nginx", S3_FORCE_PATH_STYLE: "1" }), [], "nginx offload with path-style URLs is valid");

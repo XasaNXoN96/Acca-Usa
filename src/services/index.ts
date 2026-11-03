@@ -21,6 +21,7 @@ const provider = DATA_PROVIDER === "prisma" ? prisma : memory;
 export const services: Services = {
   auth: provider.authService,
   mfa: provider.mfaService,
+  telegramAuth: provider.telegramAuthService,
   audit: provider.auditService,
   consent: provider.consentService,
   users: provider.userService,

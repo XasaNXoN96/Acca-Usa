@@ -96,7 +96,7 @@ export interface AuditService {
 
 /* ---------------- second factor (administrators) ---------------- */
 
-export interface MfaStatus { enabled: boolean; recoveryCodesLeft: number }
+export interface MfaStatus { enabled: boolean; recoveryCodesLeft: number; /** a Telegram chat is linked: sign-in codes can also be sent there */ telegramLinked?: boolean }
 export interface MfaService {
   status(userId: string): Promise<MfaStatus>;
   /** Starts (or resumes) enrolment: returns the Base32 secret to show once as QR / manual key. Fails ALREADY_ENABLED. */
@@ -104,9 +104,23 @@ export interface MfaService {
   /** Confirms with a code from the app; on success MFA is on, older sessions are revoked and the recovery codes are returned ONCE. */
   confirmEnrollment(userId: string, code: string): Promise<ServiceResult<{ recoveryCodes: string[]; tokenVersion: number }>>;
   /** Login challenge: a TOTP code (replay-protected) or a single-use recovery code. */
-  verifyLogin(userId: string, code: string): Promise<{ ok: true; method: "totp" | "recovery" } | { ok: false }>;
+  verifyLogin(userId: string, code: string): Promise<{ ok: true; method: "totp" | "recovery" | "telegram" } | { ok: false }>;
   /** Break-glass (CLI only): removes the second factor and revokes all sessions. */
   reset(userId: string): Promise<ServiceResult>;
+}
+
+/** Telegram as a second factor (next to the authenticator app) and as the administrator's notification chat. Production only. */
+export interface TelegramAuthService {
+  status(userId: string): Promise<{ linked: boolean; username?: string }>;
+  /** A fresh deep-link token for "Connect Telegram" (15 minutes, replaces older ones). The raw token is returned ONCE. */
+  beginLink(userId: string): Promise<ServiceResult<{ token: string }>>;
+  /** Called by the bot webhook after `/start <token>`: binds the chat to the administrator who created the token. */
+  completeLink(token: string, chat: { id: string; username?: string }): Promise<{ ok: true; userId: string; userName: string } | { ok: false }>;
+  unlink(userId: string): Promise<ServiceResult>;
+  /** The linked chat of an administrator (server side only; never shown). */
+  chatOf(userId: string): Promise<string | null>;
+  /** A new 6-digit code for the pending sign-in (the previous one stops working). Returns the chat to send it to. */
+  issueLoginCode(userId: string): Promise<{ ok: true; chatId: string; code: string } | { ok: false; code: "NOT_LINKED" }>;
 }
 
 export interface UserInput {
@@ -509,6 +523,7 @@ export interface SearchService {
 export interface Services {
   auth: AuthService;
   mfa: MfaService;
+  telegramAuth: TelegramAuthService;
   audit: AuditService;
   consent: ConsentService;
   users: UserService;

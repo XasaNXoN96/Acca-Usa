@@ -62,6 +62,7 @@
     "saving": "Saqlanmoqda…"
   },
   "nav": {
+    "support": "Yordam",
     "acca": "ACCA",
     "fia": "FIA",
     "books": "Kitoblar",
@@ -97,6 +98,25 @@
     "books": "Kitoblar va takrorlash to‘plamlari",
     "forums": "Hamjamiyat forumlari",
     "promoText": "O‘quv dasturi tuzilmasi va demo darslar bilan tanishish uchun bepul hisob yarating."
+  },
+  "support": {
+    "title": "Yordam xizmati",
+    "intro": "Kurslar, kirish yoki to‘lov bo‘yicha savollaringiz bormi? Bizga yozing — imkon qadar tez javob beramiz.",
+    "telegram": "Telegram",
+    "telegramHint": "Bog‘lanishning eng tez usuli",
+    "emailTitle": "Elektron pochta",
+    "emailHint2": "Hujjatlar va batafsil savollar uchun",
+    "formTitle": "Yordam xizmatiga yozing",
+    "formUnavailable": "Xabar formasi hozir mavjud emas. Iltimos, elektron pochta yoki Telegram orqali yozing.",
+    "name": "Ismingiz",
+    "email": "E-pochtangiz",
+    "emailHint": "Javobni shu manzilga yuboramiz.",
+    "message": "Xabaringiz",
+    "send": "Xabarni yuborish",
+    "sent": "Rahmat! Xabaringiz jamoaga yuborildi.",
+    "invalid": "Barcha maydonlarni to‘ldiring (xabar kamida 10 ta belgidan iborat bo‘lsin).",
+    "limited": "Bu manzildan xabarlar juda ko‘p. Bir soatdan keyin urinib ko‘ring.",
+    "failed": "Xabarni yetkazib bo‘lmadi. Telegram yoki elektron pochta orqali yozing."
   },
   "footer": {
     "tagline": "ACCA va FIA talabalari uchun premium moliyaviy ta’lim.",
@@ -366,6 +386,12 @@
     }
     },
     "mfa": {
+      "telegram": {
+        "send": "Kodni Telegramimga yuborish",
+        "sent": "Kod Telegramingizga yuborildi. Uni yuqoriga kiriting (5 daqiqa amal qiladi).",
+        "limited": "So‘rovlar juda ko‘p. Bir necha daqiqa kutib, qayta urinib ko‘ring.",
+        "failed": "Kodni yuborib bo‘lmadi. Autentifikator ilovasi yoki zaxira koddan foydalaning."
+      },
       "title": "Ikki bosqichli tekshiruv",
       "subtitle": "Autentifikator ilovasidagi 6 xonali kodni yoki tiklash kodlaridan birini kiriting.",
       "code": "Tasdiqlash kodi",
@@ -1739,6 +1765,23 @@
       "notes": "Ko‘rish — talabaning materialni ochishi (bir talaba uchun 30 daqiqada ko‘pi bilan bir marta sanaladi). Tugallash — davr ichida materialni o‘tilgan deb belgilagan talabalar (bekor qilingan belgi sanalmaydi); ulush = tugallashlar ÷ ko‘ruvchilar, hech kim ko‘rmagan bo‘lsa «—». Testlar mavzuga tegishli, shu sababli test ustunida faqat shu material emas, mavzu testlari bo‘yicha urinishlar ko‘rsatiladi. Administratorlarning o‘z ochishlari sanalmaydi."
     },
     "security": {
+      "telegram": {
+        "title": "Telegram",
+        "description": "Kirishning ikkinchi usuli: bir martalik kod Telegramingizga yuboriladi. Autentifikator ilovasi ishlashda davom etadi — ikkalasidan biri yetarli.",
+        "notConfigured": "Telegram-bot bu serverda hali ulanmagan (docs/TELEGRAM.md ga qarang).",
+        "connect": "Telegramni ulash",
+        "openAndStart": "Telegram ochildi: bot bilan chatda Start tugmasini bosing. Ochilmasa, havoladan foydalaning:",
+        "waiting": "Botdan tasdiq kutilmoqda…",
+        "connected": "Telegram ulangan. Kirish kodlarini unga yuborish mumkin.",
+        "connectedAs": "Telegram ulangan ({name}). Kirish kodlarini unga yuborish mumkin.",
+        "test": "Sinov xabarini yuborish",
+        "disconnect": "Uzish",
+        "testSent": "Sinov xabari yuborildi. Telegramni tekshiring.",
+        "testFailed": "Xabarni yuborib bo‘lmadi.",
+        "removed": "Telegram uzildi.",
+        "limited": "So‘rovlar juda ko‘p. Keyinroq urinib ko‘ring.",
+        "linkFailed": "Havolani yaratib bo‘lmadi. Qayta urinib ko‘ring."
+      },
       "title": "Xavfsizlik",
       "description": "Ikki bosqichli tekshiruv administrator hisobini himoya qiladi.",
       "setupTitle": "Ikki bosqichli tekshiruvni sozlash",

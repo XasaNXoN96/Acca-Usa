@@ -140,6 +140,8 @@ model User {
   deletedAt    DateTime?
 
   emailVerificationTokens EmailVerificationToken[]
+  telegramLink    TelegramLink?
+  telegramTokens  TelegramToken[]
   enrollments      Enrollment[]
   topicProgress    TopicProgress[]
   materialProgress MaterialProgress[]
@@ -198,6 +200,34 @@ model EmailVerificationToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// An administrator's linked Telegram account: second-factor codes are delivered to this chat (next to the authenticator app).
+model TelegramLink {
+  userId   String   @id
+  chatId   String   @unique
+  username String?
+  linkedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Short-lived secrets of the Telegram flows. purpose "link": the deep-link token (/start <token>); purpose "login": the 6-digit code of a sign-in.
+/// Only a keyed hash is stored — never the token or the code.
+model TelegramToken {
+  id         String    @id @default(cuid())
+  userId     String
+  purpose    String
+  secretHash String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([purpose, secretHash])
+  @@index([userId, purpose, createdAt])
 }
 
 /// Fixed-window rate limiter shared by every instance (login, register, reset, webhooks).

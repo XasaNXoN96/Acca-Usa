@@ -101,6 +101,23 @@ export async function verifyMfaAction(input: unknown): Promise<AuthResult> {
   return { ok: true, redirectTo: safeNext(pending.next) ?? homeFor(user.role) };
 }
 
+/** "Send the code to Telegram" on the sign-in challenge: only for an administrator who passed the password step and linked a chat. */
+export async function sendTelegramLoginCodeAction(): Promise<{ ok: true } | { ok: false; code: "NO_CHALLENGE" | "NOT_LINKED" | "RATE_LIMITED" | "FAILED"; retryMinutes?: number }> {
+  const pending = await pendingMfa();
+  if (!pending) return { ok: false, code: "NO_CHALLENGE" };
+  const [byUser, byClient] = await Promise.all([rateLimit(`tg-code:u:${pending.uid}`, 3, 10 * 60_000), rateLimit(`tg-code:c:${await clientKey()}`, 10, 10 * 60_000)]);
+  const rl = !byUser.ok ? byUser : byClient;
+  if (!rl.ok) return { ok: false, code: "RATE_LIMITED", retryMinutes: Math.ceil(rl.retryAfterSeconds / 60) };
+  const user = await services.auth.getSessionUser(pending.uid, pending.v);
+  if (!user) { await clearMfaChallenge(); return { ok: false, code: "NO_CHALLENGE" }; }
+  const issued = await services.telegramAuth.issueLoginCode(user.id);
+  if (!issued.ok) return { ok: false, code: "NOT_LINKED" };
+  const { sendTelegram } = await import("@/services/telegram/client");
+  const sent = await sendTelegram(issued.chatId, `🔐 <b>ACCA USA sign-in code</b>\n<code>${issued.code}</code>\nValid for 5 minutes, works once. If you did not try to sign in, ignore this message and change your password.`);
+  await audit({ actor: { type: "admin", id: user.id, email: user.email }, action: "auth.mfa_telegram_sent", target: { type: "session" }, outcome: sent ? "success" : "failed" });
+  return sent ? { ok: true } : { ok: false, code: "FAILED" };
+}
+
 export async function cancelMfaAction(): Promise<void> {
   await clearMfaChallenge();
   redirect(routes.login);
@@ -129,6 +146,7 @@ export async function registerAction(input: unknown, next?: string | null): Prom
   after(() => sendEmail({ email: created.data.email, locale: created.data.locale }, { kind: "welcome", name: created.data.name }));
   // Production: the owner of the address must confirm it (needed to buy access online). Demo mode has no e-mail at all.
   if (!isDemoMode) after(() => sendVerificationEmail(created.data.id));
+  after(async () => { const m = await import("@/services/telegram/notify"); m.notifyOps("users", "New student registered", [created.data.name, m.maskEmail(created.data.email)], `reg|${created.data.id}`); });
 
   // Self-registration only ever creates a STUDENT; staff roles are granted by an administrator.
   const login = await services.auth.verifyCredentials(parsed.data.email, parsed.data.password);

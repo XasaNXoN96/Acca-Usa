@@ -1,7 +1,7 @@
 import {
   Award, BarChart3, Bell, BookOpen, ClipboardCheck, ClipboardList, CreditCard, FileText, GraduationCap,
   Landmark, Layers, LayoutDashboard, Library, ListChecks, Medal, Settings, Target, TrendingUp, User, Users,
-  Video, CircleHelp,
+  Video, CircleHelp, LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 import type { NavIconName } from "@/lib/navigation";
@@ -19,6 +19,7 @@ export const navIcons: Record<NavIconName, LucideIcon> = {
   notifications: Bell,
   profile: User,
   overview: LayoutDashboard,
+  support: LifeBuoy,
   platforms: Layers,
   subjects: Library,
   topics: ListChecks,

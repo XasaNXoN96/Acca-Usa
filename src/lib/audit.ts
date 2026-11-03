@@ -21,6 +21,7 @@ export async function audit(input: Omit<AuditInput, "ip"> & { ip?: string }): Pr
   try {
     const { services } = await import("@/services"); // lazy: services/payments records events too (import cycle)
     await services.audit.record({ ...input, ip: input.ip ?? (await clientIp()) });
+    if (process.env.TELEGRAM_BOT_TOKEN) void import("@/services/telegram/notify").then((m) => m.notifyAudit(input)).catch(() => undefined);
   } catch (e) {
     logEvent("error", "audit.write_failed", { action: input.action, error: e instanceof Error ? e.name : "unknown" });
   }

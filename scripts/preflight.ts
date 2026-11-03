@@ -94,6 +94,20 @@ async function main() {
     });
   } else add("WARN", "antivirus", "ANTIVIRUS_PROVIDER=none: uploads are NOT scanned");
 
+  // ── Telegram (notifications + second factor + support): optional, but you asked for it — so a missing bot is a warning, a broken one a failure
+  if (env.TELEGRAM_BOT_TOKEN) {
+    await guard("Telegram bot (token valid, webhook registered)", async () => {
+      const { telegramCall } = await import("../src/services/telegram/client");
+      const me = await telegramCall<{ username?: string }>("getMe"); if (!me.ok) return ["FAIL", `Telegram refused the token (${me.code})`];
+      const info = await telegramCall<{ url?: string; last_error_message?: string }>("getWebhookInfo"); if (!info.ok) return ["FAIL", `getWebhookInfo failed (${info.code})`];
+      const want = `${(env.APP_URL ?? "").replace(/\/$/, "")}/api/telegram/webhook`;
+      if (!info.result.url) return ["FAIL", "no webhook registered — run: npm run telegram:setup"];
+      if (info.result.url !== want) return ["WARN", `webhook points to ${info.result.url} (expected ${want})`];
+      if (info.result.last_error_message) return ["WARN", `Telegram reports: ${info.result.last_error_message}`];
+      return ["OK", `@${me.result.username}`];
+    });
+  } else add("WARN", "Telegram bot", "not configured: no notifications, no Telegram sign-in codes, no support messages (docs/TELEGRAM.md)");
+
   // ── disk
   const gb = (n: number) => `${(n / 1024 ** 3).toFixed(1)} GB`;
   for (const [label, path, minGb] of [["media scratch space", env.MEDIA_TMP_DIR || "/tmp", 5], ["backup directory", env.BACKUP_DIR || "", 5], ["application disk", process.cwd(), 5]] as const) {

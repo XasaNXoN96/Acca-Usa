@@ -8,7 +8,7 @@ export const mfaService: MfaService = {
   async status(userId) {
     const db = getDb();
     const u = db.users.find((x) => x.id === userId);
-    return { enabled: !!u?.mfaEnabledAt && !!u.mfaSecretEnc, recoveryCodesLeft: db.mfaRecovery.filter((r) => r.userId === userId && !r.usedAt).length };
+    return { enabled: !!u?.mfaEnabledAt && !!u.mfaSecretEnc, recoveryCodesLeft: db.mfaRecovery.filter((r) => r.userId === userId && !r.usedAt).length, telegramLinked: false };
   },
 
   async beginEnrollment(userId) {

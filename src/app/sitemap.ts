@@ -9,6 +9,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (process.env.APP_URL ?? "").replace(/\/$/, "");
   if (!seoIndexing() || !base) return [];
   const subjects = (await services.subjects.listAll()).filter((s) => !s.archived);
-  const fixed = ["/", "/all-courses", "/acca", "/fia", "/books", "/terms", "/privacy", "/cookies", "/refunds"];
+  const fixed = ["/", "/all-courses", "/acca", "/fia", "/books", "/support", "/terms", "/privacy", "/cookies", "/refunds"];
   return [...fixed.map((p) => ({ url: `${base}${p}` })), ...subjects.map((s) => ({ url: `${base}/subject/${encodeURIComponent(s.slug)}` }))];
 }

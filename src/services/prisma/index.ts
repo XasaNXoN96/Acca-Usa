@@ -3,6 +3,7 @@ export { dashboardService, notificationService } from "./account";
 export { paymentService } from "./payments";
 export { authService, userService } from "./auth-users";
 export { mfaService } from "./mfa";
+export { telegramAuthService } from "./telegram-auth";
 export { auditService } from "./audit";
 export { consentService } from "./consent";
 export { enrollmentService, materialService, platformService, searchService, subjectService, topicService } from "./catalog";

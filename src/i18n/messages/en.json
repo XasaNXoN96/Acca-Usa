@@ -62,6 +62,7 @@
     "saving": "Saving…"
   },
   "nav": {
+    "support": "Support",
     "acca": "ACCA",
     "fia": "FIA",
     "books": "Books",
@@ -97,6 +98,25 @@
     "books": "Books and revision kits",
     "forums": "Community forums",
     "promoText": "Create a free account to explore the syllabus structure and demo lessons."
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Questions about courses, access or payment? Write to us — we reply as soon as we can.",
+    "telegram": "Telegram",
+    "telegramHint": "Fastest way to reach us",
+    "emailTitle": "E-mail",
+    "emailHint2": "For documents and longer questions",
+    "formTitle": "Write to the support team",
+    "formUnavailable": "The message form is not available right now. Please write to us by e-mail or in Telegram.",
+    "name": "Your name",
+    "email": "Your e-mail",
+    "emailHint": "We reply to this address.",
+    "message": "Your message",
+    "send": "Send message",
+    "sent": "Thank you! Your message was sent to the team.",
+    "invalid": "Please fill in all fields (the message needs at least 10 characters).",
+    "limited": "Too many messages from this address. Please try again in an hour.",
+    "failed": "The message could not be delivered. Please write to us in Telegram or by e-mail."
   },
   "footer": {
     "tagline": "Premium finance education for ACCA and FIA students.",
@@ -366,6 +386,12 @@
     }
     },
     "mfa": {
+      "telegram": {
+        "send": "Send the code to my Telegram",
+        "sent": "The code was sent to your Telegram. Enter it above (valid for 5 minutes).",
+        "limited": "Too many requests. Wait a few minutes and try again.",
+        "failed": "Could not send the code. Use the authenticator app or a recovery code."
+      },
       "title": "Two-step verification",
       "subtitle": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
       "code": "Verification code",
@@ -1739,6 +1765,23 @@
       "notes": "A view is a student opening the material (counted at most once per 30 minutes per student). Completion = students who marked it completed in the period (an undone mark is not counted); the rate is completions ÷ viewers, shown as — when nobody viewed it. Tests belong to a topic, so the test column shows attempts on the topic's tests, not on this material alone. Administrators' own opens are not counted."
     },
     "security": {
+      "telegram": {
+        "title": "Telegram",
+        "description": "A second way to sign in: a one-time code is sent to your Telegram. The authenticator app keeps working — either one is enough.",
+        "notConfigured": "The Telegram bot is not connected on this server yet (see docs/TELEGRAM.md).",
+        "connect": "Connect Telegram",
+        "openAndStart": "Telegram opened: press Start in the chat with the bot. If it did not open, use this link:",
+        "waiting": "Waiting for the confirmation from the bot…",
+        "connected": "Telegram is connected. Sign-in codes can be sent to it.",
+        "connectedAs": "Telegram is connected ({name}). Sign-in codes can be sent to it.",
+        "test": "Send a test message",
+        "disconnect": "Disconnect",
+        "testSent": "Test message sent. Check Telegram.",
+        "testFailed": "The message could not be sent.",
+        "removed": "Telegram was disconnected.",
+        "limited": "Too many requests. Try again later.",
+        "linkFailed": "Could not create the link. Try again."
+      },
       "title": "Security",
       "description": "Two-step verification protects the administrator account.",
       "setupTitle": "Set up two-step verification",

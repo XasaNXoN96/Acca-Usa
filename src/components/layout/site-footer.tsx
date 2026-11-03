@@ -41,6 +41,7 @@ export async function SiteFooter() {
           { href: routes.login, label: t("common.signIn") },
           { href: routes.register, label: t("common.register") },
           { href: routes.dashboard, label: t("nav.dashboard") },
+          { href: routes.support, label: t("nav.support") },
         ])}
       </div>
       <div className="border-t border-white/15">

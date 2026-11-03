@@ -36,6 +36,12 @@ everything else needs a human against the real service.
 - [ ] `npm run preflight -- --url https://your-domain` → 0 FAILED; monitoring timer running and an alert was seen once on purpose (`docs/VPS_DEPLOYMENT.md` §12b)
 - [ ] `SEO_INDEX=1` set only when you want the public pages found by search engines
 
+## Telegram (`docs/TELEGRAM.md`)
+- [ ] bot created, the five variables set, `npm run telegram:setup` ended with "test message sent", `npm run preflight` shows the bot OK — *real Telegram not tested here*
+- [ ] every administrator connected Telegram (Admin → Security) **and** still has the authenticator app; both ways of signing in tried once; Telegram's own Two-Step Verification is on
+- [ ] a test registration, a support-form message and a direct message to the bot all arrived in the chat; the monitor alert arrived once on purpose
+- [ ] `TELEGRAM_PII` chosen on purpose; the privacy policy mentions Telegram if your lawyer says so
+
 ## Database (`docs/MIGRATIONS.md`)
 - [ ] automated backups (`npm run db:backup`, encrypted, copied to write-once storage) + point-in-time recovery enabled; **restore drill done** with `npm run db:restore` on YOUR infrastructure (`docs/BACKUP_AND_RESTORE.md`) — tools proven only on local PostgreSQL 16
 - [ ] object-storage versioning / replication for uploaded files (not covered by the database backup); `AUTH_SECRET` / `AUDIT_CHAIN_SECRET` stored in a secret manager

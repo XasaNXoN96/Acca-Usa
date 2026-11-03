@@ -3,6 +3,7 @@
 #   site health (incl. database), free disk, TLS certificate expiry, newest database backup, ClamAV, the web + worker services.
 # On a PROBLEM (and again every 6 hours while it lasts) and when it RECOVERS it logs to journald and, if configured, sends a message:
 #   ALERT_TELEGRAM_TOKEN + ALERT_TELEGRAM_CHAT   (a Telegram bot you created with @BotFather)   and / or   ALERT_WEBHOOK_URL (any URL that accepts a POST with JSON {"text": "..."})
+# The same Telegram bot as the application can be used: TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are accepted when ALERT_TELEGRAM_* are not set.
 # Settings come from /etc/acca-usa/monitor.env (root:acca 0640; NOT in Git). Messages contain check names only — never secrets.
 set -uo pipefail
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/health?ready=1}"
@@ -14,6 +15,7 @@ BACKUP_DIR="${BACKUP_DIR:-}"                                          # empty = 
 BACKUP_MAX_AGE_HOURS="${BACKUP_MAX_AGE_HOURS:-30}"
 CLAMAV_HOST="${CLAMAV_HOST:-127.0.0.1}"; CLAMAV_PORT="${CLAMAV_PORT:-3310}"; CHECK_CLAMAV="${CHECK_CLAMAV:-1}"
 SERVICES="${SERVICES:-acca-usa-web acca-usa-media-worker}"
+ALERT_TELEGRAM_TOKEN="${ALERT_TELEGRAM_TOKEN:-${TELEGRAM_BOT_TOKEN:-}}"; ALERT_TELEGRAM_CHAT="${ALERT_TELEGRAM_CHAT:-${TELEGRAM_CHAT_ID:-}}"
 STATE_DIR="${STATE_DIR:-/var/lib/acca-monitor}"
 HOST_LABEL="${HOST_LABEL:-$(hostname)}"
 mkdir -p "$STATE_DIR" 2>/dev/null || STATE_DIR="/tmp/acca-monitor"; mkdir -p "$STATE_DIR"

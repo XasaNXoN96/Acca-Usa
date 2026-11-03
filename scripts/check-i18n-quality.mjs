@@ -12,7 +12,7 @@ const flat = (o, p = "") => Object.entries(o).flatMap(([k, v]) => (typeof v === 
 const en = new Map(flat(load("en")));
 // Values that legitimately stay identical in every language (brand, abbreviations, units, formats).
 // Official body names stay in English; "Progress" / "Material" are established Uzbek loanwords used consistently in the UZ UI.
-const SAME_OK = /^(ACCA|FIA|USA|ACCA USA|EN|RU|UZ|PDF|MP3|MP4|ID|OK|Demo|Admin|Email|Online|Test|Video|Audio|BT|MA|FA|[A-D]|Progress|Material|%s \| ACCA USA|Association of Chartered Certified Accountants|Foundations in Accountancy|—|…|\d[\d\s%.:/·–-]*)$/i;
+const SAME_OK = /^(ACCA|FIA|USA|ACCA USA|EN|RU|UZ|PDF|MP3|MP4|ID|OK|Telegram|Demo|Admin|Email|Online|Test|Video|Audio|BT|MA|FA|[A-D]|Progress|Material|%s \| ACCA USA|Association of Chartered Certified Accountants|Foundations in Accountancy|—|…|\d[\d\s%.:/·–-]*)$/i;
 const hasLetters = (s) => /[A-Za-zА-Яа-я]/.test(s.replace(/\{[^}]*\}/g, ""));
 let errors = 0;
 const fail = (l, key, msg) => { console.error(`[${l}] ${key}: ${msg}`); errors++; };

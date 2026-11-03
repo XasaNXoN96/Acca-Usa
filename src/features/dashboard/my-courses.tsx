@@ -49,7 +49,7 @@ export async function MyCourses({ enrollments, platforms }: { enrollments: Enrol
       </ul>
 
       {/* Tablet / desktop: cards */}
-      <div className="hidden gap-4 md:grid md:grid-cols-3">
+      <div className="hidden gap-4 md:grid md:grid-cols-2">
         {enrollments.map((e) => {
           const theme = platformTheme[e.platform];
           const active = e.status === "active";

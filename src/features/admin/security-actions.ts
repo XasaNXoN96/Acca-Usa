@@ -3,6 +3,8 @@
 import { headers } from "next/headers";
 import { services } from "@/services";
 import { getSessionForMfaSetup, startSession } from "@/lib/auth/session";
+import { sessionOrNull, STAFF_ROLES } from "@/lib/auth/guards";
+import { sendTelegram, telegramConfigured } from "@/services/telegram/client";
 import { audit, adminActor } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
 import { mfaCodeSchema } from "@/lib/validators/auth";
@@ -32,4 +34,51 @@ export async function confirmMfaAction(input: unknown): Promise<ConfirmMfaResult
   await startSession(loaded.session.user, res.data.tokenVersion, { mfa: true });
   await audit({ actor: adminActor(loaded.session.user), action: "mfa.enabled", target: { type: "user", id: loaded.session.user.id } });
   return { ok: true, recoveryCodes: res.data.recoveryCodes };
+}
+
+
+// ── Telegram: link / unlink / test (the second factor next to the authenticator app, and the administrator's notification chat)
+export type TelegramLinkState = { configured: boolean; linked: boolean; username?: string; botUsername?: string };
+
+async function adminOnly() {
+  const session = await sessionOrNull(STAFF_ROLES);
+  return session && session.user.role === "ADMIN" ? session : null;
+}
+
+export async function telegramStateAction(): Promise<TelegramLinkState> {
+  const session = await adminOnly();
+  const configured = telegramConfigured() && !!process.env.TELEGRAM_BOT_USERNAME;
+  if (!session || !configured) return { configured, linked: false };
+  const st = await services.telegramAuth.status(session.user.id);
+  return { configured, linked: st.linked, username: st.username, botUsername: process.env.TELEGRAM_BOT_USERNAME };
+}
+
+/** "Connect Telegram": returns the deep link that opens the bot with a one-time token. */
+export async function beginTelegramLinkAction(): Promise<{ ok: true; url: string } | { ok: false; code: "FORBIDDEN" | "NOT_CONFIGURED" | "RATE_LIMITED" | "FAILED" }> {
+  const session = await adminOnly();
+  if (!session) return { ok: false, code: "FORBIDDEN" };
+  if (!telegramConfigured() || !process.env.TELEGRAM_BOT_USERNAME) return { ok: false, code: "NOT_CONFIGURED" };
+  if (!(await rateLimit(`tg-link:${session.user.id}`, 10, 60 * 60_000)).ok) return { ok: false, code: "RATE_LIMITED" };
+  const res = await services.telegramAuth.beginLink(session.user.id);
+  if (!res.ok) return { ok: false, code: "FAILED" };
+  return { ok: true, url: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${res.data.token}` };
+}
+
+export async function unlinkTelegramAction(): Promise<{ ok: boolean }> {
+  const session = await adminOnly();
+  if (!session) return { ok: false };
+  const res = await services.telegramAuth.unlink(session.user.id);
+  if (res.ok) await audit({ actor: adminActor(session.user), action: "mfa.telegram_unlinked", target: { type: "user", id: session.user.id } });
+  return { ok: res.ok };
+}
+
+/** Sends a test message to the linked chat so the administrator can see that the connection works. */
+export async function sendTelegramTestAction(): Promise<{ ok: boolean; code?: "RATE_LIMITED" | "FAILED" }> {
+  const session = await adminOnly();
+  if (!session) return { ok: false, code: "FAILED" };
+  if (!(await rateLimit(`tg-test:${session.user.id}`, 5, 60 * 60_000)).ok) return { ok: false, code: "RATE_LIMITED" };
+  const chat = await services.telegramAuth.chatOf(session.user.id);
+  if (!chat) return { ok: false, code: "FAILED" };
+  const sent = await sendTelegram(chat, "✅ <b>ACCA USA</b>\nTelegram is connected to your administrator account. Sign-in codes will arrive here.");
+  return sent ? { ok: true } : { ok: false, code: "FAILED" };
 }

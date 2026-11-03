@@ -13,7 +13,8 @@ export async function PlatformsSection() {
   const t = await getTranslations("landing.platforms");
   return (
     <Section id="platforms" title={t("title")} subtitle={t("subtitle")}>
-      <div className="grid gap-5 md:grid-cols-3">
+      {/* Two qualifications (ACCA, FIA): two equal columns, centred as a block — not three columns with an empty one */}
+      <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
         {platformOrder.map((slug) => {
           const theme = platformTheme[slug];
           return (

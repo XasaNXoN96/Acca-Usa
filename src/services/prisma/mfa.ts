@@ -2,14 +2,17 @@ import "server-only";
 import type { MfaService } from "../contracts";
 import { decryptSecret, encryptSecret, hashRecoveryCode, looksLikeRecoveryCode, newRecoveryCodes } from "@/lib/auth/mfa-crypto";
 import { generateTotpSecret, verifyTotp } from "@/lib/auth/totp";
+import { looksLikeLoginCode } from "@/lib/auth/telegram-codes";
 import { getPrisma } from "@/lib/prisma";
+import { consumeTelegramLoginCode } from "./telegram-auth";
 
 export const mfaService: MfaService = {
   async status(userId) {
     const prisma = getPrisma();
     const u = await prisma.user.findUnique({ where: { id: userId }, select: { mfaEnabledAt: true, mfaSecretEnc: true } });
     const left = await prisma.mfaRecoveryCode.count({ where: { userId, usedAt: null } });
-    return { enabled: !!u?.mfaEnabledAt && !!u.mfaSecretEnc, recoveryCodesLeft: left };
+    const tg = await prisma.telegramLink.count({ where: { userId } });
+    return { enabled: !!u?.mfaEnabledAt && !!u.mfaSecretEnc, recoveryCodesLeft: left, telegramLinked: tg > 0 };
   },
 
   async beginEnrollment(userId) {
@@ -57,7 +60,11 @@ export const mfaService: MfaService = {
     }
     const secret = decryptSecret(u.mfaSecretEnc);
     const step = secret ? verifyTotp(secret, code, Date.now(), u.mfaLastStep ?? -1) : null;
-    if (step === null) return { ok: false };
+    if (step === null) {
+      // Not a valid authenticator code: it may be the code that was sent to the administrator's Telegram (either factor works).
+      if (looksLikeLoginCode(code) && (await consumeTelegramLoginCode(userId, code))) return { ok: true, method: "telegram" };
+      return { ok: false };
+    }
     // replay protection that survives concurrent requests: the step may only move forward
     const advanced = await prisma.user.updateMany({ where: { id: userId, OR: [{ mfaLastStep: null }, { mfaLastStep: { lt: step } }] }, data: { mfaLastStep: step } });
     return advanced.count === 1 ? { ok: true, method: "totp" } : { ok: false };

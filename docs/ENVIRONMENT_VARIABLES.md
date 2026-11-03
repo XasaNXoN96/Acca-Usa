@@ -73,6 +73,19 @@ Access is granted only by a verified webhook or by an administrator's decision �
 
 `LEGAL_OPERATOR_NAME` R · `LEGAL_CONTACT_EMAIL` R (also shown in the "online payment unavailable" notice) · `LEGAL_DATA_LOCATION` R (where the database, files and backups physically are — state the truth) · `LEGAL_OPERATOR_ADDRESS`, `LEGAL_OPERATOR_TAX_ID`, `LEGAL_GOVERNING_LAW`, `LEGAL_REFUND_WINDOW` O · `LEGAL_TEXTS_REVIEWED=1` O (only after a lawyer has reviewed the texts).
 
+## Telegram bot (optional feature, all-or-nothing) — see `docs/TELEGRAM.md`
+
+| Name | | Meaning |
+|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | secret | Token from @BotFather. Never logged. |
+| `TELEGRAM_BOT_USERNAME` | | Bot username without `@` (for the "Connect Telegram" deep link). |
+| `TELEGRAM_WEBHOOK_SECRET` | secret | 16–256 characters `A-Za-z0-9_-`; Telegram echoes it in a header on every call and the server refuses calls without it. |
+| `TELEGRAM_CHAT_ID` | | Chat (or group, negative id) that receives all notifications and support messages. |
+| `SUPPORT_TELEGRAM` | O | Username (without `@`) shown on `/support` as the contact link. Works without the bot. |
+| `TELEGRAM_EVENTS` | O | Categories to send: `system,security,users,payments,content,support` (default all). |
+| `TELEGRAM_PII` | O | `masked` (default: `s***@gmail.com`) or `full`. |
+| `TELEGRAM_API_BASE` | T | Test double of the Bot API (tests only). |
+
 ## Antivirus — see `docs/ANTIVIRUS.md`
 
 | Name | | Meaning |

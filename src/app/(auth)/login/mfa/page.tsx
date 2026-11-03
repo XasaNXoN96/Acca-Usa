@@ -5,6 +5,8 @@ import { MfaChallengeForm } from "@/features/auth/mfa-forms";
 import { getSession, pendingMfa } from "@/lib/auth/session";
 import { homeFor } from "@/lib/auth/guards";
 import { routes } from "@/lib/routes";
+import { services } from "@/services";
+import { telegramConfigured } from "@/services/telegram/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.mfa");
@@ -14,7 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginMfaPage() {
   const session = await getSession();
   if (session) redirect(homeFor(session.user.role));
-  if (!(await pendingMfa())) redirect(routes.login); // nothing to verify: password step first
+  const pending = await pendingMfa();
+  if (!pending) redirect(routes.login); // nothing to verify: password step first
+  const telegram = telegramConfigured() && (await services.telegramAuth.status(pending.uid)).linked;
   const t = await getTranslations("auth.mfa");
   return (
     <div className="space-y-6">
@@ -22,7 +26,7 @@ export default async function LoginMfaPage() {
         <h1 className="type-h1">{t("title")}</h1>
         <p className="type-small text-muted-foreground">{t("subtitle")}</p>
       </div>
-      <MfaChallengeForm />
+      <MfaChallengeForm telegram={telegram} />
     </div>
   );
 }
