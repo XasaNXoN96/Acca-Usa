@@ -18,7 +18,9 @@ async function takeTest(p, correct) {
   }
   await p.getByRole("button", { name: "Submit test" }).first().click(); await p.getByRole("dialog").getByRole("button", { name: "Submit now" }).click(); await p.waitForURL(/result/);
 }
-const rows = async (p) => p.locator("table tbody tr").allInnerTexts();
+// Cell by cell (textContent, space-separated): innerText of a row read before the stylesheet is applied glues the cells together ("010%"),
+// which made the exact-score check flaky. The data is unchanged, only the reading is robust.
+const rows = async (p) => { await p.locator("table tbody tr").first().waitFor(); return p.locator("table tbody tr").evaluateAll((trs) => trs.map((tr) => [...tr.children].map((c) => (c.textContent ?? "").replace(/\s+/g, " ").trim()).filter(Boolean).join(" "))); };
 
 const sc = await ctx(); const s = await sc.newPage(); await demo(s, "Student"); await s.waitForURL(/dashboard$/);
 await step("ranking: real demo students only, own place highlighted, other learners abbreviated, no emails / full surnames / suspended users", async () => {
