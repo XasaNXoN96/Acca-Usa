@@ -8,10 +8,11 @@ import { getPaymentProvider } from "../payments";
 import type { PaymentRec, PaymentStore } from "../payments/contracts";
 import { paymentsMode } from "@/lib/payments-mode";
 import { applyProviderEvent, emailPaymentFailed, emailPaymentReceived } from "../payments/process";
+import { siteCurrency } from "@/lib/currency";
 import { getDb, nowIso, pushNotification } from "./db";
 
 const toPayment = (p: PaymentRec, studentName?: string): Payment => ({
-  id: p.id, description: p.description, amountCents: p.amountCents, currency: "USD",
+  id: p.id, description: p.description, amountCents: p.amountCents, currency: p.currency,
   status: ({ PAID: "paid", PENDING: "pending", FAILED: "failed", CANCELLED: "cancelled", REFUNDED: "refunded" } as const)[p.status],
   createdAt: p.createdAt, studentName, platform: p.platform, provider: p.provider,
 });
@@ -91,7 +92,7 @@ export const paymentService: PaymentService = {
     }
     const rec: PaymentRec = {
       id: `pay-${randomUUID()}`, userId, platform: platform as PlatformSlug, description: `${plat.name} — full access`, amountCents: plat.priceCents,
-      currency: "USD", status: "PENDING", provider: provider.name, idempotencyKey, createdAt: nowIso(),
+      currency: siteCurrency(), status: "PENDING", provider: provider.name, idempotencyKey, createdAt: nowIso(),
     };
     db.payments.push(rec);
     const session = await provider.createCheckout({

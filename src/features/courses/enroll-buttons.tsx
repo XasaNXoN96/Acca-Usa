@@ -15,10 +15,12 @@ export interface EnrollButtonProps {
   platform: PlatformSlug; size?: ButtonProps["size"]; label?: string; className?: string;
   /** > 0 → the platform is paid: the button starts a checkout instead of enrolling directly */
   priceCents?: number;
+  /** the shop currency (set by EnrollControl on the server) */
+  currency?: string;
   access?: "FREE" | "ACTIVE" | "EXPIRED" | "REVOKED";
 }
 
-export function EnrollButton({ platform, size = "default", label, className, priceCents = 0, access }: EnrollButtonProps) {
+export function EnrollButton({ platform, size = "default", label, className, priceCents = 0, access, currency = "USD" }: EnrollButtonProps) {
   const t = useTranslations("courses");
   const f = useFormatter();
   const router = useRouter();
@@ -26,7 +28,8 @@ export function EnrollButton({ platform, size = "default", label, className, pri
   const [error, setError] = useState<"failed" | "limited" | false>(false);
   if (access === "REVOKED") return <p role="status" className={`type-small font-medium text-destructive ${className ?? ""}`}>{t("revoked")}</p>;
   const paid = priceCents > 0;
-  const price = f.number(priceCents / 100, { style: "currency", currency: "USD" });
+  const wholeSum = currency === "UZS" && priceCents % 100 === 0;
+  const price = f.number(priceCents / 100, { style: "currency", currency, ...(wholeSum ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}) });
   return (
     <div className={className}>
       <Button

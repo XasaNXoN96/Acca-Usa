@@ -1,6 +1,7 @@
 /** Environment validation rules (pure).   npm run test:env */
 import assert from "node:assert/strict";
 import { assertEnv, validateEnv } from "../../src/lib/env-check";
+import { formatMoney } from "../../src/lib/format";
 
 const full = {
   NEXT_PUBLIC_APP_MODE: "production", DATA_PROVIDER: "prisma", DATABASE_URL: "postgresql://u:p@h:5432/d", AUTH_SECRET: "x".repeat(48), APP_URL: "https://acca.example",
@@ -48,6 +49,16 @@ assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: "none" }), [], "'none' is 
 assert.deepEqual(names({ ...full, ANTIVIRUS_PROVIDER: "norton" }), ["ANTIVIRUS_PROVIDER"], "unknown provider refused");
 assert.deepEqual(names({ ...full, CLAMAV_PORT: "abc" }), ["CLAMAV_PORT"]);
 assert.deepEqual(names({ NEXT_PUBLIC_APP_MODE: "demo" }), [], "demo needs nothing");
+
+// ── PRICE_CURRENCY: USD | UZS (optional, default USD); Stripe cannot charge sum
+assert.deepEqual(names({ ...full, PRICE_CURRENCY: "USD" }), [], "USD ok");
+assert.deepEqual(names({ ...full, PRICE_CURRENCY: "EUR" }), ["PRICE_CURRENCY"], "unknown currency refused");
+assert.deepEqual(names({ ...full, PRICE_CURRENCY: "UZS" }), ["PRICE_CURRENCY"], "stripe + UZS refused");
+assert.deepEqual(names({ ...full, PAYMENTS_PROVIDER: "none", PRICE_CURRENCY: "UZS" }), [], "UZS needs no online provider");
+{
+  const uz = formatMoney(15_000_000, "UZS", "ru"); assert.ok(/150\s?000/.test(uz.replace(/\u00a0|\u202f/g, " ")) && !/,00|\.00/.test(uz), `UZS whole sum: ${uz}`);
+  assert.ok(/149[.,]00/.test(formatMoney(14_900, "USD", "en")), "USD keeps cents");
+}
 
 // ── FILE_DELIVERY (optional): node | nginx; nginx needs path-style S3 URLs
 assert.deepEqual(names({ ...full, FILE_DELIVERY: "node" }), [], "node is the default");

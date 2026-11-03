@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { services } from "@/services";
 import { getStorage } from "@/services/storage";
+import { siteCurrency } from "@/lib/currency";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { platformTheme } from "@/lib/platform-theme";
 import { isDemoMode } from "@/lib/app-mode";
@@ -52,7 +53,7 @@ export async function buildRows(resource: ResourceKey): Promise<Built> {
         rows: platforms.map((p) =>
           mk(p.slug, {
             name: <span className="flex items-center gap-2">{platformBadge(p.slug)}{bold(p.name)}</span>,
-            fullName: p.fullName, price: p.priceCents > 0 ? formatMoney(p.priceCents, "USD", locale) : ts("priceFree"), levels: p.levels.length, subjects: subjects.filter((s) => s.platform === p.slug && !s.archived).length,
+            fullName: p.fullName, price: p.priceCents > 0 ? formatMoney(p.priceCents, siteCurrency(), locale) : ts("priceFree"), levels: p.levels.length, subjects: subjects.filter((s) => s.platform === p.slug && !s.archived).length,
           }, { name: p.name, fullName: p.fullName, price: String(p.priceCents / 100) }, [p.name, p.fullName], p.name, !!p.archived),
         ),
       };

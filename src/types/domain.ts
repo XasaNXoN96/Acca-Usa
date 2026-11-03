@@ -30,7 +30,7 @@ export interface Platform {
   slug: PlatformSlug;
   name: string;
   fullName: string;
-  /** Price of full access in USD cents. 0 = free enrolment. */
+  /** Price of full access in minor currency units (cents / tiyin) of PRICE_CURRENCY. 0 = free enrolment. */
   priceCents: number;
   levels: Level[];
   archived?: boolean;
@@ -455,7 +455,7 @@ export interface Payment {
   id: string;
   description: string;
   amountCents: number;
-  currency: "USD";
+  currency: string;
   status: "paid" | "pending" | "refunded" | "failed" | "cancelled";
   createdAt: string;
   studentName?: string;

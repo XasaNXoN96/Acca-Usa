@@ -47,6 +47,14 @@ async function main() {
   assert.equal(await applyProviderEvent(s.store, "stripe", paid({ eventId: "evt_2" }), notify), "ignored", "a second paid event for a PAID payment is ignored");
   assert.deepEqual(calls, ["received"], "no duplicate notification");
 
+  // ── sum (UZS) payments: amounts are tiyin (1/100), a USD event for a UZS payment never grants access
+  const u = fakeStore([pending({ amountCents: 15_000_000, currency: "UZS", provider: "stripe" })]);
+  assert.equal(await applyProviderEvent(u.store, "stripe", paid({ amountCents: 15_000_000, currency: "usd" }), notify), "ignored", "wrong currency for a sum payment");
+  assert.equal(u.access.size, 0);
+  assert.equal(await applyProviderEvent(u.store, "stripe", paid({ eventId: "evt_uz", amountCents: 15_000_000, currency: "uzs" }), notify), "applied", "right currency and amount");
+  assert.equal(u.access.get("u1:acca"), "ACTIVE");
+  calls.length = 0;
+
   // ── amount / currency mismatch never grants access
   s = fakeStore([pending()]);
   assert.equal(await applyProviderEvent(s.store, "stripe", paid({ amountCents: 100 }), notify), "ignored");

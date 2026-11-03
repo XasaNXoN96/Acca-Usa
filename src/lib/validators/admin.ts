@@ -1,5 +1,6 @@
 import { isCommonPassword } from "./auth";
 import { z } from "zod";
+import { MAX_PRICE_UNITS } from "@/lib/currency";
 import { difficulties, materialKinds } from "@/types";
 
 /**
@@ -15,7 +16,7 @@ const int = (min: number, max: number) =>
 const id = z.string().trim().min(1, "required").max(120, "invalidChoice");
 const optionalId = z.string().trim().max(120, "invalidChoice").optional().default("");
 
-export const platformSchema = z.object({ name: text(2, 20), fullName: text(3, 120), price: int(0, 100000) });
+export const platformSchema = z.object({ name: text(2, 20), fullName: text(3, 120), price: int(0, MAX_PRICE_UNITS) });
 
 export const subjectSchema = z.object({ code: text(1, 12), name: text(3, 120), level: id });
 

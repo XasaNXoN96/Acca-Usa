@@ -1,4 +1,5 @@
 import "server-only";
+import { formatMoney } from "@/lib/format";
 import { routes } from "@/lib/routes";
 import { audit } from "@/lib/audit";
 import { logEvent } from "@/lib/log";
@@ -75,8 +76,7 @@ export async function applyProviderEvent(store: PaymentStore, provider: PaymentP
   }
 }
 
-export const formatAmount = (cents: number, currency: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+export const formatAmount = (cents: number, currency: string) => formatMoney(cents, currency, "en-US");
 
 /** E-mail side of the notifier (the in-app notification part is data-provider specific). */
 export async function emailPaymentReceived(store: PaymentStore, p: PaymentRec) {

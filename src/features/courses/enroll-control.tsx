@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { legalOperator } from "@/lib/legal/operator";
+import { siteCurrency } from "@/lib/currency";
 import { paymentsMode } from "@/lib/payments-mode";
 import { EnrollButton, type EnrollButtonProps } from "./enroll-buttons";
 
@@ -10,7 +11,7 @@ import { EnrollButton, type EnrollButtonProps } from "./enroll-buttons";
  */
 export async function EnrollControl(props: EnrollButtonProps) {
   const paid = (props.priceCents ?? 0) > 0;
-  if (!paid || props.access === "REVOKED" || paymentsMode() !== "none") return <EnrollButton {...props} />;
+  if (!paid || props.access === "REVOKED" || paymentsMode() !== "none") return <EnrollButton {...props} currency={siteCurrency()} />;
   const t = await getTranslations("courses");
   const email = legalOperator().contactEmail;
   return (

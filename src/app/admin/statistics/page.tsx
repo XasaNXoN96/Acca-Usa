@@ -10,6 +10,7 @@ import { StatsFilters, rangePresets } from "@/features/admin/stats/stats-filters
 import { services } from "@/services";
 import { can } from "@/lib/permissions";
 import { isPlatformSlug } from "@/lib/platform-theme";
+import { siteCurrency } from "@/lib/currency";
 import { formatMoney } from "@/lib/format";
 import { isDemoMode } from "@/lib/app-mode";
 import { requireSession, STAFF_ROLES } from "@/lib/auth/guards";
@@ -93,7 +94,7 @@ export default async function StatisticsPage({ searchParams }: { searchParams: S
         <StatCard tone="fia" icon={<GraduationCap aria-hidden />} value={c.completedTopics} label={t("cards.completedTopics")} />
         <StatCard tone="warning" icon={<Award aria-hidden />} value={c.certificates} label={t("cards.certificates")} />
         <StatCard tone="azure" icon={<CreditCard aria-hidden />} value={c.payments} label={t("cards.payments")} />
-        <StatCard tone="navy" icon={<Wallet aria-hidden />} value={formatMoney(c.revenueCents, "USD", locale)} label={t("cards.revenue")} />
+        <StatCard tone="navy" icon={<Wallet aria-hidden />} value={formatMoney(c.revenueCents, siteCurrency(), locale)} label={t("cards.revenue")} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

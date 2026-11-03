@@ -20,7 +20,9 @@ export function formatRelative(iso: string, locale: Locale | string, now: number
 }
 
 export function formatMoney(cents: number, currency: string, locale: Locale | string) {
-  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(cents / 100);
+  // Sum prices are whole numbers: "150 000 UZS", not "150 000,00 UZS" (tiyin only show when there really are some).
+  const whole = currency === "UZS" && cents % 100 === 0;
+  return new Intl.NumberFormat(locale, { style: "currency", currency, ...(whole ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}) }).format(cents / 100);
 }
 
 export function formatNumber(n: number, locale: Locale | string) {

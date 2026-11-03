@@ -18,7 +18,7 @@ export interface UserRec {
   createdAt: string;
   deletedAt?: string;
 }
-export interface PlatformRec { slug: PlatformSlug; name: string; fullName: string; /** USD cents; 0 = free enrolment */ priceCents: number; deletedAt?: string }
+export interface PlatformRec { slug: PlatformSlug; name: string; fullName: string; /** minor units (cents / tiyin) of PRICE_CURRENCY; 0 = free enrolment */ priceCents: number; deletedAt?: string }
 export interface LevelRec { id: string; platform: PlatformSlug; name: string; order: number }
 export interface SubjectRec { slug: string; code: string; name: string; levelId: string; createdAt: string; deletedAt?: string }
 export interface TopicRec extends Omit<Topic, "archived"> { createdAt: string; deletedAt?: string }

@@ -4,6 +4,7 @@ import type { Payment as DbPayment, Prisma, User as DbUser } from "@prisma/clien
 import type { PaymentService } from "../contracts";
 import type { Payment, PlatformSlug } from "@/types";
 import { APP_MODE } from "@/lib/app-mode";
+import { siteCurrency } from "@/lib/currency";
 import { getPrisma } from "@/lib/prisma";
 import { absoluteUrl } from "../email";
 import { getPaymentProvider } from "../payments";
@@ -14,7 +15,7 @@ import { notifyUser } from "./events";
 
 const status = { PAID: "paid", PENDING: "pending", FAILED: "failed", CANCELLED: "cancelled", REFUNDED: "refunded" } as const;
 const toPayment = (p: DbPayment & { user?: Pick<DbUser, "name"> }): Payment => ({
-  id: p.id, description: p.description, amountCents: p.amountCents, currency: "USD", status: status[p.status],
+  id: p.id, description: p.description, amountCents: p.amountCents, currency: p.currency, status: status[p.status],
   createdAt: p.createdAt.toISOString(), studentName: p.user?.name, platform: p.platformSlug as PlatformSlug, provider: p.provider,
 });
 const toRec = (p: DbPayment): PaymentRec => ({
@@ -118,7 +119,7 @@ export const paymentService: PaymentService = {
       created = await prisma.payment.create({
         data: {
           id: `pay-${randomUUID()}`, userId, platformSlug: platform, description: `${plat.name} — full access`, amountCents: plat.priceCents,
-          currency: "USD", status: "PENDING", provider: provider.name, idempotencyKey,
+          currency: siteCurrency(), status: "PENDING", provider: provider.name, idempotencyKey,
         },
       });
     } catch (e) {

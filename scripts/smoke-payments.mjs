@@ -1,6 +1,9 @@
 // Smoke test: paid platforms, demo checkout, webhook, access (grant / revoke / expiry). BASE_URL=... CHROMIUM=... node scripts/smoke-payments.mjs  (fresh server)
 import { chromium } from "playwright-core";
 const BASE = process.env.BASE_URL ?? "http://localhost:3100";
+// PRICE_CURRENCY=UZS runs the same flow with a sum price (the server must be started with the same variable)
+const UZS = process.env.PRICE_CURRENCY === "UZS";
+const PRICE = UZS ? { input: "150000", text: "UZS 150,000", buy: /Buy access — UZS 150,000/ } : { input: "29", text: "$29.00", buy: /Buy access — \$29\.00/ };
 const results = [];
 const step = async (n, f) => { try { await f(); results.push([n, true]); console.log("  ok  ", n); } catch (e) { results.push([n, false]); console.log("  FAIL", n, "\n      ", String(e.message).split("\n").slice(0, process.env.VERBOSE ? 10 : 1).join("\n      ")); } };
 const assert = (c, m) => { if (!c) throw new Error(m); };
@@ -14,11 +17,11 @@ let firstPaymentId = "";
 const gate = async () => { await s.goto("/platform/fia"); await s.waitForLoadState("networkidle"); return (await s.getByText("Enroll to access FIA").count()) > 0; };
 
 await step("admin: sets a price for FIA (Platforms → Edit → price)", async () => {
-  await a.goto("/admin/platforms"); await a.getByRole("button", { name: /^Edit: FIA$/ }).click(); await a.locator("#f-price").fill("29"); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
-  await a.goto("/admin/platforms"); await a.getByRole("row", { name: /FIA/ }).getByText("$29.00").waitFor();
+  await a.goto("/admin/platforms"); await a.getByRole("button", { name: /^Edit: FIA$/ }).click(); await a.locator("#f-price").fill(PRICE.input); await a.getByRole("button", { name: "Save", exact: true }).click(); await a.getByText("Saved.").waitFor();
+  await a.goto("/admin/platforms"); await a.getByRole("row", { name: /FIA/ }).getByText(PRICE.text).waitFor();
 });
 await step("student: paid platform shows 'Buy access', stays locked, checkout does NOT unlock it", async () => {
-  await s.goto("/courses"); const buy = s.getByRole("button", { name: /Buy access — \$29\.00/ }); await buy.waitFor();
+  await s.goto("/courses"); const buy = s.getByRole("button", { name: PRICE.buy }); await buy.waitFor();
   await buy.click(); await s.waitForURL(/\/payments\/demo-checkout\/pay-/); firstPaymentId = s.url().split("/").pop();
   await s.getByText(/DEMO simulation/).waitFor(); assert(await gate(), "FIA unlocked right after starting checkout");
   await s.goto("/payments"); await s.getByRole("row", { name: /FIA — full access/ }).getByText("Pending").waitFor();

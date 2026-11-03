@@ -58,6 +58,7 @@ The public Vercel demo uses `demo` mode and no variables at all; it must never r
 
 | Name | | Meaning |
 |---|---|---|
+| `PRICE_CURRENCY` | O | `USD` (default) or `UZS`. All prices, payments, statistics and e-mails use it. Prices are typed in whole units in Admin → Platforms (`150000` = 150 000 sum; stored as tiyin, 1/100). Stripe + UZS is refused at startup. |
 | `PAYMENTS_PROVIDER` | R | `none` (online payments off: no Stripe variable is needed, paid platforms show the contact notice, an administrator grants access in Admin → Access) or `stripe`. Missing or any other value = the server refuses to start. |
 | `PAYMENT_SECRET_KEY` | R if `stripe` | `sk_test_…` or `sk_live_…`. Must be absent/unused with `none`. |
 | `PAYMENT_WEBHOOK_SECRET` | R if `stripe` | `whsec_…` signing secret of `/api/webhooks/payments`. |

@@ -58,9 +58,11 @@ export function validateEnv(env: Env = process.env): { mode: "demo" | "productio
   if (has(env.SMTP_SECURE) && !["0", "1"].includes(env.SMTP_SECURE!)) add("SMTP_SECURE", "must be 0 or 1");
 
   // Online payments are an explicit decision: `none` (access is granted by an administrator, no Stripe variables needed) or `stripe`.
+  if (has(env.PRICE_CURRENCY) && !["USD", "UZS"].includes(env.PRICE_CURRENCY!)) add("PRICE_CURRENCY", "must be 'USD' or 'UZS'");
   const payments = env.PAYMENTS_PROVIDER;
   if (!has(payments)) add("PAYMENTS_PROVIDER", "required in production: 'none' (online payments off) or 'stripe'");
   else if (payments !== "none" && payments !== "stripe") add("PAYMENTS_PROVIDER", "must be 'none' or 'stripe'");
+  if (payments === "stripe" && env.PRICE_CURRENCY === "UZS") add("PRICE_CURRENCY", "Stripe cannot charge Uzbek sum: use PRICE_CURRENCY=USD with Stripe (or another payment provider for UZS)");
   if (payments === "stripe") {
     need("PAYMENT_SECRET_KEY", "required when PAYMENTS_PROVIDER=stripe");
     need("PAYMENT_WEBHOOK_SECRET", "required when PAYMENTS_PROVIDER=stripe (payment webhooks)");
