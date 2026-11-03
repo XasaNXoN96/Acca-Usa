@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import { useForm, type FieldValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ZodType } from "zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Alert } from "@/components/ui/alert";
@@ -41,7 +40,7 @@ export function RecordDialog({
     () => Object.fromEntries(fields.map((f) => [f.name, initial?.[f.name] ?? f.default ?? (f.kind === "multiselect" || f.kind === "questionPicker" ? [] : f.kind === "checkbox" ? false : "")])),
     [fields, initial],
   );
-  const form = useForm<FieldValues>({ resolver: zodResolver(schema as unknown as ZodType<FieldValues>) as unknown as Resolver<FieldValues>, defaultValues: defaults });
+  const form = useForm<FieldValues>({ resolver: zodResolver(schema as never) as unknown as Resolver<FieldValues>, defaultValues: defaults });
 
   const errorText = (code?: string) => (code ? validationText(v as unknown as (k: string, p?: Record<string, string | number>) => string, code) : undefined);
 
