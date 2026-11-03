@@ -38,7 +38,7 @@ Local lab: production build (`NEXT_PUBLIC_APP_MODE=production`), PostgreSQL 16, 
 
 | Area | Result |
 |---|---|
-| Dependencies | Next.js 16.4.0 → 16.4.4 (critical RCE / DoS advisories), nodemailer → 10.3. `npm audit` still lists `zod` 3.x (DoS on huge collections; needs a breaking 4.x migration, inputs are size-limited), the Prisma CLI's `deepmerge-ts` (migration tooling only) and lint-time packages. |
+| Dependencies | Next.js 16.4.0 → 16.4.4 (critical RCE / DoS advisories), nodemailer → 10.3, zod → 4. `npm audit` still lists the Prisma CLI's `deepmerge-ts` (migration tooling only, needs a Prisma 7 major upgrade) and lint-time packages. |
 | Antivirus | ClamAV integration (`test:antivirus`, real clamd with a test signature checked once). Explicit `ANTIVIRUS_PROVIDER`. **Real signature database: NOT TESTED** (no internet in the sandbox). |
 | Attack probes | `scripts/security-probe.mjs`: 48 probes (headers, anonymous access, traversal, open redirect, forged cookies, CSRF on upload, spoofed / script / SVG uploads, NUL-byte file name, multi-range, unsatisfiable range) — all pass. **Found and fixed:** a malformed upload (NUL byte in the file name) made the request hang forever (DoS path). |
 | Passwords | the most guessed passwords are refused (registration, reset, admin form, `admin:create`). Gap kept on purpose: no e-mail verification at sign-up (anyone can register with someone else's address; the owner can still reset the password). |
@@ -48,6 +48,22 @@ Local lab: production build (`NEXT_PUBLIC_APP_MODE=production`), PostgreSQL 16, 
 | Performance | catalogue snapshot shared between requests (+40 % page throughput), smaller HTML (admin-only texts not sent to everyone), compression moved to Nginx, optional Nginx video offload. Details and limits: `docs/LOAD_AND_CAPACITY.md`. A tried access-decision cache for files was **reverted** because it let a student read an old file version for a few seconds (caught by `smoke-examsecurity`). |
 | Nginx config | validated with a real Nginx 1.24 (`nginx -t`, run, HTTP/2, gzip, HSTS, large uploads, internal offload location). **Found and fixed:** `http2 on;` does not exist in Ubuntu 24.04's nginx 1.24. |
 | Regression | `smoke:all` 33/33, `test:production` 28/28, integration, migration, backup and restart suites — see the final report for the last run. |
+
+## December preparation round (what was added and verified)
+
+| Area | Result |
+|---|---|
+| Prices in sum | `PRICE_CURRENCY=USD|UZS`; whole-sum formatting; admin limit 20 000 000 (32-bit minor units); `smoke-payments` passes in USD and UZS |
+| Question import | CSV (RU/EN headers, `, ; tab`), check-then-import as drafts, row-level errors, duplicates skipped, 2 MB / 2000 rows; `test:question-import` + `smoke-questionimport` on memory **and** PostgreSQL; 300 questions created in 0.8 s |
+| zod 3 → 4 | closes the DoS advisory; the whole suite passes on it (see the final run below) |
+| Payme | Merchant API endpoint + hosted-checkout link + `PaymeTransaction` table; `test:payme` (mutation-checked) and `test:production` against the real server + PostgreSQL. **NOT TESTED against Payme itself** — no merchant account existed; Payme's own certification checks are mandatory (`docs/PAYMENTS.md`, `docs/LAUNCH_DAY.md`). Fiscal receipts: not implemented |
+| E-mail confirmation | banner + refused online purchase until confirmed, single-use 48 h link, resend limit; tested in `test:production`; real mailbox delivery **NOT TESTED** |
+| Preflight | `npm run preflight` (config, PostgreSQL + migrations, bucket write/read/delete, SMTP login, FFmpeg encoders, ClamAV, disks, public site headers, closed ports); shown OK on a healthy lab and FAILing for each broken part |
+| Monitoring | `deploy/monitoring/monitor.sh` + systemd timer: site/DB, disk, certificate, backup age, ClamAV, services; alert / no-repeat / recovery tested; Telegram and `systemctl` checks **NOT TESTED** |
+| SEO | `SEO_INDEX=1` switches on indexing, `robots.txt`, `sitemap.xml`; default stays "not indexed" |
+| Runbook | `docs/LAUNCH_DAY.md` |
+
+Still open: Payme certification; fiscal receipts; real SMTP/spam behaviour; everything in "Not verifiable before a VPS exists".
 
 ## Not verifiable before a VPS exists
 

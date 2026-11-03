@@ -27,6 +27,15 @@ everything else needs a human against the real service.
 - [ ] `nginx -t` OK, HTTPS grade checked (e.g. SSL Labs), `curl -I` shows HSTS / nosniff / no `X-Powered-By`, port 3000 / 5432 / 9000 / 3310 are **not** reachable from outside (`nmap` from another machine)
 - [ ] `docs/LOAD_AND_CAPACITY.md`: load test run on staging from another machine; ceiling written down
 
+## Payments, currency, sign-up (December scope)
+- [ ] `PRICE_CURRENCY=UZS`; prices typed in whole sum in Admin → Platforms; a student sees "UZS 150,000" in all three languages
+- [ ] Payme: merchant id + cashbox key typed **on the server**; endpoint registered in the Payme cabinet (`/api/payments/payme`, account field `order_id`); test purchase + cancellation on `test.paycom.uz`; **Payme's certification checks passed** — *not verified here (no Payme account)*
+- [ ] one real purchase and one refund with your own card; access appears after the purchase and disappears after the refund
+- [ ] e-mail confirmation: a new account receives the link, the banner disappears after confirming, buying is refused before — *verified here against a mail sink; real mailbox delivery (spam / SPF / DKIM) not verified*
+- [ ] question import: a 20-row CSV imported as drafts, reviewed, published (`docs/ADMIN_GUIDE_RU.md`)
+- [ ] `npm run preflight -- --url https://your-domain` → 0 FAILED; monitoring timer running and an alert was seen once on purpose (`docs/VPS_DEPLOYMENT.md` §12b)
+- [ ] `SEO_INDEX=1` set only when you want the public pages found by search engines
+
 ## Database (`docs/MIGRATIONS.md`)
 - [ ] automated backups (`npm run db:backup`, encrypted, copied to write-once storage) + point-in-time recovery enabled; **restore drill done** with `npm run db:restore` on YOUR infrastructure (`docs/BACKUP_AND_RESTORE.md`) — tools proven only on local PostgreSQL 16
 - [ ] object-storage versioning / replication for uploaded files (not covered by the database backup); `AUTH_SECRET` / `AUDIT_CHAIN_SECRET` stored in a secret manager
