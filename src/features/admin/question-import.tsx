@@ -36,9 +36,9 @@ export function QuestionImport() {
     <div className="space-y-6">
       <section className="space-y-3 rounded-xl border border-border p-4">
         <h2 className="type-h4">{t("stepsTitle")}</h2>
-        <ol className="list-decimal space-y-1 pl-5 text-sm">
-          <li>{t("step1")}</li><li>{t("step2")}</li><li>{t("step3")}</li>
-        </ol>
+        <ul className="space-y-1 text-sm">
+          {(["step1", "step2", "step3"] as const).map((k, i) => <li key={k} className="flex gap-2"><span className="font-semibold tabular-nums">{i + 1}.</span><span>{t(k)}</span></li>)}
+        </ul>
         <p className="type-caption text-muted-foreground">{t("columns")}</p>
         <Button asChild variant="outline" size="sm"><a href="/templates/questions-template.csv" download><Download aria-hidden />{t("template")}</a></Button>
       </section>
